@@ -1,70 +1,362 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
 
 html {
   scroll-behavior: smooth;
 }
 
+/* Typography: Poppins for body/UI, Cormorant Garamond for headings */
 body {
-  background: #000;
-  color: #FAFAFA;
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
+  background: #FFFFFF;
+  color: #111827;
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root{
+  --color-white: #FFFFFF;
+  --color-offwhite: #F8F7F5;
+  --color-text: #111827;
+  --color-text-muted: #6B7280;
+  --color-border: #E5E7EB;
+  --color-rose: #D4A5A5;
+  --color-rose-dark: #B88585;
+  --transition-fast: 200ms;
+  --transition-medium: 350ms;
+  
+  /* Vercel-like Admin Theme Variables */
+  --admin-bg: #000000;
+  --admin-bg-secondary: #0a0a0a;
+  --admin-bg-tertiary: #111111;
+  --admin-bg-hover: #171717;
+  --admin-bg-elevated: #1a1a1a;
+  --admin-border: #262626;
+  --admin-border-light: #333333;
+  --admin-text: #ededed;
+  --admin-text-secondary: #a1a1a1;
+  --admin-text-tertiary: #666666;
+  --admin-accent: #0070f3;
+  --admin-accent-hover: #0060df;
+  --admin-success: #50e3c2;
+  --admin-warning: #f5a623;
+  --admin-error: #ee0000;
+  --admin-error-light: #ff6166;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 400;
+  font-family: 'Cormorant Garamond', 'Poppins', serif;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .font-display {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Cormorant Garamond', 'Poppins', serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.875rem 2.5rem;
-  font-size: 0.75rem;
+  padding: 0.875rem 2rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  transition: all 0.4s ease;
+  letter-spacing: 0.025em;
+  transition: all var(--transition-fast) ease;
   border: none;
   cursor: pointer;
+  border-radius: 4px;
 }
 
 .btn-primary {
-  background: #D4AF37;
-  color: #000;
+  background: var(--color-text);
+  color: #FFFFFF;
 }
 
 .btn-primary:hover {
-  background: #C5A572;
-  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-  transform: translateY(-2px);
+  background: var(--color-rose-dark);
+  transform: translateY(-1px);
 }
 
 .btn-outline {
-  border: 1px solid #D4AF37;
-  color: #FAFAFA;
+  border: 1px solid var(--color-text);
+  color: var(--color-text);
   background: transparent;
 }
 
 .btn-outline:hover {
-  background: #D4AF37;
-  color: #000;
-  border-color: #D4AF37;
+  background: var(--color-text);
+  color: #FFFFFF;
 }
 
 .btn-secondary {
-  background: #111;
-  color: #FAFAFA;
-  border: 1px solid #333;
+  background: var(--color-offwhite);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover {
-  background: #222;
-  border-color: #D4AF37;
+  background: var(--color-border);
+  border-color: var(--color-text);
 }
+
+/* Hint the browser to promote animated elements to their own layer for smoother animations */
+.will-change-transform {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Smooth, subtle gold glow animation for CTA focus */
+.glow {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================ */
+/* VERCEL-LIKE ADMIN PANEL STYLES */
+/* ============================================ */
+
+.admin-layout {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+/* Prevent accidental blue text inside admin UI (override Tailwind / component classes)
+   Keep primary text readable on dark background */
+.admin-layout .text-blue-700,
+.admin-layout .text-blue-600,
+.admin-layout .text-blue-500,
+.admin-layout .text-blue-400,
+.admin-layout .turbopack-text,
+.admin-layout a,
+.admin-layout .link {
+  color: var(--admin-text) !important;
+}
+
+.admin-layout a:hover,
+.admin-layout .link:hover {
+  color: var(--admin-text) !important;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  /* Make modal dialogs full-width on small screens */
+  .admin-layout .max-w-lg {
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* Reduce page padding on small devices */
+  .admin-layout main {
+    padding: 1rem !important;
+  }
+
+  /* Sidebar should take most of the screen when open */
+  .admin-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Ensure tables are scrollable on small screens */
+.admin-layout .table-responsive {
+  overflow-x: auto;
+}
+
+.admin-sidebar {
+  background: var(--admin-bg);
+  border-right: 1px solid var(--admin-border);
+}
+
+.admin-card {
+  background: var(--admin-bg-secondary);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+}
+
+.admin-card-hover:hover {
+  background: var(--admin-bg-hover);
+  border-color: var(--admin-border-light);
+}
+
+.admin-input {
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--admin-text-secondary);
+  box-shadow: 0 0 0 1px var(--admin-border-light);
+}
+
+.admin-input::placeholder {
+  color: var(--admin-text-tertiary);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.admin-btn-primary {
+  background: var(--admin-text);
+  color: var(--admin-bg);
+}
+
+.admin-btn-primary:hover {
+  background: #fff;
+}
+
+.admin-btn-secondary {
+  background: transparent;
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
+}
+
+.admin-btn-secondary:hover {
+  background: var(--admin-bg-hover);
+  border-color: var(--admin-border-light);
+}
+
+.admin-btn-danger {
+  background: var(--admin-error);
+  color: #fff;
+}
+
+.admin-btn-danger:hover {
+  background: var(--admin-error-light);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-bg-secondary);
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table tbody tr:hover {
+  background: var(--admin-bg-hover);
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+.admin-badge-success {
+  background: rgba(80, 227, 194, 0.1);
+  color: var(--admin-success);
+}
+
+.admin-badge-warning {
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--admin-warning);
+}
+
+.admin-badge-error {
+  background: rgba(238, 0, 0, 0.1);
+  color: var(--admin-error-light);
+}
+
+.admin-badge-neutral {
+  background: var(--admin-bg-elevated);
+  color: var(--admin-text-secondary);
+}
+
+/* Modal overlay */
+.admin-modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar for admin */
+.admin-layout ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-layout ::-webkit-scrollbar-track {
+  background: var(--admin-bg);
+}
+
+.admin-layout ::-webkit-scrollbar-thumb {
+  background: var(--admin-border);
+  border-radius: 4px;
+}
+
+.admin-layout ::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-border-light);
+}
+
+/* Select and option styling for dark theme */
+.admin-layout select {
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+.admin-layout select option {
+  background-color: var(--admin-bg-secondary);
+  color: var(--admin-text);
+  padding: 8px;
+}
+
+/* Ensure headings inside admin use white text */
+.admin-layout h1,
+.admin-layout h2,
+.admin-layout h3,
+.admin-layout h4,
+.admin-layout h5,
+.admin-layout h6 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  color: var(--admin-text);
+}
+

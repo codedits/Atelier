@@ -7,52 +7,48 @@ export default function Newsletter() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle newsletter subscription
-    console.log('Newsletter subscription:', email)
+    // console.log('Newsletter subscription:', email)
     setEmail('')
   }
 
   return (
-    <section className="py-24 md:py-32 bg-black">
-      <div className="max-w-4xl mx-auto px-6 text-center">
+    <section className="py-12 md:py-20 bg-[#F8F7F5]">
+      <div className="max-w-3xl mx-auto px-6 text-center">
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="space-y-8"
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.6 }}
+          className="space-y-6 will-change-transform"
         >
-          <div className="inline-block px-4 py-2 border border-[#D4AF37]/30 text-xs tracking-[0.25em] uppercase text-[#D4AF37]">
-            Exclusive Access
-          </div>
-
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-white">
-            Join the Inner Circle
+          <h2 className="text-3xl md:text-4xl font-medium text-[#1A1A1A]">
+            Join Our Newsletter
           </h2>
 
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Exclusive releases & member-only offers. Be the first to discover our newest collections.
+          <p className="text-base text-[#6B6B6B] max-w-xl mx-auto">
+            Be the first to hear about new collections, exclusive offers, and special events.
           </p>
 
-          <form onSubmit={handleSubmit} className="max-w-xl mx-auto mt-12">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Your email address"
                 required
-                className="flex-1 px-6 py-4 bg-[#111] border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-[#D4AF37] transition-colors"
+                className="flex-1 px-5 py-3 bg-white border border-[#E5E5E5] text-[#1A1A1A] placeholder-[#6B6B6B] focus:outline-none focus:border-[#1A1A1A] transition-colors text-sm"
               />
               <button
                 type="submit"
-                className="btn btn-primary px-8 py-4 whitespace-nowrap"
+                className="btn btn-primary px-6 py-3 whitespace-nowrap text-sm"
               >
                 Subscribe
               </button>
             </div>
-            <p className="text-xs text-gray-600 mt-4">
-              We respect your privacy. Unsubscribe at any time.
+            <p className="text-xs text-[#6B6B6B] mt-3">
+              By subscribing, you agree to our Privacy Policy.
             </p>
           </form>
 

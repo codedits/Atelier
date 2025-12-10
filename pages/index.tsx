@@ -63,9 +63,34 @@ export default function Home() {
       <Head>
         <title>Atelier — Fine Jewellery</title>
         <meta name="description" content="Atelier — Exquisite handcrafted fine jewellery" />
+        <meta property="og:title" content="Atelier — Timeless Elegance" />
+        <meta property="og:description" content="Fine jewellery handcrafted by master artisans. Shop rings, necklaces, bracelets and more." />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop" />
+        <link rel="canonical" href="https://codedits.github.io/Atelier" />
+
+        {/* JSON-LD Organization + Product (signature piece) */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "name": "Atelier",
+              "url": "https://codedits.github.io/Atelier",
+              "logo": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop",
+              "sameAs": ["https://instagram.com"]
+            },
+            {
+              "@type": "Product",
+              "name": "The Imperial Diamond Necklace",
+              "description": "Handcrafted with 18k gold and precision-cut stones.",
+              "image": ["https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop"],
+              "offers": { "@type": "Offer", "priceCurrency": "USD", "price": "125000", "availability": "https://schema.org/InStock" }
+            }
+          ]
+        }) }} />
       </Head>
       
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-white">
         <Header />
         
         <main>
@@ -82,28 +107,21 @@ export default function Home() {
           <Craftsmanship />
 
           {/* 5. New Arrivals / Best Sellers - Grid */}
-          <motion.section 
+          <section 
             id="new-arrivals" 
-            className="py-24 md:py-32 bg-black"
-            initial={{ opacity: 0 }} 
-            whileInView={{ opacity: 1 }} 
-            viewport={{ once: true }} 
-            transition={{ duration: 0.8 }}
+            className="py-12 md:py-20 bg-white will-change-transform"
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
               <motion.div 
-                className="text-center mb-20" 
+                className="text-center mb-8 md:mb-12" 
                 initial={{ opacity: 0, y: 20 }} 
                 whileInView={{ opacity: 1, y: 0 }} 
                 viewport={{ once: true }} 
                 transition={{ duration: 0.6 }}
               >
-                <div className="inline-block px-4 py-2 border border-[#D4AF37]/30 text-xs tracking-[0.25em] uppercase text-[#D4AF37] mb-6">
-                  Latest Collection
-                </div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-light mb-6 text-white">New Arrivals</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                  Discover our newest creations, each piece a testament to timeless elegance.
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-4 text-[#1A1A1A]">New Arrivals</h2>
+                <p className="text-[#6B6B6B] max-w-xl mx-auto text-base">
+                  Discover our newest creations
                 </p>
               </motion.div>
               
@@ -113,8 +131,9 @@ export default function Home() {
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    viewport={{ once: true, amount: 0.18 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
+                    className="will-change-transform"
                   >
                     <ProductCard 
                       name={product.name} 
@@ -126,7 +145,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          </motion.section>
+          </section>
 
           {/* 6. Testimonials - High-End Style */}
           <Testimonials />
