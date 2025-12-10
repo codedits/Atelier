@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         rating: rating || 5,
         display_order: display_order || 0,
         is_active: is_active !== undefined ? is_active : true
-      }])
+      }] as any)
       .select()
       .single()
 
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (display_order !== undefined) updates.display_order = display_order
     if (is_active !== undefined) updates.is_active = is_active
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('testimonials')
       .update(updates)
       .eq('id', id)
