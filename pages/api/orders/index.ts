@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Order, OrderItem } from '@/lib/supabase'
 import { getSupabaseAdmin } from '@/lib/admin-api-utils'
 import { getUserFromRequest } from '@/lib/user-auth'
+import { sendOrderConfirmationEmail } from '@/lib/email'
 
 export default async function handler(
   req: NextApiRequest,
@@ -139,6 +140,25 @@ export default async function handler(
     // Clear cart if user is authenticated and clearCart is true
     if (user && clearCart) {
       await supabase.from('user_cart').delete().eq('user_id', user.id)
+    }
+
+    // Send order confirmation email
+    if (email) {
+      try {
+        await sendOrderConfirmationEmail({
+          to: email,
+          orderId: data.id,
+          userName: user_name,
+          items: items as any[],
+          totalPrice: Number(total_price),
+          paymentMethod: payment_method,
+          address,
+          phone,
+        })
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError)
+        // Don't fail the order creation if email fails - it's not critical
+      }
     }
 
     return res.status(201).json(data as Order)

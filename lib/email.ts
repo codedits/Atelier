@@ -71,3 +71,139 @@ export async function sendOtpEmail({ to, otp, storeName = 'Atelier' }: SendOtpEm
     return false
   }
 }
+
+interface OrderItem {
+  name: string
+  price: number
+  quantity: number
+}
+
+interface SendOrderConfirmationEmailOptions {
+  to: string
+  orderId: string
+  userName: string
+  items: OrderItem[]
+  totalPrice: number
+  paymentMethod: string
+  address: string
+  phone: string
+  storeName?: string
+}
+
+export async function sendOrderConfirmationEmail({
+  to,
+  orderId,
+  userName,
+  items,
+  totalPrice,
+  paymentMethod,
+  address,
+  phone,
+  storeName = 'Atelier',
+}: SendOrderConfirmationEmailOptions): Promise<boolean> {
+  // In development without SMTP configured, just log the order details
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log(`\n========================================`)
+    console.log(`📧 Order Confirmation Email (DEV MODE - No SMTP configured)`)
+    console.log(`To: ${to}`)
+    console.log(`Order ID: ${orderId}`)
+    console.log(`Customer: ${userName}`)
+    console.log(`Total: ₨${totalPrice.toLocaleString()}`)
+    console.log(`Items: ${items.map(i => `${i.name} x${i.quantity}`).join(', ')}`)
+    console.log(`========================================\n`)
+    return true
+  }
+
+  const itemsHtml = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">x${item.quantity}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">₨${(item.price * item.quantity).toLocaleString()}</td>
+        </tr>
+      `
+    )
+    .join('')
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `"${storeName}" <noreply@atelier.com>`,
+      to,
+      subject: `Order Confirmation: ${orderId.slice(0, 8).toUpperCase()}`,
+      text: `Thank you for your order!\n\nOrder ID: ${orderId}\nTotal: ₨${totalPrice.toLocaleString()}\n\nWe will process your ${paymentMethod} payment and ship your order soon.`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="background: #111827; padding: 32px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">${storeName.toUpperCase()}</h1>
+              <p style="color: #d4a5a5; margin: 8px 0 0; font-size: 14px;">Order Confirmation</p>
+            </div>
+            
+            <div style="padding: 40px 32px;">
+              <h2 style="color: #111827; margin: 0 0 8px; font-size: 20px; font-weight: 500;">Thank You, ${userName}!</h2>
+              <p style="color: #6b7280; margin: 0 0 24px; font-size: 14px;">Your order has been successfully placed.</p>
+              
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #d4a5a5;">
+                <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</p>
+                <p style="color: #111827; margin: 0; font-size: 22px; font-weight: 600;">#${orderId.slice(0, 8).toUpperCase()}</p>
+              </div>
+
+              <h3 style="color: #111827; margin: 0 0 16px; font-size: 16px; font-weight: 600;">Order Items</h3>
+              <table style="width: 100%; margin-bottom: 32px;">
+                <thead>
+                  <tr style="background: #f9fafb;">
+                    <th style="padding: 12px; text-align: left; color: #6b7280; font-weight: 500; font-size: 12px;">Product</th>
+                    <th style="padding: 12px; text-align: center; color: #6b7280; font-weight: 500; font-size: 12px;">Quantity</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-weight: 500; font-size: 12px;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                </tbody>
+              </table>
+
+              <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                  <span style="color: #6b7280;">Subtotal</span>
+                  <span style="color: #111827; font-weight: 500;">₨${totalPrice.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <h3 style="color: #111827; margin: 0 0 16px; font-size: 16px; font-weight: 600;">Delivery Details</h3>
+              <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 32px;">
+                <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Address</p>
+                <p style="color: #111827; margin: 0 0 16px; line-height: 1.6;">${address}</p>
+                <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Phone</p>
+                <p style="color: #111827; margin: 0;">${phone}</p>
+              </div>
+
+              <div style="background: #fef3c7; border-radius: 8px; padding: 16px; margin-bottom: 32px; border-left: 4px solid #d97706;">
+                <p style="color: #92400e; margin: 0; font-size: 13px;"><strong>Payment Method:</strong> ${paymentMethod}</p>
+                <p style="color: #92400e; margin: 8px 0 0; font-size: 13px;">Your payment status: <strong>Pending</strong></p>
+              </div>
+
+              <p style="color: #6b7280; margin: 0 0 16px; font-size: 14px;">We will process your order and send you a tracking number via email shortly.</p>
+            </div>
+
+            <div style="background: #f9fafb; padding: 24px 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #9ca3af; margin: 0 0 8px; font-size: 12px;">Have questions? Reply to this email or visit our website.</p>
+              <p style="color: #9ca3af; margin: 0; font-size: 12px;">© ${new Date().getFullYear()} ${storeName}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+    return true
+  } catch (error) {
+    console.error('Failed to send order confirmation email:', error)
+    return false
+  }
+}

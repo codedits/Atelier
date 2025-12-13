@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_price NUMERIC NOT NULL,
   payment_method TEXT NOT NULL CHECK (payment_method IN ('COD', 'Bank Transfer')),
   payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid')),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'shipped', 'delivered')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'shipped', 'delivered', 'cancelled')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

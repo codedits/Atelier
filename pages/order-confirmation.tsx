@@ -76,18 +76,34 @@ export default function OrderConfirmationPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Success Icon */}
-              <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
+              {/* Success Icon with animation */}
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center"
+              >
+                <motion.svg 
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="w-12 h-12 text-green-600" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </motion.svg>
+              </motion.div>
 
               <h1 className="text-3xl md:text-4xl font-medium text-[#111827] mb-4">
                 Thank You for Your Order!
               </h1>
-              <p className="text-[#6B7280] mb-8">
+              <p className="text-[#6B7280] mb-2">
                 We&apos;ve received your order and will begin processing it soon.
+              </p>
+              <p className="text-sm text-[#9CA3AF] mb-8">
+                A confirmation email has been sent to your email address.
               </p>
 
               {order && (
@@ -122,7 +138,7 @@ export default function OrderConfirmationPage() {
                       {order.items.map((item, idx) => (
                         <div key={idx} className="flex justify-between">
                           <span className="text-[#111827]">{item.name} × {item.quantity}</span>
-                          <span className="text-[#111827]">${(item.price * item.quantity).toLocaleString()}</span>
+                          <span className="text-[#111827]">₨{(item.price * item.quantity).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -131,7 +147,7 @@ export default function OrderConfirmationPage() {
                   <div className="border-t border-gray-200 pt-4 mb-4">
                     <div className="flex justify-between font-medium">
                       <span className="text-[#111827]">Total</span>
-                      <span className="text-[#111827]">${order.total_price.toLocaleString()}</span>
+                      <span className="text-[#111827]">₨{order.total_price.toLocaleString()}</span>
                     </div>
                   </div>
 

@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
@@ -13,9 +14,11 @@ interface Order {
   payment_status: string
   total_price: number
   items: Array<{
+    product_id?: string
     name: string
     quantity: number
     price: number
+    image_url?: string
   }>
 }
 
@@ -221,7 +224,7 @@ export default function AccountPage() {
 
         {/* Quick Stats - Mobile */}
         <div className="sm:hidden px-4 -mt-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl border border-gray-900/10 p-4 grid grid-cols-3 gap-4 transition-shadow duration-300">
             <div className="text-center">
               <p className="text-2xl font-semibold text-gray-900">{orders.length}</p>
               <p className="text-xs text-gray-500">Orders</p>
@@ -252,7 +255,7 @@ export default function AccountPage() {
             {/* Left Column */}
             <div className="lg:col-span-1 space-y-6">
               {/* Profile Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-900/10 overflow-hidden transition-shadow duration-300">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                   <h2 className="font-semibold text-gray-900">Profile Details</h2>
                   {!isEditing && (
@@ -386,7 +389,7 @@ export default function AccountPage() {
               </div>
 
               {/* Quick Links - Desktop */}
-              <div className="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="hidden sm:block bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-900/10 overflow-hidden transition-shadow duration-300">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                   <h2 className="font-semibold text-gray-900">Quick Links</h2>
                 </div>
@@ -419,7 +422,7 @@ export default function AccountPage() {
               </div>
 
               {/* Danger Zone */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-900/10 overflow-hidden transition-shadow duration-300">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                   <h2 className="font-semibold text-gray-900">Account Settings</h2>
                 </div>
@@ -441,7 +444,7 @@ export default function AccountPage() {
 
             {/* Right Column - Orders */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg hover:shadow-xl border border-gray-900/10 overflow-hidden transition-shadow duration-300">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                   <h2 className="font-semibold text-gray-900">Order History</h2>
                   <span className="text-sm text-gray-500">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
@@ -501,15 +504,50 @@ export default function AccountPage() {
                             </span>
                           </div>
 
-                          <div className="space-y-2 mb-4 pl-0 sm:pl-13">
-                            {order.items.slice(0, 2).map((item, idx) => (
-                              <div key={idx} className="flex justify-between text-sm">
-                                <span className="text-gray-600">{item.name} × {item.quantity}</span>
-                                <span className="text-gray-900 font-medium">₨{(item.price * item.quantity).toFixed(2)}</span>
+                          <div className="space-y-2.5 mb-4 pl-0 sm:pl-13">
+                            {order.items.slice(0, 3).map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white p-4 rounded-2xl border border-gray-100 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-100/50 transition-all duration-300 group">
+                                {/* Product Image - Luxurious Frame */}
+                                {item.image_url ? (
+                                  <Link href={item.product_id ? `/products/${item.product_id}` : '#'} className="flex-shrink-0">
+                                    <div className="relative w-16 h-16 bg-white rounded-xl border border-gray-200 overflow-hidden shadow-md group-hover:shadow-amber-200/60 group-hover:border-amber-300 transition-all duration-300">
+                                      <Image
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                        sizes="64px"
+                                      />
+                                    </div>
+                                  </Link>
+                                ) : (
+                                  <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border border-gray-300 flex items-center justify-center shadow-sm">
+                                    <span className="text-xs text-gray-400 font-medium">No image</span>
+                                  </div>
+                                )}
+                                
+                                {/* Product Info */}
+                                <div className="flex-1 min-w-0">
+                                  <Link
+                                    href={item.product_id ? `/products/${item.product_id}` : '#'}
+                                    className="text-sm font-semibold text-gray-900 hover:text-amber-700 transition-colors truncate block group-hover:text-amber-600"
+                                  >
+                                    {item.name}
+                                  </Link>
+                                  <p className="text-xs text-gray-500 mt-0.5 font-medium">Quantity: <span className="text-gray-700 font-semibold">{item.quantity}</span></p>
+                                </div>
+
+                                {/* Price - Premium Display */}
+                                <div className="flex-shrink-0 text-right">
+                                  <p className="text-sm font-bold text-gray-900">₨{(item.price * item.quantity).toFixed(0)}</p>
+                                  <p className="text-xs text-gray-500 mt-1">₨{item.price.toFixed(0)}/unit</p>
+                                </div>
                               </div>
                             ))}
-                            {order.items.length > 2 && (
-                              <p className="text-xs text-gray-400">+{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}</p>
+                            {order.items.length > 3 && (
+                              <p className="text-xs text-gray-500 px-4 py-3 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 font-medium">
+                                +{order.items.length - 3} more item{order.items.length - 3 > 1 ? 's' : ''}
+                              </p>
                             )}
                           </div>
 

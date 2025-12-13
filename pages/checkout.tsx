@@ -24,6 +24,9 @@ export default function CheckoutPage() {
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [showThankYou, setShowThankYou] = useState(false)
+  const [orderId, setOrderId] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
 
   // Pre-fill form with user data
   useEffect(() => {
@@ -59,8 +62,19 @@ export default function CheckoutPage() {
     e.preventDefault()
     setError('')
     setSubmitting(true)
+    setLoadingProgress(10)
+    let redirectTimeout: NodeJS.Timeout | null = null
+    let progressInterval: NodeJS.Timeout | null = null
 
     try {
+      // Simulate progress
+      progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 20
+          return newProgress > 90 ? 90 : newProgress
+        })
+      }, 300)
+
       const orderItems = items.map(item => ({
         product_id: item.product.id,
         name: item.product.name,
@@ -101,16 +115,39 @@ export default function CheckoutPage() {
 
       if (!res.ok) {
         const data = await res.json()
+        console.error('Order failed:', data)
         throw new Error(data.error || 'Failed to create order')
       }
 
       const order = await res.json()
-      clearCart()
-      router.push(`/order-confirmation?id=${order.id}`)
+      console.log('Order created successfully:', order)
+      console.log('Setting orderId to:', order.id)
+      console.log('Setting showThankYou to true')
+      
+      // Clear progress interval and show 100%
+      if (progressInterval) clearInterval(progressInterval)
+      setLoadingProgress(100)
+      
+      // Small delay to show 100% progress before showing modal
+      setTimeout(() => {
+        setOrderId(order.id)
+        setShowThankYou(true)
+        setSubmitting(false)
+        setLoadingProgress(0)
+      }, 500)
+      
+      // Redirect after 5 seconds
+      redirectTimeout = setTimeout(() => {
+        console.log('Redirecting to order confirmation')
+        router.push(`/order-confirmation?id=${order.id}`)
+      }, 5000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
+      if (progressInterval) clearInterval(progressInterval)
+      console.error('Checkout error:', err)
+      const errorMsg = err instanceof Error ? err.message : 'Something went wrong'
+      setError(errorMsg)
       setSubmitting(false)
+      setLoadingProgress(0)
     }
   }
 
@@ -151,6 +188,7 @@ export default function CheckoutPage() {
               Checkout
             </motion.h1>
 
+            {!showThankYou && (
             <form onSubmit={handleSubmit}>
               <div className="grid lg:grid-cols-3 gap-12">
                 {/* Form Fields */}
@@ -336,15 +374,33 @@ export default function CheckoutPage() {
                     </div>
 
                     {error && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
+                        <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
+
+                    {submitting && (
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-medium text-[#6B7280]">Processing Order</span>
+                          <span className="text-xs font-medium text-[#D4A5A5]">{Math.round(loadingProgress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-[#D4A5A5] to-amber-400 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${loadingProgress}%` }}
+                          />
+                        </div>
                       </div>
                     )}
 
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full py-3 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      className="w-full py-3.5 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                     >
                       {submitting ? (
                         <span className="flex items-center justify-center gap-2">
@@ -355,25 +411,70 @@ export default function CheckoutPage() {
                           Processing...
                         </span>
                       ) : (
-                        'Place Order'
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Place Order
+                        </span>
                       )}
                     </button>
 
+                    <p className="text-xs text-center text-[#9CA3AF] mt-4">
+                      🔒 Your information is secure and encrypted
+                    </p>
+
                     <Link
                       href="/cart"
-                      className="block text-center text-sm text-[#6B7280] hover:text-[#111827] mt-4 transition-colors"
+                      className="flex items-center justify-center gap-1 text-sm text-[#6B7280] hover:text-[#111827] mt-4 transition-colors"
                     >
-                      ← Back to Cart
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Back to Cart
                     </Link>
                   </motion.div>
                 </div>
               </div>
             </form>
+            )}
           </div>
         </main>
 
         <Footer />
       </div>
+
+      {/* Thank You Modal */}
+      {showThankYou && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in duration-300">
+            {/* Checkmark Icon */}
+            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6 animate-bounce">
+              <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Thank You!</h2>
+            <p className="text-gray-600 mb-2 text-lg">Your order has been placed successfully.</p>
+            <p className="text-sm text-amber-600 font-semibold mb-6">Order ID: #{orderId.slice(0, 8).toUpperCase()}</p>
+
+            <div className="bg-amber-50 rounded-lg p-4 mb-8 border-2 border-amber-200">
+              <p className="text-gray-700 font-medium">
+                Thank you for your purchase! We really appreciate it.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                Check your email for order confirmation and tracking updates.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <div className="animate-spin h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full"></div>
+              <span>Redirecting to order details...</span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

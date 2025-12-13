@@ -374,7 +374,10 @@ export default function ProductDetailPage() {
                   
                   {/* Stock/Error Messages */}
                   {stockError && (
-                    <div className="p-3 bg-red-50 text-red-700 text-sm rounded">
+                    <div className="p-3 bg-red-50 text-red-700 text-sm rounded flex items-center gap-2">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       Not enough stock available. Maximum you can add: {maxCanAdd}
                     </div>
                   )}
@@ -384,19 +387,31 @@ export default function ProductDetailPage() {
                     <button
                       onClick={handleAddToCart}
                       disabled={isOutOfStock || (product.stock > 0 && maxCanAdd === 0)}
-                      className={`flex-1 py-4 font-medium transition-all ${
+                      className={`flex-1 py-4 font-medium transition-all rounded ${
                         addedToCart 
                           ? 'bg-green-600 text-white' 
-                          : 'bg-[#1A1A1A] text-white hover:bg-[#333]'
+                          : 'bg-[#1A1A1A] text-white hover:bg-[#333] hover:shadow-lg'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                      {addedToCart 
-                        ? '✓ Added to Cart' 
-                        : isOutOfStock 
-                          ? 'Out of Stock'
-                          : product.stock > 0 && maxCanAdd === 0
-                            ? 'Max in Cart'
-                            : 'Add to Cart'}
+                      {addedToCart ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Added to Cart
+                        </span>
+                      ) : isOutOfStock ? (
+                        'Out of Stock'
+                      ) : product.stock > 0 && maxCanAdd === 0 ? (
+                        'Max in Cart'
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                          Add to Cart
+                        </span>
+                      )}
                     </button>
                     <button
                       onClick={handleToggleFavorite}

@@ -32,17 +32,20 @@ export default function Newsletter() {
 
           <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
             <div className="flex flex-col sm:flex-row gap-3">
+              <label htmlFor="newsletter-email" className="sr-only">Email address</label>
               <input
                 type="email"
+                id="newsletter-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
                 required
-                className="flex-1 px-5 py-3 bg-white border border-[#E5E5E5] text-[#1A1A1A] placeholder-[#6B6B6B] focus:outline-none focus:border-[#1A1A1A] transition-colors text-sm"
+                aria-label="Email address for newsletter"
+                className="flex-1 px-5 py-3 bg-white border border-[#E5E5E5] text-[#1A1A1A] placeholder-[#6B6B6B] focus:outline-none focus:border-[#1A1A1A] focus:ring-2 focus:ring-[#D4A5A5]/20 transition-all text-sm rounded"
               />
               <button
                 type="submit"
-                className="btn btn-primary px-6 py-3 whitespace-nowrap text-sm"
+                className="btn btn-primary px-6 py-3 whitespace-nowrap text-sm hover:shadow-md transition-all"
               >
                 Subscribe
               </button>

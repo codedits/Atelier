@@ -43,18 +43,23 @@ export default function FavoritesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-20"
               >
-                <svg className="w-20 h-20 mx-auto text-gray-300 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <div className="w-20 h-20 mx-auto mb-6 bg-pink-50 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-[#D4A5A5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
                 <h2 className="text-xl font-medium text-[#111827] mb-4">No favorites yet</h2>
-                <p className="text-[#6B7280] mb-8">
-                  Start adding pieces you love by clicking the heart icon on any product.
+                <p className="text-[#6B7280] mb-8 max-w-md mx-auto">
+                  Start building your collection by clicking the heart icon on products you love.
                 </p>
                 <Link
                   href="/products"
-                  className="inline-block px-8 py-3 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] transition-colors"
                 >
                   Browse Products
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </motion.div>
             ) : (

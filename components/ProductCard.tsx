@@ -35,9 +35,12 @@ export default function ProductCard({ id, name, price, img, category = 'Fine Jew
           )}
 
           {/* Quick view button on hover */}
-          <div className="absolute inset-x-0 bottom-0 bg-white/95 py-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
-            <span className="block w-full text-sm font-medium text-[#1A1A1A] text-center">
+          <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+            <span className="block w-full text-sm font-medium text-[#1A1A1A] text-center flex items-center justify-center gap-2">
               View Details
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </span>
           </div>
         </div>
