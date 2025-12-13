@@ -86,8 +86,35 @@ export default function ProductsPage() {
   return (
     <>
       <Head>
-        <title>Shop All Products — Atelier Fine Jewellery</title>
-        <meta name="description" content="Browse our complete collection of handcrafted jewelry. Rings, necklaces, bracelets, and earrings." />
+        <title>Shop All Jewelry — Rings, Necklaces, Bracelets & Earrings | Atelier</title>
+        <meta name="description" content="Browse our complete collection of luxury handcrafted jewelry. Shop fine rings, elegant necklaces, stunning bracelets, and exquisite earrings with free shipping." />
+        <meta name="keywords" content="jewelry shop, buy rings, gold necklaces, diamond bracelets, earrings online, luxury jewelry store" />
+        <meta property="og:title" content="Shop All Jewelry | Atelier Fine Jewellery" />
+        <meta property="og:description" content="Browse our complete collection of handcrafted jewelry. Rings, necklaces, bracelets, and earrings." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://codedits.github.io/Atelier/products" />
+        <link rel="canonical" href="https://codedits.github.io/Atelier/products" />
+        
+        {/* JSON-LD CollectionPage */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Shop All Jewelry",
+          "description": "Browse our complete collection of luxury handcrafted jewelry",
+          "url": "https://codedits.github.io/Atelier/products",
+          "isPartOf": {
+            "@type": "WebSite",
+            "name": "Atelier Fine Jewellery",
+            "url": "https://codedits.github.io/Atelier"
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://codedits.github.io/Atelier" },
+              { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://codedits.github.io/Atelier/products" }
+            ]
+          }
+        }) }} />
       </Head>
 
       <div className="min-h-screen bg-white">

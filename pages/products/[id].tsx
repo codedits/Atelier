@@ -193,11 +193,60 @@ export default function ProductDetailPage() {
   return (
     <>
       <Head>
-        <title>{product.name} — Atelier Fine Jewellery</title>
-        <meta name="description" content={product.description} />
-        <meta property="og:title" content={product.name} />
-        <meta property="og:description" content={product.description} />
+        <title>{product.name} — Buy Luxury Jewelry | Atelier Fine Jewellery</title>
+        <meta name="description" content={`${product.description?.slice(0, 155)}...` || `Shop ${product.name} - handcrafted luxury ${product.category?.toLowerCase()} from Atelier Fine Jewellery.`} />
+        <meta name="keywords" content={`${product.name}, ${product.category}, luxury jewelry, fine jewellery, handcrafted, buy online`} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={`${product.name} | Atelier Fine Jewellery`} />
+        <meta property="og:description" content={product.description || `Shop ${product.name} from Atelier`} />
         <meta property="og:image" content={product.images[0]} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="1200" />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`https://codedits.github.io/Atelier/products/${product.id}`} />
+        <meta property="product:price:amount" content={product.price?.toString()} />
+        <meta property="product:price:currency" content="USD" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.name} | Atelier`} />
+        <meta name="twitter:description" content={product.description || `Shop ${product.name}`} />
+        <meta name="twitter:image" content={product.images[0]} />
+        
+        <link rel="canonical" href={`https://codedits.github.io/Atelier/products/${product.id}`} />
+        
+        {/* JSON-LD Product Schema */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "description": product.description,
+          "image": product.images,
+          "sku": product.id,
+          "category": product.category,
+          "brand": {
+            "@type": "Brand",
+            "name": "Atelier Fine Jewellery"
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": `https://codedits.github.io/Atelier/products/${product.id}`,
+            "priceCurrency": "USD",
+            "price": product.price,
+            "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "itemCondition": "https://schema.org/NewCondition"
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://codedits.github.io/Atelier" },
+              { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://codedits.github.io/Atelier/products" },
+              { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://codedits.github.io/Atelier/products/${product.id}` }
+            ]
+          }
+        }) }} />
       </Head>
 
       <div className="min-h-screen bg-white">

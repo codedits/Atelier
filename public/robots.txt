@@ -1,4 +1,26 @@
+# Atelier Fine Jewellery - robots.txt
+# https://codedits.github.io/Atelier
+
 User-agent: *
 Allow: /
 
+# Allow all major crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+
+# Sitemaps
 Sitemap: https://codedits.github.io/Atelier/sitemap.xml
+
+# Crawl-delay for politeness (optional)
+Crawl-delay: 1
