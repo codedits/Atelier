@@ -118,6 +118,8 @@ export default async function handler(
       return res.status(500).json({ error: error.message })
     }
 
+    console.log('Order created successfully:', data.id)
+
     // Reduce stock for ordered products
     for (const item of items) {
       if (item.product_id && item.quantity > 0) {
@@ -139,7 +141,13 @@ export default async function handler(
 
     // Clear cart if user is authenticated and clearCart is true
     if (user && clearCart) {
-      await supabase.from('user_cart').delete().eq('user_id', user.id)
+      console.log('Clearing user cart for user:', user.id)
+      const { error: cartError } = await supabase.from('user_cart').delete().eq('user_id', user.id)
+      if (cartError) {
+        console.error('Failed to clear cart:', cartError)
+      } else {
+        console.log('Cart cleared successfully')
+      }
     }
 
     // Send order confirmation email
@@ -161,7 +169,8 @@ export default async function handler(
       }
     }
 
-    return res.status(201).json(data as Order)
+    console.log('Order creation completed successfully, returning order:', data.id)
+    return res.status(201).json({ ...data, message: 'Order created successfully' })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

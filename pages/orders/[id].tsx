@@ -147,7 +147,7 @@ export default function OrderDetailPage() {
   }
 
   const handleCancelOrder = async () => {
-    if (!order || !window.confirm('Are you sure you want to cancel this order?')) {
+    if (!order || !window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
       return
     }
 
@@ -174,7 +174,7 @@ export default function OrderDetailPage() {
       // Redirect back to account after 1 second
       setTimeout(() => {
         router.push('/account')
-      }, 1000)
+      }, 1500)
     } catch (err) {
       console.error('Failed to cancel order:', err)
       setCancelError('Network error')
@@ -290,7 +290,7 @@ export default function OrderDetailPage() {
                   <p className="text-sm text-red-600">{cancelError}</p>
                 )}
                 {cancelSuccess && (
-                  <p className="text-sm text-green-600">Order cancelled successfully</p>
+                  <p className="text-sm text-green-600">Order cancelled and deleted successfully</p>
                 )}
               </div>
             </div>

@@ -43,7 +43,7 @@ export interface Order {
   total_price: number
   payment_method: 'COD' | 'Bank Transfer'
   payment_status: 'pending' | 'paid'
-  status: 'pending' | 'shipped' | 'delivered'
+  status: 'pending' | 'shipped' | 'delivered' | 'cancelled'
   created_at: string
 }
 

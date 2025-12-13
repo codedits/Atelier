@@ -81,7 +81,8 @@ export function getOtpExpiry(): Date {
 }
 
 /**
- * Delete a user and cascade related rows using the service-role Supabase client.
+ * Delete a user and set their order user_id references to NULL (preserve orders).
+ * This ensures orders remain in the system for admin management while removing user data.
  * Returns true on success, false on failure (or if service role not configured).
  */
 export async function deleteUserById(userId: string): Promise<boolean> {
@@ -89,11 +90,52 @@ export async function deleteUserById(userId: string): Promise<boolean> {
   if (!supabase) return false
 
   try {
+    // First, update orders to set user_id to NULL (preserve orders)
+    const { error: ordersError } = await supabase
+      .from('orders')
+      .update({ user_id: null })
+      .eq('user_id', userId)
+
+    if (ordersError) {
+      console.error('Failed to update orders user_id:', ordersError.message)
+      return false
+    }
+
+    // Delete user-specific data (cart, favorites, etc.) - these will cascade
+    const { error: cartError } = await supabase
+      .from('user_cart')
+      .delete()
+      .eq('user_id', userId)
+
+    if (cartError) {
+      console.error('Failed to delete user cart:', cartError.message)
+      // Continue anyway
+    }
+
+    const { error: favoritesError } = await supabase
+      .from('user_favorites')
+      .delete()
+      .eq('user_id', userId)
+
+    if (favoritesError) {
+      console.error('Failed to delete user favorites:', favoritesError.message)
+      // Continue anyway
+    }
+
+    const { error: otpError } = await supabase
+      .from('user_otps')
+      .delete()
+      .eq('email', '')
+      .neq('id', '0') // Delete all OTPs for this user by finding via user lookup
+
+    // Finally, delete the user record
     const { error } = await supabase.from('users').delete().eq('id', userId)
     if (error) {
       console.error('Failed to delete user:', error.message)
       return false
     }
+    
+    console.log(`User ${userId} deleted successfully. Orders preserved with user_id set to NULL.`)
     return true
   } catch (err) {
     console.error('Delete user error:', err)

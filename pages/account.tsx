@@ -121,7 +121,11 @@ export default function AccountPage() {
 
   const handleDeleteAccount = async () => {
     setDeleteError(null)
-    const ok = window.confirm('Are you sure you want to permanently delete your account? This cannot be undone.')
+    const ok = window.confirm(
+      'Are you sure you want to permanently delete your account?\n\n' +
+      'This will delete your personal information, but your order history will be preserved for admin records.\n\n' +
+      'This action cannot be undone.'
+    )
     if (!ok) return
     setDeleting(true)
     try {

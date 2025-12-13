@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Header, Footer } from '@/components'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
+import Toast from '@/components/Toast'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -27,6 +28,10 @@ export default function CheckoutPage() {
   const [showThankYou, setShowThankYou] = useState(false)
   const [orderId, setOrderId] = useState('')
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [orderCompleted, setOrderCompleted] = useState(false)
+  const [orderSuccessful, setOrderSuccessful] = useState(false)
 
   // Pre-fill form with user data
   useEffect(() => {
@@ -70,10 +75,10 @@ export default function CheckoutPage() {
       // Simulate progress
       progressInterval = setInterval(() => {
         setLoadingProgress(prev => {
-          const newProgress = prev + Math.random() * 20
-          return newProgress > 90 ? 90 : newProgress
+          const newProgress = prev + Math.random() * 25
+          return newProgress > 85 ? 85 : newProgress
         })
-      }, 300)
+      }, 200)
 
       const orderItems = items.map(item => ({
         product_id: item.product.id,
@@ -97,6 +102,17 @@ export default function CheckoutPage() {
         }).catch(() => {}) // Silent fail - don't block order
       }
 
+      console.log('Submitting order with data:', {
+        user_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: `${formData.address}, ${formData.city} ${formData.postalCode}`,
+        items: orderItems,
+        total_price: orderTotal,
+        payment_method: formData.paymentMethod,
+        clearCart: true,
+      })
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,6 +129,8 @@ export default function CheckoutPage() {
         }),
       })
 
+      console.log('Order API response status:', res.status)
+      
       if (!res.ok) {
         const data = await res.json()
         console.error('Order failed:', data)
@@ -122,25 +140,33 @@ export default function CheckoutPage() {
       const order = await res.json()
       console.log('Order created successfully:', order)
       console.log('Setting orderId to:', order.id)
-      console.log('Setting showThankYou to true')
       
-      // Clear progress interval and show 100%
+      // Clear progress interval and show 100% immediately
       if (progressInterval) clearInterval(progressInterval)
       setLoadingProgress(100)
       
-      // Small delay to show 100% progress before showing modal
-      setTimeout(() => {
-        setOrderId(order.id)
-        setShowThankYou(true)
-        setSubmitting(false)
-        setLoadingProgress(0)
-      }, 500)
+      // Set order ID first
+      setOrderId(order.id)
       
-      // Redirect after 5 seconds
+      // Show success states IMMEDIATELY - no delay
+      setToastMessage(`🎉 Order placed successfully! Order ID: #${order.id.slice(0, 8).toUpperCase()}`)
+      setShowSuccessToast(true)
+      setOrderCompleted(true)
+      setShowThankYou(true) // Show modal immediately
+      setOrderSuccessful(true) // Keep form visible
+      // Keep submitting true until redirect
+      
+      // Redirect after 4 seconds (gives user time to see the confirmation)
       redirectTimeout = setTimeout(() => {
         console.log('Redirecting to order confirmation')
+        // Clear cart before redirecting
+        console.log('Clearing cart...')
+        clearCart()
+        console.log('Cart cleared')
+        setSubmitting(false)
+        setLoadingProgress(0)
         router.push(`/order-confirmation?id=${order.id}`)
-      }, 5000)
+      }, 4000)
     } catch (err) {
       if (progressInterval) clearInterval(progressInterval)
       console.error('Checkout error:', err)
@@ -178,6 +204,35 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-white">
         <Header />
 
+        {/* Order Success Banner */}
+        {orderCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 px-6 py-4"
+          >
+            <div className="max-w-6xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-green-800 font-medium">Order placed successfully!</p>
+                  <p className="text-green-600 text-sm">Order ID: #{orderId.slice(0, 8).toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push(`/order-confirmation?id=${orderId}`)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                View Details
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         <main className="pt-24 pb-20">
           <div className="max-w-6xl mx-auto px-6 lg:px-8">
             <motion.h1
@@ -188,7 +243,6 @@ export default function CheckoutPage() {
               Checkout
             </motion.h1>
 
-            {!showThankYou && (
             <form onSubmit={handleSubmit}>
               <div className="grid lg:grid-cols-3 gap-12">
                 {/* Form Fields */}
@@ -437,7 +491,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </form>
-            )}
           </div>
         </main>
 
@@ -446,35 +499,81 @@ export default function CheckoutPage() {
 
       {/* Thank You Modal */}
       {showThankYou && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center relative overflow-hidden"
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
+            
             {/* Checkmark Icon */}
-            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <svg className="w-10 h-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", damping: 15, stiffness: 300 }}
+              className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6 shadow-lg"
+            >
+              <motion.svg 
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.5, duration: 0.6, ease: "easeInOut" }}
+                className="w-12 h-12 text-green-600" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <motion.path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </motion.svg>
+            </motion.div>
+
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Order Placed!</h2>
+            <p className="text-gray-600 mb-3 text-lg">Thank you for your purchase! Your order has been confirmed.</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+              <p className="text-sm text-amber-700 font-semibold">Order ID: #{orderId.slice(0, 8).toUpperCase()}</p>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Thank You!</h2>
-            <p className="text-gray-600 mb-2 text-lg">Your order has been placed successfully.</p>
-            <p className="text-sm text-amber-600 font-semibold mb-6">Order ID: #{orderId.slice(0, 8).toUpperCase()}</p>
-
-            <div className="bg-amber-50 rounded-lg p-4 mb-8 border-2 border-amber-200">
-              <p className="text-gray-700 font-medium">
-                Thank you for your purchase! We really appreciate it.
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 mb-6 border border-green-200">
+              <p className="text-gray-700 font-medium mb-2">
+                🎉 Thank you for your purchase! We really appreciate it.
               </p>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600">
                 Check your email for order confirmation and tracking updates.
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-              <div className="animate-spin h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full"></div>
-              <span>Redirecting to order details...</span>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <div className="animate-spin h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full"></div>
+                <span>Redirecting to order details...</span>
+              </div>
+              
+              <button
+                onClick={() => router.push(`/order-confirmation?id=${orderId}`)}
+                className="text-amber-600 hover:text-amber-700 text-sm font-medium underline transition-colors"
+              >
+                View Order Details Now
+              </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+
+      {/* Success Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type="success"
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+        duration={8000}
+      />
     </>
   )
 }

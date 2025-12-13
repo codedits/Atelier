@@ -62,5 +62,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(data)
   }
 
+  if (req.method === 'DELETE') {
+    try {
+      // First get the order to restore inventory before deleting
+      const { data: order, error: fetchError } = await supabaseAdmin
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single() as { data: any, error: any }
+
+      if (fetchError || !order) {
+        console.error('Fetch error:', fetchError)
+        return res.status(404).json({ error: 'Order not found' })
+      }
+
+      // Restore inventory for all items in the order
+      if (order?.items && Array.isArray(order.items)) {
+        for (const item of order.items) {
+          if (item.product_id && item.quantity > 0) {
+            // Get current stock and increment it
+            const { data: product, error: productError } = await supabaseAdmin
+              .from('products')
+              .select('stock')
+              .eq('id', item.product_id)
+              .single() as { data: any, error: any }
+              
+            if (product && !productError) {
+              await supabaseAdmin
+                .from('products')
+                // @ts-ignore - Supabase client without typed schema
+                .update({ stock: (product.stock || 0) + item.quantity })
+                .eq('id', item.product_id)
+            }
+          }
+        }
+      }
+
+      // Delete the order
+      const { error: deleteError } = await supabaseAdmin
+        .from('orders')
+        .delete()
+        .eq('id', orderId)
+
+      if (deleteError) {
+        console.error('Delete error:', deleteError)
+        return res.status(500).json({ error: 'Failed to delete order' })
+      }
+
+      return res.status(200).json({ 
+        message: 'Order removed successfully',
+        order_id: orderId
+      })
+
+    } catch (error) {
+      console.error('Delete order error:', error)
+      return res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+
   return res.status(405).json({ error: 'Method not allowed' })
 }

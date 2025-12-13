@@ -60,18 +60,6 @@ export default async function handler(
       return res.status(400).json({ error: 'Order cannot be cancelled after it has been shipped' })
     }
 
-    // Update order status to cancelled
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', orderId)
-      .eq('user_id', user.id)
-
-    if (updateError) {
-      console.error('Error cancelling order:', updateError)
-      return res.status(500).json({ error: 'Failed to cancel order' })
-    }
-
     // Restore product inventory if it was decremented
     if (order.items && Array.isArray(order.items)) {
       for (const item of order.items) {
@@ -93,7 +81,19 @@ export default async function handler(
       }
     }
 
-    res.status(200).json({ message: 'Order cancelled successfully' })
+    // Delete the order completely instead of just updating status
+    const { error: deleteError } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+      .eq('user_id', user.id)
+
+    if (deleteError) {
+      console.error('Error deleting order:', deleteError)
+      return res.status(500).json({ error: 'Failed to cancel order' })
+    }
+
+    res.status(200).json({ message: 'Order cancelled and removed successfully' })
   } catch (error) {
     console.error('Error in cancel order handler:', error)
     res.status(500).json({ error: 'Internal server error' })

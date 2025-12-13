@@ -40,6 +40,11 @@ function OrdersContent() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterPayment, setFilterPayment] = useState('')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false)
+  const [deleteAllConfirmText, setDeleteAllConfirmText] = useState('')
+  const [isDeleteAllLoading, setIsDeleteAllLoading] = useState(false)
 
   useEffect(() => {
     loadOrders()
@@ -76,6 +81,51 @@ function OrdersContent() {
       }
     } catch {
       alert('Failed to update payment')
+    }
+  }
+
+  const handleDeleteAllOrders = async () => {
+    if (!deleteAllConfirmText || deleteAllConfirmText !== String(orders.length)) {
+      alert(`Please type the number of orders (${orders.length}) to confirm deletion`)
+      return
+    }
+
+    setIsDeleteAllLoading(true)
+    try {
+      await api.del('/orders/all')
+      
+      // Clear all orders from state
+      setOrders([])
+      setSelectedOrder(null)
+      setShowDeleteAllModal(false)
+      setDeleteAllConfirmText('')
+      alert('All orders have been successfully deleted!')
+    } catch (error) {
+      console.error('Error deleting all orders:', error)
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to delete all orders'}`)
+    } finally {
+      setIsDeleteAllLoading(false)
+    }
+  }
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return
+
+    try {
+      await api.del(`/orders/${orderToDelete.id}`)
+      
+      // Remove order from state
+      setOrders(prev => prev.filter(order => order.id !== orderToDelete.id))
+      if (selectedOrder?.id === orderToDelete.id) {
+        setSelectedOrder(null)
+      }
+      
+      setShowDeleteModal(false)
+      setOrderToDelete(null)
+      alert('Order removed successfully')
+    } catch (error) {
+      console.error('Failed to delete order:', error)
+      alert('Failed to remove order: ' + (error as Error).message)
     }
   }
 
@@ -176,6 +226,17 @@ function OrdersContent() {
               {Icons.chevronDown}
             </span>
           </div>
+          {orders.length > 0 && (
+            <button
+              onClick={() => {
+                setShowDeleteAllModal(true)
+                setDeleteAllConfirmText('')
+              }}
+              className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg border border-red-600/30 text-sm font-medium transition-colors"
+            >
+              Delete All Orders
+            </button>
+          )}
         </div>
       </div>
 
@@ -267,13 +328,28 @@ function OrdersContent() {
                     <span className="text-[#666] text-xs">{formatDate(order.created_at)}</span>
                   </td>
                   <td className="text-right">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 text-[#888] hover:text-white text-sm transition-colors"
-                    >
-                      {Icons.eye}
-                      <span>View</span>
-                    </button>
+                    <div className="flex items-center gap-2 justify-end">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="inline-flex items-center gap-1 text-[#888] hover:text-white text-sm transition-colors"
+                      >
+                        {Icons.eye}
+                        <span>View</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setOrderToDelete(order)
+                          setShowDeleteModal(true)
+                        }}
+                        className="inline-flex items-center gap-1 text-[#f87171] hover:text-[#ef4444] text-sm transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <span>Remove</span>
+                        </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -386,6 +462,98 @@ function OrdersContent() {
               <div>
                 <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Order Date</h3>
                 <p className="text-white text-sm">{formatDate(selectedOrder.created_at)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Order Modal */}
+      {showDeleteModal && orderToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-medium mb-2">Remove Order</h3>
+                <p className="text-[#888] text-sm mb-4">
+                  Are you sure you want to permanently remove order <span className="text-white font-mono">#{orderToDelete.id.slice(0, 8)}</span>? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false)
+                      setOrderToDelete(null)
+                    }}
+                    className="px-4 py-2 text-[#888] hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteOrder}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                  >
+                    Remove Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Orders Modal */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-medium mb-2">⚠️ Delete All Orders</h3>
+                <p className="text-[#888] text-sm mb-2">
+                  This will permanently delete <span className="text-white font-bold">{orders.length} order{orders.length !== 1 ? 's' : ''}</span> and restore inventory for all items.
+                </p>
+                <p className="text-[#888] text-sm mb-4">
+                  <span className="text-red-400">This action cannot be undone.</span>
+                </p>
+                <div className="mb-4">
+                  <label className="text-[#888] text-xs font-medium mb-2 block">
+                    Type the number of orders ({orders.length}) to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={String(orders.length)}
+                    value={deleteAllConfirmText}
+                    onChange={e => setDeleteAllConfirmText(e.target.value)}
+                    className="w-full bg-[#111] border border-[#262626] rounded-lg px-3 py-2 text-white placeholder-[#444] text-sm focus:outline-none focus:border-[#444]"
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowDeleteAllModal(false)
+                      setDeleteAllConfirmText('')
+                    }}
+                    className="px-4 py-2 text-[#888] hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAllOrders}
+                    disabled={isDeleteAllLoading || deleteAllConfirmText !== String(orders.length)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  >
+                    {isDeleteAllLoading ? 'Deleting...' : 'Delete All Orders'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
