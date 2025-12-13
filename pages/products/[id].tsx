@@ -226,114 +226,58 @@ export default function ProductDetailPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
               
-              {/* Image Gallery - swipeable carousel with arrows */}
+              {/* Image Gallery - simple prev/next viewer */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                {/* Carousel Container */}
-                <div className="aspect-square bg-[#F8F7F5] overflow-hidden relative">
-                  <motion.div
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    onDragEnd={(e, info) => {
-                      const threshold = 60
-                      if (info.offset.x < -threshold && selectedImage < product.images.length - 1) {
-                        setSelectedImage(si => si + 1)
-                      } else if (info.offset.x > threshold && selectedImage > 0) {
-                        setSelectedImage(si => si - 1)
-                      }
-                    }}
-                    animate={{ x: `-${selectedImage * 100}%` }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    style={{ display: 'flex', width: `${product.images.length * 100}%`, height: '100%' }}
-                    className="will-change-transform"
-                  >
-                    {product.images.map((img: string, idx: number) => (
-                      <div key={idx} className="relative flex-0 w-full h-full">
-                        <Image
-                          src={img}
-                          alt={`${product.name} view ${idx + 1}`}
-                          fill
-                          className="object-cover"
-                          priority={idx === selectedImage}
-                          sizes="(min-width: 1024px) 50vw, 100vw"
-                        />
-                      </div>
-                    ))}
-                  </motion.div>
+                <div className="w-full bg-[#F8F7F5] relative rounded-lg overflow-hidden" style={{ aspectRatio: '4 / 5' }}>
+                  <div className="absolute inset-0">
+                    <Image
+                      key={selectedImage}
+                      src={product.images[selectedImage]}
+                      alt={`${product.name} view ${selectedImage + 1}`}
+                      fill
+                      className="object-cover object-center"
+                      priority
+                      sizes="(min-width: 1024px) 50vw, 100vw"
+                    />
+                  </div>
 
                   {/* Sale Badge */}
                   {product.old_price && (
-                    <div className="absolute top-6 left-6 bg-[#D4A5A5] text-white text-sm font-medium px-4 py-2 rounded">
+                    <div className="absolute top-6 left-6 bg-[#D4A5A5] text-white text-sm font-medium px-4 py-2 rounded z-10">
                       Save ${(product.old_price - product.price).toLocaleString()}
                     </div>
                   )}
 
-                  {/* Left Arrow */}
+                  {/* Prev / Next buttons - simple wrap-around */}
                   {product.images.length > 1 && (
-                    <button
-                      aria-label="Previous image"
-                      onClick={() => setSelectedImage(si => Math.max(0, si - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white p-2 rounded-full hover:bg-black/40"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  )}
+                    <>
+                      <button
+                        aria-label="Previous image"
+                        onClick={() => setSelectedImage(si => (si - 1 + product.images.length) % product.images.length)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-2.5 rounded-full transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
 
-                  {/* Right Arrow */}
-                  {product.images.length > 1 && (
-                    <button
-                      aria-label="Next image"
-                      onClick={() => setSelectedImage(si => Math.min(product.images.length - 1, si + 1))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/30 text-white p-2 rounded-full hover:bg-black/40"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                      <button
+                        aria-label="Next image"
+                        onClick={() => setSelectedImage(si => (si + 1) % product.images.length)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-2.5 rounded-full transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
                   )}
                 </div>
-
-                {/* Thumbnail Images - responsive horizontal for small screens */}
-                {product.images.length > 1 && (
-                  <div className="hidden sm:grid grid-cols-4 gap-4">
-                    {product.images.map((img: string, idx: number) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImage(idx)}
-                        className={`aspect-square bg-[#F8F7F5] overflow-hidden relative border-2 transition-all ${
-                          selectedImage === idx ? 'border-[#D4A5A5]' : 'border-transparent hover:border-[#E5E7EB]'
-                        }`}
-                      >
-                        <Image
-                          src={img}
-                          alt={`${product.name} view ${idx + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(min-width: 1024px) 12vw, 25vw"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {product.images.length > 1 && (
-                  <div className="sm:hidden flex gap-2 overflow-x-auto no-scrollbar">
-                    {product.images.map((img: string, idx: number) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImage(idx)}
-                        className={`w-24 h-24 flex-shrink-0 rounded overflow-hidden border-2 ${selectedImage === idx ? 'border-[#D4A5A5]' : 'border-transparent hover:border-[#E5E7EB]'}`}
-                      >
-                        <Image src={img} alt={`${product.name} view ${idx + 1}`} fill className="object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
               </motion.div>
 
               {/* Product Info */}
