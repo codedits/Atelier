@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -19,12 +20,26 @@ interface Product {
 }
 
 export default function ProductsPage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
   const [sortBy, setSortBy] = useState('default')
   const [loading, setLoading] = useState(true)
+
+  // Read filters from URL query params on mount
+  useEffect(() => {
+    if (router.isReady) {
+      const { category, gender } = router.query
+      if (category && typeof category === 'string') {
+        setSelectedCategory(category.toLowerCase())
+      }
+      if (gender && typeof gender === 'string') {
+        setSelectedGender(gender.toLowerCase())
+      }
+    }
+  }, [router.isReady, router.query])
 
   // Fetch products from API
   useEffect(() => {
@@ -43,14 +58,14 @@ export default function ProductsPage() {
   useEffect(() => {
     let filtered = [...products]
 
-    // Filter by category
+    // Filter by category (case-insensitive)
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory)
+      filtered = filtered.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase())
     }
 
-    // Filter by gender
+    // Filter by gender (case-insensitive)
     if (selectedGender !== 'all') {
-      filtered = filtered.filter(p => p.gender === selectedGender)
+      filtered = filtered.filter(p => p.gender.toLowerCase() === selectedGender.toLowerCase())
     }
 
     // Sort products

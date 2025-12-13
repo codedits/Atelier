@@ -7,5 +7,6 @@ export { default as SignaturePiece } from './SignaturePiece'
 export { default as Craftsmanship } from './Craftsmanship'
 export { default as Testimonials } from './Testimonials'
 export { default as Newsletter } from './Newsletter'
+export { default as LoginForm } from './LoginForm'
 
 // Barrel file to simplify imports and improve editor/module resolution.

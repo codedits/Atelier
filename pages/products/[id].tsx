@@ -6,6 +6,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Header, Footer } from '../../components'
 import { useProduct } from '@/hooks/useProducts'
+import { useCart } from '@/context/CartContext'
+import { useFavorites } from '@/context/FavoritesContext'
 
 // Sample product data - replace with API call
 const productData: Record<string, any> = {
@@ -76,6 +78,8 @@ export default function ProductDetailPage() {
   const { product: fetchedProduct, loading, error } = useProduct(
     typeof id === 'string' ? id : undefined
   )
+  const { addItem } = useCart()
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites()
 
   // fallback to local sample data for development when API has no product
   const rawProduct = fetchedProduct ?? (id ? productData[id as string] : null)
@@ -94,15 +98,71 @@ export default function ProductDetailPage() {
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [addedToCart, setAddedToCart] = useState(false)
+  const [stockError, setStockError] = useState(false)
+
+  const isInFavorites = product ? isFavorite(product.id) : false
+  
+  // Get current quantity in cart for this product
+  const { getItemQuantity, canAddMore } = useCart()
+  const currentInCart = product ? getItemQuantity(product.id) : 0
+  const maxCanAdd = product && product.stock > 0 
+    ? Math.max(0, product.stock - currentInCart) 
+    : 999
+  const isOutOfStock = product && product.stock > 0 && product.stock <= currentInCart
 
   const handleAddToCart = () => {
     if (!product) return
-    alert(`Added ${quantity} × ${product.name} to cart`)
+    
+    // Check stock before adding
+    if (product.stock > 0 && quantity > maxCanAdd) {
+      setStockError(true)
+      setTimeout(() => setStockError(false), 3000)
+      return
+    }
+    
+    const added = addItem({
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      old_price: product.old_price,
+      category: product.category,
+      gender: product.gender || 'unisex',
+      image_url: product.images[0],
+      stock: product.stock,
+      created_at: new Date().toISOString(),
+    }, quantity)
+    
+    if (added) {
+      setAddedToCart(true)
+      setQuantity(1) // Reset quantity after adding
+      setTimeout(() => setAddedToCart(false), 2000)
+    } else {
+      setStockError(true)
+      setTimeout(() => setStockError(false), 3000)
+    }
   }
 
-  const handleAddToFavorites = () => {
+  const handleToggleFavorite = () => {
     if (!product) return
-    alert(`Added ${product.name} to favorites`)
+    const productData = {
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      old_price: product.old_price,
+      category: product.category,
+      gender: product.gender || 'unisex',
+      image_url: product.images[0],
+      stock: product.stock,
+      created_at: new Date().toISOString(),
+    }
+    if (isInFavorites) {
+      removeFavorite(product.id)
+    } else {
+      addFavorite(productData)
+    }
   }
 
   if (loading) {
@@ -281,41 +341,74 @@ export default function ProductDetailPage() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-10 h-10 border border-[#E5E7EB] rounded flex items-center justify-center text-[#111827] hover:border-[#D4A5A5] transition-colors"
+                        className="w-10 h-10 border border-[#E5E7EB] rounded flex items-center justify-center text-[#111827] hover:border-[#D4A5A5] transition-colors disabled:opacity-50"
                         disabled={quantity <= 1}
                       >
                         −
                       </button>
                       <span className="w-12 text-center text-lg font-medium text-[#111827]">{quantity}</span>
                       <button
-                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                        className="w-10 h-10 border border-[#E5E7EB] rounded flex items-center justify-center text-[#111827] hover:border-[#D4A5A5] transition-colors"
-                        disabled={quantity >= product.stock}
+                        onClick={() => setQuantity(Math.min(maxCanAdd, quantity + 1))}
+                        className="w-10 h-10 border border-[#E5E7EB] rounded flex items-center justify-center text-[#111827] hover:border-[#D4A5A5] transition-colors disabled:opacity-50"
+                        disabled={product.stock > 0 && quantity >= maxCanAdd}
                       >
                         +
                       </button>
                     </div>
+                    {currentInCart > 0 && (
+                      <p className="text-xs text-[#6B7280] mt-2">
+                        You have {currentInCart} in your cart
+                      </p>
+                    )}
                   </div>
+                  
+                  {/* Stock/Error Messages */}
+                  {stockError && (
+                    <div className="p-3 bg-red-50 text-red-700 text-sm rounded">
+                      Not enough stock available. Maximum you can add: {maxCanAdd}
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                       onClick={handleAddToCart}
-                      disabled={product.stock === 0}
-                      className="flex-1 btn btn-primary py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isOutOfStock || (product.stock > 0 && maxCanAdd === 0)}
+                      className={`flex-1 py-4 font-medium transition-all ${
+                        addedToCart 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-[#1A1A1A] text-white hover:bg-[#333]'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                      {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                      {addedToCart 
+                        ? '✓ Added to Cart' 
+                        : isOutOfStock 
+                          ? 'Out of Stock'
+                          : product.stock > 0 && maxCanAdd === 0
+                            ? 'Max in Cart'
+                            : 'Add to Cart'}
                     </button>
                     <button
-                      onClick={handleAddToFavorites}
-                      className="btn btn-outline py-4 px-6"
-                      aria-label="Add to favorites"
+                      onClick={handleToggleFavorite}
+                      className={`py-4 px-6 border transition-colors ${
+                        isInFavorites 
+                          ? 'bg-[#D4A5A5] border-[#D4A5A5] text-white' 
+                          : 'border-[#E5E7EB] text-[#111827] hover:border-[#D4A5A5]'
+                      }`}
+                      aria-label={isInFavorites ? 'Remove from favorites' : 'Add to favorites'}
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill={isInFavorites ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
                   </div>
+
+                  {/* View Cart Link */}
+                  {addedToCart && (
+                    <Link href="/cart" className="block text-center text-sm text-[#D4A5A5] hover:underline">
+                      View Cart →
+                    </Link>
+                  )}
 
                   {/* Additional Info */}
                   <div className="pt-4 space-y-2 text-sm text-[#6B7280]">

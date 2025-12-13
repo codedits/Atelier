@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { 
   Header, 
   Hero, 
@@ -12,52 +13,30 @@ import {
   Newsletter
 } from '../components'
 
-const newArrivals = [
-  { 
-    id: '1', 
-    name: 'Étoile Diamond Necklace', 
-    price: '$12,800', 
-    category: 'Necklaces',
-    img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop' 
-  },
-  { 
-    id: '2', 
-    name: 'Luna Pearl Bracelet', 
-    price: '$4,200', 
-    category: 'Bracelets',
-    img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop' 
-  },
-  { 
-    id: '3', 
-    name: 'Solitaire Ring', 
-    price: '$18,500', 
-    category: 'Rings',
-    img: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=800&auto=format&fit=crop' 
-  },
-  { 
-    id: '4', 
-    name: 'Sapphire Drop Earrings', 
-    price: '$8,900', 
-    category: 'Earrings',
-    img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop' 
-  },
-  { 
-    id: '5', 
-    name: 'Diamond Tennis Bracelet', 
-    price: '$15,200', 
-    category: 'Bracelets',
-    img: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?q=80&w=800&auto=format&fit=crop' 
-  },
-  { 
-    id: '6', 
-    name: 'Emerald Cocktail Ring', 
-    price: '$22,500', 
-    category: 'Rings',
-    img: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?q=80&w=800&auto=format&fit=crop' 
-  },
-]
+interface Product {
+  id: string
+  name: string
+  price: number
+  old_price?: number
+  category: string
+  image_url: string
+}
 
 export default function Home() {
+  const [newArrivals, setNewArrivals] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/products?limit=6')
+      .then(res => res.json())
+      .then(data => {
+        // Filter visible products and take first 6
+        const visible = data.filter((p: Product & { is_hidden?: boolean }) => !p.is_hidden).slice(0, 6)
+        setNewArrivals(visible)
+      })
+      .catch(err => console.error('Failed to load products:', err))
+      .finally(() => setLoading(false))
+  }, [])
   return (
     <>
       <Head>
@@ -125,25 +104,50 @@ export default function Home() {
                 </p>
               </motion.div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {newArrivals.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.18 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="will-change-transform"
-                  >
-                    <ProductCard 
-                      name={product.name} 
-                      price={product.price} 
-                      img={product.img}
-                      category={product.category}
-                    />
-                  </motion.div>
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
+                </div>
+              ) : newArrivals.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {newArrivals.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.18 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      className="will-change-transform"
+                    >
+                      <ProductCard 
+                        id={product.id}
+                        name={product.name} 
+                        price={product.price}
+                        oldPrice={product.old_price}
+                        img={product.image_url}
+                        category={product.category}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-[#6B6B6B]">No products available yet.</p>
+              )}
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="text-center mt-12"
+              >
+                <a 
+                  href="/products" 
+                  className="inline-block px-8 py-3 border border-[#1A1A1A] text-[#1A1A1A] font-medium hover:bg-[#1A1A1A] hover:text-white transition-colors"
+                >
+                  View All Products
+                </a>
+              </motion.div>
             </div>
           </section>
 

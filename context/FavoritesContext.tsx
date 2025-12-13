@@ -1,7 +1,8 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { Product } from '@/lib/supabase'
+import { useUserAuth } from './UserAuthContext'
 
 interface FavoritesContextType {
   favorites: Product[]
@@ -10,6 +11,7 @@ interface FavoritesContextType {
   removeFavorite: (productId: string) => Promise<void>
   isFavorite: (productId: string) => boolean
   loading: boolean
+  refetch: () => Promise<void>
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined)
@@ -31,45 +33,57 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Product[]>([])
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const { isAuthenticated, isLoading: authLoading } = useUserAuth()
 
-  // Fetch favorites on mount
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      const token = getClientToken()
-      if (!token) {
-        setLoading(false)
-        return
+  // Fetch favorites - uses credentials if authenticated, else client_token
+  const fetchFavorites = useCallback(async () => {
+    setLoading(true)
+    try {
+      let res: Response
+      if (isAuthenticated) {
+        // Authenticated users: use cookie-based auth
+        res = await fetch('/api/favorites', { credentials: 'include' })
+      } else {
+        // Anonymous users: use client_token
+        const token = getClientToken()
+        res = await fetch(`/api/favorites?client_token=${token}`)
       }
-
-      try {
-        const res = await fetch(`/api/favorites?client_token=${token}`)
-        if (res.ok) {
-          const data: Product[] = await res.json()
-          setFavorites(data)
-          setFavoriteIds(new Set(data.map((p) => p.id)))
-        }
-      } catch (error) {
-        console.error('Failed to fetch favorites:', error)
-      } finally {
-        setLoading(false)
+      
+      if (res.ok) {
+        const data: Product[] = await res.json()
+        setFavorites(data)
+        setFavoriteIds(new Set(data.map((p) => p.id)))
       }
+    } catch (error) {
+      console.error('Failed to fetch favorites:', error)
+    } finally {
+      setLoading(false)
     }
+  }, [isAuthenticated])
 
-    fetchFavorites()
-  }, [])
+  // Fetch favorites when auth state settles or changes
+  useEffect(() => {
+    if (!authLoading) {
+      fetchFavorites()
+    }
+  }, [authLoading, isAuthenticated, fetchFavorites])
 
   const addFavorite = async (product: Product) => {
-    const token = getClientToken()
-    
     // Optimistic update
     setFavorites((prev) => [...prev, product])
     setFavoriteIds((prev) => new Set(prev).add(product.id))
 
     try {
+      const body: Record<string, string> = { product_id: product.id }
+      if (!isAuthenticated) {
+        body.client_token = getClientToken()
+      }
+
       const res = await fetch('/api/favorites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: product.id, client_token: token }),
+        credentials: 'include',
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) {
@@ -94,7 +108,6 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFavorite = async (productId: string) => {
-    const token = getClientToken()
     const removedProduct = favorites.find((p) => p.id === productId)
 
     // Optimistic update
@@ -106,10 +119,16 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     })
 
     try {
+      const body: Record<string, string> = { product_id: productId }
+      if (!isAuthenticated) {
+        body.client_token = getClientToken()
+      }
+
       const res = await fetch('/api/favorites', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: productId, client_token: token }),
+        credentials: 'include',
+        body: JSON.stringify(body),
       })
 
       if (!res.ok && removedProduct) {
@@ -137,6 +156,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         removeFavorite,
         isFavorite,
         loading,
+        refetch: fetchFavorites,
       }}
     >
       {children}
