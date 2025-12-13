@@ -2,9 +2,8 @@ import Head from 'next/head'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import Link from 'next/link'
-import { Header, Footer } from '../../components'
+import { Header, Footer, ProductCarousel } from '../../components'
 import { useProduct } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -96,7 +95,6 @@ export default function ProductDetailPage() {
     price: rawProduct.price ?? 0,
   } : null
 
-  const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [stockError, setStockError] = useState(false)
@@ -226,58 +224,17 @@ export default function ProductDetailPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
               
-              {/* Image Gallery - simple prev/next viewer */}
+              {/* Image Gallery */}
               <motion.div
-                initial={{ opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4"
+                transition={{ duration: 0.4 }}
               >
-                <div className="w-full bg-[#F8F7F5] relative rounded-lg overflow-hidden" style={{ aspectRatio: '4 / 5' }}>
-                  <div className="absolute inset-0">
-                    <Image
-                      key={selectedImage}
-                      src={product.images[selectedImage]}
-                      alt={`${product.name} view ${selectedImage + 1}`}
-                      fill
-                      className="object-cover object-center"
-                      priority
-                      sizes="(min-width: 1024px) 50vw, 100vw"
-                    />
-                  </div>
-
-                  {/* Sale Badge */}
-                  {product.old_price && (
-                    <div className="absolute top-6 left-6 bg-[#D4A5A5] text-white text-sm font-medium px-4 py-2 rounded z-10">
-                      Save ${(product.old_price - product.price).toLocaleString()}
-                    </div>
-                  )}
-
-                  {/* Prev / Next buttons - simple wrap-around */}
-                  {product.images.length > 1 && (
-                    <>
-                      <button
-                        aria-label="Previous image"
-                        onClick={() => setSelectedImage(si => (si - 1 + product.images.length) % product.images.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-2.5 rounded-full transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-
-                      <button
-                        aria-label="Next image"
-                        onClick={() => setSelectedImage(si => (si + 1) % product.images.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/60 text-white p-2.5 rounded-full transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
+                <ProductCarousel
+                  images={product.images}
+                  productName={product.name}
+                  saleBadge={product.old_price ? `Save $${(product.old_price - product.price).toLocaleString()}` : undefined}
+                />
               </motion.div>
 
               {/* Product Info */}

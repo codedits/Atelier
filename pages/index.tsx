@@ -30,11 +30,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/products?limit=6')
+    // Only fetch 3 newest products for the New Arrivals section
+    fetch('/api/products?limit=3')
       .then(res => res.json())
       .then(data => {
-        // Filter visible products and take first 6
-        const visible = data.filter((p: Product & { is_hidden?: boolean }) => !p.is_hidden).slice(0, 6)
+        const visible = data.filter((p: Product & { is_hidden?: boolean }) => !p.is_hidden).slice(0, 3)
         setNewArrivals(visible)
       })
       .catch(err => console.error('Failed to load products:', err))
