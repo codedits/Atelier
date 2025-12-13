@@ -1,5 +1,7 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 import { CartProvider } from '@/context/CartContext'
 import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
@@ -11,6 +13,14 @@ const SITE_URL = 'https://codedits.github.io/Atelier'
 const DEFAULT_OG = '/og-image.jpg'
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter()
+
+  // Prefetch critical routes on mount for faster navigation
+  useEffect(() => {
+    const criticalRoutes = ['/products', '/cart', '/favorites']
+    criticalRoutes.forEach(route => router.prefetch(route))
+  }, [router])
+
   return (
     <UserAuthProvider>
       <CartProvider>

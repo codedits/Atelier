@@ -112,6 +112,17 @@ function CategoriesContent() {
 
   return (
     <div className="max-w-2xl space-y-6">
+      {/* Info Note */}
+      <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-4">
+        <p className="text-blue-400 text-sm">
+          <strong>What are Categories?</strong> Categories are used to tag and organize your <strong>products</strong> (e.g., Rings, Necklaces, Bracelets). 
+          When adding or editing a product, you&apos;ll assign it to one of these categories.
+        </p>
+        <p className="text-blue-400/70 text-xs mt-2">
+          💡 To display categories on the homepage, go to <a href="/admin/homepage" className="underline hover:text-blue-300">Homepage → Collections</a> and add a collection card for each category you want to feature.
+        </p>
+      </div>
+
       {/* Add New Category */}
       <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-[#262626]">

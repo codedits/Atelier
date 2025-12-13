@@ -1,17 +1,20 @@
 import Head from 'next/head'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { 
   Header, 
   Hero, 
-  Footer, 
   ProductCard,
   FeaturedCollections,
-  SignaturePiece,
-  Craftsmanship,
-  Testimonials,
-  Newsletter
 } from '../components'
+
+// Lazy load below-fold components for faster initial render
+const SignaturePiece = dynamic(() => import('../components/SignaturePiece'), { ssr: true })
+const Craftsmanship = dynamic(() => import('../components/Craftsmanship'), { ssr: true })
+const Testimonials = dynamic(() => import('../components/Testimonials'), { ssr: true })
+const Newsletter = dynamic(() => import('../components/Newsletter'), { ssr: true })
+const Footer = dynamic(() => import('../components/Footer'), { ssr: true })
 
 interface Product {
   id: string

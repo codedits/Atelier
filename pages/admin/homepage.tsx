@@ -527,6 +527,16 @@ function HomepageContent() {
       {/* Collections Tab */}
       {activeTab === 'collections' && (
         <div className="space-y-4">
+          {/* Info Note */}
+          <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-4">
+            <p className="text-blue-400 text-sm">
+              <strong>Homepage Collections</strong> are the category cards displayed on the homepage &quot;Shop by Category&quot; section.
+            </p>
+            <p className="text-blue-400/70 text-xs mt-2">
+              💡 Each collection links to a filtered product page. Set the <strong>Link</strong> field to <code className="bg-blue-900/40 px-1 rounded">/products?category=rings</code> (use lowercase category name).
+            </p>
+          </div>
+
           <div className="flex justify-between items-center">
             <p className="text-[#888] text-sm">Manage featured collection cards</p>
             <button onClick={openCollectionAdd} className="admin-btn admin-btn-primary">
