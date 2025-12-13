@@ -56,7 +56,7 @@ export default function SignaturePiece() {
               </div>
               <div className="flex justify-between py-2">
                 <p className="text-sm text-[#6B6B6B]">Price</p>
-                <p className="text-xl text-[#1A1A1A] font-medium">$125,000</p>
+                <p className="text-xl text-[#1A1A1A] font-medium">₨1,650,000</p>
               </div>
             </div>
 

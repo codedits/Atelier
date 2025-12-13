@@ -206,7 +206,7 @@ export default function OrderDetailPage() {
                       <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                     </div>
                     <p className="text-gray-900 font-medium">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₨{(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}

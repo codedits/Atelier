@@ -419,9 +419,9 @@ function ProductsContent() {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <span className="text-white text-sm">${product.price}</span>
+                        <span className="text-white text-sm">₨{product.price}</span>
                         {product.old_price && (
-                          <span className="text-[#666] line-through text-xs">${product.old_price}</span>
+                          <span className="text-[#666] line-through text-xs">₨{product.old_price}</span>
                         )}
                       </div>
                     </td>

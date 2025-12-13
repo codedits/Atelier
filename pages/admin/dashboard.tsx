@@ -123,7 +123,7 @@ function DashboardContent() {
     },
     { 
       label: 'Total Revenue', 
-      value: `$${stats.totalRevenue.toLocaleString()}`, 
+      value: `₨${stats.totalRevenue.toLocaleString()}`, 
       icon: Icons.revenue, 
       color: 'text-[#50e3c2]',
       bgColor: 'bg-[#50e3c2]/10'

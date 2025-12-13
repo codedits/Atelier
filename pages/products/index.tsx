@@ -253,11 +253,11 @@ export default function ProductsPage() {
                         </h3>
                         <div className="flex items-center gap-2">
                           <p className="text-base font-medium text-[#111827]">
-                            ${product.price.toLocaleString()}
+                            ₨{product.price.toLocaleString()}
                           </p>
                           {product.old_price && (
                             <p className="text-sm text-[#6B7280] line-through">
-                              ${product.old_price.toLocaleString()}
+                              ₨{product.old_price.toLocaleString()}
                             </p>
                           )}
                         </div>

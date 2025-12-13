@@ -93,7 +93,7 @@ export default function CartPage() {
                         </h3>
                       </Link>
                       <p className="text-sm text-[#6B7280] mt-1 capitalize">{item.product.category}</p>
-                      <p className="text-[#111827] font-medium mt-2">${item.product.price.toLocaleString()}</p>
+                      <p className="text-[#111827] font-medium mt-2">₨{item.product.price.toLocaleString()}</p>
                       
                       {/* Stock warning */}
                       {item.product.stock > 0 && item.quantity >= item.product.stock && (
@@ -139,7 +139,7 @@ export default function CartPage() {
                     {/* Line Total */}
                     <div className="text-right">
                       <p className="font-medium text-[#111827]">
-                        ${(item.product.price * item.quantity).toLocaleString()}
+                        ₨{(item.product.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </motion.div>
@@ -166,15 +166,15 @@ export default function CartPage() {
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-[#6B7280]">
                       <span>Subtotal ({totalItems} items)</span>
-                      <span>${totalPrice.toLocaleString()}</span>
+                      <span>₨{totalPrice.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-[#6B7280]">
                       <span>Shipping</span>
-                      <span>{totalPrice >= 100 ? 'Free' : '$10'}</span>
+                      <span>{totalPrice >= 5000 ? 'Free' : '₨500'}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-4 flex justify-between text-[#111827] font-medium">
                       <span>Total</span>
-                      <span>${(totalPrice + (totalPrice >= 100 ? 0 : 10)).toLocaleString()}</span>
+                      <span>₨{(totalPrice + (totalPrice >= 5000 ? 0 : 500)).toLocaleString()}</span>
                     </div>
                   </div>
 

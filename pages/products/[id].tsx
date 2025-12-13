@@ -206,7 +206,7 @@ export default function ProductDetailPage() {
         <meta property="og:type" content="product" />
         <meta property="og:url" content={`https://codedits.github.io/Atelier/products/${product.id}`} />
         <meta property="product:price:amount" content={product.price?.toString()} />
-        <meta property="product:price:currency" content="USD" />
+        <meta property="product:price:currency" content="PKR" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
           "offers": {
             "@type": "Offer",
             "url": `https://codedits.github.io/Atelier/products/${product.id}`,
-            "priceCurrency": "USD",
+            "priceCurrency": "PKR",
             "price": product.price,
             "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
                 <ProductCarousel
                   images={product.images}
                   productName={product.name}
-                  saleBadge={product.old_price ? `Save $${(product.old_price - product.price).toLocaleString()}` : undefined}
+                  saleBadge={product.old_price ? `Save ₨${(product.old_price - product.price).toLocaleString()}` : undefined}
                 />
               </motion.div>
 
@@ -303,11 +303,11 @@ export default function ProductDetailPage() {
                   {/* Price */}
                   <div className="flex items-baseline gap-3 mb-6">
                     <p className="text-3xl font-medium text-[#111827]">
-                      ${product.price.toLocaleString()}
+                      ₨{product.price.toLocaleString()}
                     </p>
                     {product.old_price && (
                       <p className="text-xl text-[#6B7280] line-through">
-                        ${product.old_price.toLocaleString()}
+                        ₨{product.old_price.toLocaleString()}
                       </p>
                     )}
                   </div>
@@ -426,7 +426,7 @@ export default function ProductDetailPage() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                       </svg>
-                      Free shipping on orders over $100
+                      Free shipping on orders over ₨5,000
                     </p>
                     <p className="flex items-center gap-2">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

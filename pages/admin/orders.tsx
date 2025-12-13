@@ -225,7 +225,7 @@ function OrdersContent() {
                     </div>
                   </td>
                   <td>
-                    <span className="text-white text-sm font-medium">${order.total_price}</span>
+                    <span className="text-white text-sm font-medium">₨{order.total_price}</span>
                     <span className="text-[#666] text-xs ml-1">({order.payment_method})</span>
                   </td>
                   <td>
@@ -326,12 +326,12 @@ function OrdersContent() {
                         <p className="text-white text-sm">{item.name}</p>
                         <p className="text-[#666] text-xs mt-1">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-white text-sm">${item.price * item.quantity}</p>
+                      <p className="text-white text-sm">₨{item.price * item.quantity}</p>
                     </div>
                   ))}
                   <div className="p-4 flex justify-between bg-[#0a0a0a]">
                     <span className="text-[#888] text-sm">Total</span>
-                    <span className="text-white font-semibold">${selectedOrder.total_price}</span>
+                    <span className="text-white font-semibold">₨{selectedOrder.total_price}</span>
                   </div>
                 </div>
               </div>

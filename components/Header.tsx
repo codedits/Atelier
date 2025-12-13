@@ -12,7 +12,7 @@ export default function Header() {
     <>
       {/* Promotional Banner */}
       <div className="bg-[#1A1A1A] text-white text-center py-2 px-4">
-        <p className="text-xs font-medium">Free shipping on orders over $100 | Free returns</p>
+        <p className="text-xs font-medium">Free shipping on orders over ₨5,000 | Free returns</p>
       </div>
       
       <header className="sticky top-0 z-50 bg-white border-b border-[#E5E5E5] shadow-sm">

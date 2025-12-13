@@ -505,7 +505,7 @@ export default function AccountPage() {
                             {order.items.slice(0, 2).map((item, idx) => (
                               <div key={idx} className="flex justify-between text-sm">
                                 <span className="text-gray-600">{item.name} × {item.quantity}</span>
-                                <span className="text-gray-900 font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                <span className="text-gray-900 font-medium">₨{(item.price * item.quantity).toFixed(2)}</span>
                               </div>
                             ))}
                             {order.items.length > 2 && (
@@ -515,7 +515,7 @@ export default function AccountPage() {
 
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-100">
                             <span className="text-lg font-semibold text-gray-900">
-                              ${order.total_price.toFixed(2)}
+                              ₨{order.total_price.toFixed(2)}
                             </span>
                             <Link
                               href={`/orders/${order.id}`}

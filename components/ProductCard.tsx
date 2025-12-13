@@ -12,7 +12,7 @@ type Props = {
 }
 
 export default function ProductCard({ id, name, price, img, category = 'Fine Jewellery', oldPrice }: Props) {
-  const formattedPrice = typeof price === 'number' ? `$${price.toLocaleString()}` : price
+  const formattedPrice = typeof price === 'number' ? `₨${price.toLocaleString()}` : price
   const productUrl = id ? `/products/${id}` : '/products'
 
   return (
@@ -48,7 +48,7 @@ export default function ProductCard({ id, name, price, img, category = 'Fine Jew
           <div className="flex items-center justify-center gap-2">
             <p className="text-sm text-[#1A1A1A] font-medium">{formattedPrice}</p>
             {oldPrice && (
-              <p className="text-sm text-[#9CA3AF] line-through">${oldPrice.toLocaleString()}</p>
+              <p className="text-sm text-[#9CA3AF] line-through">₨{oldPrice.toLocaleString()}</p>
             )}
           </div>
         </div>

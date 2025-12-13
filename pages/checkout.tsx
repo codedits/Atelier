@@ -52,7 +52,7 @@ export default function CheckoutPage() {
     }
   }, [isLoading, items.length, router])
 
-  const shipping = totalPrice >= 100 ? 0 : 10
+  const shipping = totalPrice >= 5000 ? 0 : 500
   const orderTotal = totalPrice + shipping
 
   const handleSubmit = async (e: FormEvent) => {
@@ -68,6 +68,20 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         image_url: item.product.image_url,
       }))
+
+      // Save user profile data for future orders (non-blocking)
+      if (isAuthenticated) {
+        fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            name: formData.name,
+            phone: formData.phone,
+            address: `${formData.address}, ${formData.city} ${formData.postalCode}`,
+          }),
+        }).catch(() => {}) // Silent fail - don't block order
+      }
 
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -299,7 +313,7 @@ export default function CheckoutPage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[#111827] truncate">{item.product.name}</p>
                             <p className="text-xs text-[#6B7280]">Qty: {item.quantity}</p>
-                            <p className="text-sm text-[#111827]">${(item.product.price * item.quantity).toLocaleString()}</p>
+                            <p className="text-sm text-[#111827]">₨{(item.product.price * item.quantity).toLocaleString()}</p>
                           </div>
                         </div>
                       ))}
@@ -309,15 +323,15 @@ export default function CheckoutPage() {
                     <div className="space-y-3 border-t border-gray-200 pt-4 mb-6">
                       <div className="flex justify-between text-[#6B7280]">
                         <span>Subtotal ({totalItems} items)</span>
-                        <span>${totalPrice.toLocaleString()}</span>
+                        <span>₨{totalPrice.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-[#6B7280]">
                         <span>Shipping</span>
-                        <span>{shipping === 0 ? 'Free' : `$${shipping}`}</span>
+                        <span>{shipping === 0 ? 'Free' : `₨${shipping}`}</span>
                       </div>
                       <div className="flex justify-between text-[#111827] font-medium text-lg pt-2 border-t border-gray-200">
                         <span>Total</span>
-                        <span>${orderTotal.toLocaleString()}</span>
+                        <span>₨{orderTotal.toLocaleString()}</span>
                       </div>
                     </div>
 

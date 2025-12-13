@@ -14,7 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Products Table
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL,
   price NUMERIC NOT NULL,
   old_price NUMERIC,
@@ -152,7 +152,7 @@ INSERT INTO store_settings (key, value) VALUES
   ('store_name', 'Atelier'),
   ('store_email', 'contact@atelier.com'),
   ('store_phone', '+1 234 567 8900'),
-  ('currency', 'USD'),
+  ('currency', 'PKR'),
   ('tax_rate', '0')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
@@ -163,7 +163,7 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 -- Hero Images Table (for homepage carousel/hero section)
 CREATE TABLE IF NOT EXISTS hero_images (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
+  title TEXT NOT NULL UNIQUE,
   subtitle TEXT,
   image_url TEXT NOT NULL,
   cta_text TEXT,
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS hero_images (
 -- Featured Collections Table (category showcase cards)
 CREATE TABLE IF NOT EXISTS featured_collections (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
+  title TEXT NOT NULL UNIQUE,
   description TEXT,
   image_url TEXT NOT NULL,
   link TEXT DEFAULT '/products',
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS featured_collections (
 -- Testimonials Table
 CREATE TABLE IF NOT EXISTS testimonials (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  customer_name TEXT NOT NULL,
+  customer_name TEXT NOT NULL UNIQUE,
   content TEXT NOT NULL,
   rating INTEGER DEFAULT 5 CHECK (rating >= 1 AND rating <= 5),
   display_order INTEGER DEFAULT 0,
@@ -310,7 +310,116 @@ CREATE TRIGGER update_homepage_sections_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- 4. SAMPLE DATA
+-- 4. USER AUTHENTICATION SCHEMA
+-- ============================================
+
+-- Users Table (customer accounts with OTP login)
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  phone TEXT,
+  address TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User OTP Table (for email verification)
+CREATE TABLE IF NOT EXISTS user_otps (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT NOT NULL,
+  otp_code TEXT NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  used BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User Cart Table
+CREATE TABLE IF NOT EXISTS user_cart (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, product_id)
+);
+
+-- User Favorites Table
+CREATE TABLE IF NOT EXISTS user_favorites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, product_id)
+);
+
+-- User-related indexes
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email);
+CREATE INDEX IF NOT EXISTS idx_user_otps_expires ON user_otps(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_cart_user ON user_cart(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_cart_product ON user_cart(product_id);
+CREATE INDEX IF NOT EXISTS idx_user_favorites_user ON user_favorites(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_favorites_product ON user_favorites(product_id);
+
+-- Add user_id and email columns to orders table
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS email TEXT;
+CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
+
+-- Enable RLS for user tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_otps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_cart ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for user tables (service role only)
+DROP POLICY IF EXISTS "Users managed by service role" ON users;
+CREATE POLICY "Users managed by service role" ON users
+  FOR ALL USING (auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "OTPs managed by service role" ON user_otps;
+CREATE POLICY "OTPs managed by service role" ON user_otps
+  FOR ALL USING (auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Cart managed by service role" ON user_cart;
+CREATE POLICY "Cart managed by service role" ON user_cart
+  FOR ALL USING (auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "User favorites managed by service role" ON user_favorites;
+CREATE POLICY "User favorites managed by service role" ON user_favorites
+  FOR ALL USING (auth.role() = 'service_role');
+
+-- Triggers for updated_at on user tables
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_user_cart_updated_at ON user_cart;
+CREATE TRIGGER update_user_cart_updated_at BEFORE UPDATE ON user_cart
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Cleanup expired OTPs function
+CREATE OR REPLACE FUNCTION cleanup_expired_otps()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM user_otps WHERE expires_at < NOW() OR used = true;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to safely decrement product stock
+CREATE OR REPLACE FUNCTION decrement_stock(p_id UUID, qty INTEGER)
+RETURNS void AS $$
+BEGIN
+  UPDATE products
+  SET stock = GREATEST(0, stock - qty)
+  WHERE id = p_id AND stock > 0;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- 5. SAMPLE DATA
 -- ============================================
 
 -- Sample categories
@@ -329,12 +438,12 @@ INSERT INTO products (name, description, price, old_price, category, gender, ima
   ('Gold Chain Bracelet', 'Delicate 14k gold chain bracelet with adjustable clasp. Perfect for everyday wear.', 1200, NULL, 'Bracelets', 'women', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800', 12, false),
   ('Sapphire Stud Earrings', 'Stunning blue sapphire studs set in platinum. Timeless elegance.', 3500, NULL, 'Earrings', 'women', 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800', 6, false),
   ('Men''s Gold Signet Ring', 'Classic 18k gold signet ring with polished finish. A statement piece.', 2200, NULL, 'Rings', 'men', 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800', 10, false)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- Sample hero image
 INSERT INTO hero_images (title, subtitle, image_url, cta_text, cta_link, display_order, is_active) VALUES
   ('Timeless Elegance', 'Discover our collection of handcrafted jewelry', 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2070', 'Shop Now', '/products', 0, true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 -- Sample featured collections
 INSERT INTO featured_collections (title, description, image_url, link, display_order, is_active) VALUES
@@ -342,14 +451,14 @@ INSERT INTO featured_collections (title, description, image_url, link, display_o
   ('Everyday Elegance', 'Perfect for daily wear', 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800', '/products?category=Bracelets', 1, true),
   ('Statement Pieces', 'Make an impression', 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800', '/products?category=Necklaces', 2, true),
   ('Men''s Collection', 'Sophisticated designs', 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800', '/products?gender=men', 3, true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 -- Sample testimonials
 INSERT INTO testimonials (customer_name, content, rating, display_order, is_active) VALUES
   ('Sarah Johnson', 'Absolutely stunning jewelry! The craftsmanship is exceptional and the customer service was wonderful.', 5, 0, true),
   ('Michael Chen', 'Bought an engagement ring here and it exceeded all expectations. Highly recommend!', 5, 1, true),
   ('Emma Williams', 'Beautiful pieces at fair prices. The quality is outstanding and shipping was fast.', 5, 2, true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (customer_name) DO NOTHING;
 
 -- Sample homepage sections
 INSERT INTO homepage_sections (section_key, title, subtitle, content, image_url, cta_text, cta_link, is_active) VALUES

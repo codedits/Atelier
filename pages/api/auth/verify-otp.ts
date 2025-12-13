@@ -45,10 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .update({ used: true })
       .eq('id', otpRecord.id)
 
-    // Get user
+    // Get user with complete profile
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, name')
+      .select('id, email, name, phone, address')
       .eq('email', email.toLowerCase())
       .single()
 
@@ -72,6 +72,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: user.id,
         email: user.email,
         name: user.name,
+        phone: user.phone,
+        address: user.address,
       },
     })
   } catch (error) {
