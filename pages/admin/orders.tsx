@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
+import { useDebounce } from '@/hooks/useDebounce'
 import { Order, OrderItem } from '@/lib/supabase'
 
 // Icons
@@ -45,6 +46,38 @@ function OrdersContent() {
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false)
   const [deleteAllConfirmText, setDeleteAllConfirmText] = useState('')
   const [isDeleteAllLoading, setIsDeleteAllLoading] = useState(false)
+  const pendingStatusRef = useRef<Map<string, { status?: string; payment_status?: string }>>(new Map())
+
+  // Perform actual status update
+  const performStatusUpdate = async (id: string, updates: { status?: string; payment_status?: string }) => {
+    try {
+      await api.put(`/orders/${id}`, updates)
+      setOrders(prev => prev.map(o => {
+        if (o.id === id) {
+          const updatedOrder = { ...o }
+          if (updates.status) updatedOrder.status = updates.status as Order['status']
+          if (updates.payment_status) updatedOrder.payment_status = updates.payment_status as Order['payment_status']
+          return updatedOrder
+        }
+        return o
+      }))
+      if (selectedOrder?.id === id) {
+        const updated = { ...selectedOrder }
+        if (updates.status) updated.status = updates.status as Order['status']
+        if (updates.payment_status) updated.payment_status = updates.payment_status as Order['payment_status']
+        setSelectedOrder(updated)
+      }
+      pendingStatusRef.current.delete(id)
+    } catch (error) {
+      console.error('Failed to update order:', error)
+      alert('Failed to update order')
+    }
+  }
+
+  const { debounced: debouncedStatusUpdate } = useDebounce(
+    performStatusUpdate,
+    350 // 350ms debounce for dropdown updates
+  )
 
   useEffect(() => {
     loadOrders()
@@ -60,28 +93,34 @@ function OrdersContent() {
     }
   }
 
-  const updateOrderStatus = async (id: string, status: string) => {
-    try {
-      await api.put(`/orders/${id}`, { status })
-      loadOrders()
-      if (selectedOrder?.id === id) {
-        setSelectedOrder({ ...selectedOrder, status: status as Order['status'] })
-      }
-    } catch {
-      alert('Failed to update order')
+  const updateOrderStatus = (id: string, status: string) => {
+    // Store pending update
+    const pending = pendingStatusRef.current.get(id) || {}
+    pendingStatusRef.current.set(id, { ...pending, status })
+    
+    // Update UI immediately
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: status as Order['status'] } : o))
+    if (selectedOrder?.id === id) {
+      setSelectedOrder({ ...selectedOrder, status: status as Order['status'] })
     }
+    
+    // Debounce the API call
+    debouncedStatusUpdate(id, { ...pendingStatusRef.current.get(id) })
   }
 
-  const updatePaymentStatus = async (id: string, payment_status: string) => {
-    try {
-      await api.put(`/orders/${id}`, { payment_status })
-      loadOrders()
-      if (selectedOrder?.id === id) {
-        setSelectedOrder({ ...selectedOrder, payment_status: payment_status as Order['payment_status'] })
-      }
-    } catch {
-      alert('Failed to update payment')
+  const updatePaymentStatus = (id: string, payment_status: string) => {
+    // Store pending update
+    const pending = pendingStatusRef.current.get(id) || {}
+    pendingStatusRef.current.set(id, { ...pending, payment_status })
+    
+    // Update UI immediately
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, payment_status: payment_status as Order['payment_status'] } : o))
+    if (selectedOrder?.id === id) {
+      setSelectedOrder({ ...selectedOrder, payment_status: payment_status as Order['payment_status'] })
     }
+    
+    // Debounce the API call
+    debouncedStatusUpdate(id, { ...pendingStatusRef.current.get(id) })
   }
 
   const handleDeleteAllOrders = async () => {

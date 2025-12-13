@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
+import { useDebounce } from '@/hooks/useDebounce'
 import { Category } from '@/lib/supabase'
 
 // Icons
@@ -46,6 +47,7 @@ function CategoriesContent() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const pendingUpdatesRef = useRef<Map<string, string>>(new Map())
 
   useEffect(() => {
     loadCategories()
@@ -74,16 +76,33 @@ function CategoriesContent() {
     }
   }
 
-  const updateCategory = async (id: string) => {
-    if (!editName.trim()) return
-
+  const performCategoryUpdate = async (id: string, name: string) => {
     try {
-      await api.put(`/categories/${id}`, { name: editName.trim() })
-      setEditingId(null)
-      loadCategories()
-    } catch {
+      await api.put(`/categories/${id}`, { name: name.trim() })
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, name: name.trim() } : c))
+      pendingUpdatesRef.current.delete(id)
+    } catch (error) {
+      console.error('Failed to update category:', error)
       alert('Failed to update category')
     }
+  }
+
+  const { debounced: debouncedCategoryUpdate } = useDebounce(
+    performCategoryUpdate,
+    400 // 400ms debounce for text input
+  )
+
+  const updateCategory = (id: string, name: string) => {
+    if (!name.trim()) return
+
+    // Store pending update
+    pendingUpdatesRef.current.set(id, name)
+    
+    // Update UI immediately
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, name } : c))
+    
+    // Debounce the API call
+    debouncedCategoryUpdate(id, name)
   }
 
   const deleteCategory = async (id: string) => {
@@ -167,12 +186,12 @@ function CategoriesContent() {
                     className="admin-input flex-1"
                     autoFocus
                     onKeyDown={e => {
-                      if (e.key === 'Enter') updateCategory(category.id)
+                      if (e.key === 'Enter') updateCategory(category.id, editName)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
                   />
                   <button
-                    onClick={() => updateCategory(category.id)}
+                    onClick={() => updateCategory(category.id, editName)}
                     className="admin-btn admin-btn-primary px-3"
                     title="Save"
                   >

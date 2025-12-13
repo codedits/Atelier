@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
+import { useDebounce } from '@/hooks/useDebounce'
 import { Product, Category } from '@/lib/supabase'
 
 // Icons
@@ -53,6 +54,7 @@ function ProductsContent() {
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const pendingUpdatesRef = useRef<Map<string, number>>(new Map())
 
   // Form state
   const [form, setForm] = useState({
@@ -281,17 +283,39 @@ function ProductsContent() {
     }
   }
 
-  const updateStock = async (id: string, delta: number) => {
-    const product = products.find(p => p.id === id)
-    if (!product) return
-    
-    const newStock = Math.max(0, product.stock + delta)
+  const performStockUpdate = async (id: string, newStock: number) => {
     try {
       await api.put(`/products/${id}`, { stock: newStock })
       setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: newStock } : p))
-    } catch {
+      pendingUpdatesRef.current.delete(id)
+    } catch (error) {
+      console.error('Failed to update stock:', error)
       alert('Failed to update stock')
     }
+  }
+
+  const { debounced: debouncedStockUpdate } = useDebounce(
+    performStockUpdate,
+    300 // 300ms debounce delay for stock updates
+  )
+
+  const updateStock = (id: string, delta: number) => {
+    const product = products.find(p => p.id === id)
+    if (!product) return
+    
+    // Get the current pending value or the product's current stock
+    const currentPending = pendingUpdatesRef.current.get(id)
+    const currentStock = currentPending !== undefined ? currentPending : product.stock
+    const newStock = Math.max(0, currentStock + delta)
+    
+    // Store pending update
+    pendingUpdatesRef.current.set(id, newStock)
+    
+    // Update UI immediately for responsiveness
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: newStock } : p))
+    
+    // Debounce the actual API call
+    debouncedStockUpdate(id, newStock)
   }
 
   const toggleHidden = async (id: string, hidden: boolean) => {
