@@ -244,9 +244,9 @@ export default function CheckoutPage() {
             </motion.h1>
 
             <form onSubmit={handleSubmit}>
-              <div className="grid lg:grid-cols-3 gap-12">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
                 {/* Form Fields */}
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2 space-y-6 lg:space-y-8">
                   {/* Contact Information */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
                     className="bg-[#F8F7F5] rounded-lg p-6"
                   >
                     <h2 className="text-lg font-medium text-[#111827] mb-6">Shipping Address</h2>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
                         <label className="block text-sm text-[#6B7280] mb-2">Street Address *</label>
                         <input
@@ -308,11 +308,11 @@ export default function CheckoutPage() {
                           required
                           value={formData.address}
                           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
                           placeholder="123 Main Street, Apt 4B"
                         />
                       </div>
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                           <label className="block text-sm text-[#6B7280] mb-2">City *</label>
                           <input
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
                             required
                             value={formData.city}
                             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
                             placeholder="New York"
                           />
                         </div>
@@ -331,7 +331,7 @@ export default function CheckoutPage() {
                             required
                             value={formData.postalCode}
                             onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                            className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
                             placeholder="10001"
                           />
                         </div>
@@ -347,8 +347,8 @@ export default function CheckoutPage() {
                     className="bg-[#F8F7F5] rounded-lg p-6"
                   >
                     <h2 className="text-lg font-medium text-[#111827] mb-6">Payment Method</h2>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3 p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
+                    <div className="space-y-2 sm:space-y-3">
+                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
                         <input
                           type="radio"
                           name="payment"
@@ -362,7 +362,7 @@ export default function CheckoutPage() {
                           <p className="text-sm text-[#6B7280]">Pay when you receive your order</p>
                         </div>
                       </label>
-                      <label className="flex items-center gap-3 p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
+                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
                         <input
                           type="radio"
                           name="payment"
@@ -381,17 +381,17 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Order Summary */}
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 order-first lg:order-last">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-[#F8F7F5] rounded-lg p-6 sticky top-24"
+                    className="bg-[#F8F7F5] rounded-lg p-4 sm:p-6 lg:sticky lg:top-24"
                   >
-                    <h2 className="text-lg font-medium text-[#111827] mb-6">Order Summary</h2>
+                    <h2 className="text-base sm:text-lg font-medium text-[#111827] mb-4 sm:mb-6">Order Summary</h2>
 
                     {/* Items */}
-                    <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
+                    <div className="space-y-3 mb-4 sm:mb-6 max-h-48 sm:max-h-64 overflow-y-auto">
                       {items.map((item) => (
                         <div key={item.product.id} className="flex gap-4">
                           <div className="w-16 h-16 bg-white relative rounded overflow-hidden shrink-0">
@@ -428,11 +428,11 @@ export default function CheckoutPage() {
                     </div>
 
                     {error && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
-                        <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2 text-xs sm:text-sm">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-sm text-red-600">{error}</p>
+                        <p className="text-red-600">{error}</p>
                       </div>
                     )}
 
@@ -454,11 +454,11 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-full py-3.5 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+                      className="w-full py-2.5 sm:py-3.5 px-3 sm:px-4 bg-[#1A1A1A] text-white text-sm sm:text-base font-medium rounded hover:bg-[#333] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                     >
                       {submitting ? (
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
@@ -466,7 +466,7 @@ export default function CheckoutPage() {
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-2">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                           Place Order

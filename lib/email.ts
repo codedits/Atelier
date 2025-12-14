@@ -228,7 +228,7 @@ export async function sendDeliveryNotificationEmail({
   // In development without SMTP configured, just log the delivery details
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log(`\n========================================`)
-    console.log(`📧 Delivery Notification Email (DEV MODE - No SMTP configured)`)
+    console.log(`📧 DELIVERY NOTIFICATION EMAIL (DEV MODE - No SMTP configured)`)
     console.log(`To: ${to}`)
     console.log(`Order ID: ${orderId}`)
     console.log(`Customer: ${userName}`)

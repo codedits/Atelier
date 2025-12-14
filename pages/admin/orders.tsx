@@ -69,6 +69,16 @@ function OrdersContent() {
         if (updates.payment_status) updated.payment_status = updates.payment_status as Order['payment_status']
         setSelectedOrder(updated)
       }
+      
+      // Show success message
+      if (updates.status === 'delivered') {
+        toast.success('Order marked as delivered and customer notified!')
+      } else if (updates.status) {
+        toast.success(`Order status updated to ${updates.status}`)
+      } else if (updates.payment_status) {
+        toast.success(`Payment status updated to ${updates.payment_status}`)
+      }
+      
       pendingStatusRef.current.delete(id)
     } catch (error) {
       console.error('Failed to update order:', error)

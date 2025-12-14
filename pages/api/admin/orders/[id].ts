@@ -74,7 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send delivery notification email if status changed to 'delivered'
     if (status === 'delivered' && currentOrder.status !== 'delivered') {
-      const customerEmail = currentOrder.user_email || currentOrder.email
+      const customerEmail = currentOrder.email || currentOrder.user_email
+      console.log(`Order ${orderId} marked as delivered. Sending delivery notification...`)
+      console.log(`Customer email: ${customerEmail || 'NOT PROVIDED'}`)
       
       if (customerEmail) {
         try {
@@ -85,13 +87,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             items: currentOrder.items || [],
             totalPrice: currentOrder.total_price,
           })
-          console.log(`Delivery notification email sent to ${customerEmail} for order ${orderId}`)
+          console.log(`✅ Delivery notification email sent to ${customerEmail} for order ${orderId}`)
         } catch (emailError) {
-          console.error('Failed to send delivery notification email:', emailError)
+          console.error('❌ Failed to send delivery notification email:', emailError)
           // Don't fail the request if email fails
         }
       } else {
-        console.log(`No email address found for order ${orderId}, skipping delivery notification`)
+        console.log(`⚠️ No email address found for order ${orderId}, skipping delivery notification`)
       }
     }
 

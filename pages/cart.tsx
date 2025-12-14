@@ -67,20 +67,20 @@ export default function CartPage() {
               Shopping Cart
             </motion.h1>
 
-            <div className="grid lg:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
               {/* Cart Items */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4 lg:space-y-6">
                 {items.map((item, index) => (
                   <motion.div
                     key={item.product.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex gap-6 pb-6 border-b border-gray-100"
+                    className="flex flex-col sm:flex-row gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-gray-100"
                   >
                     {/* Product Image */}
-                    <Link href={`/products/${item.product.id}`} className="shrink-0">
-                      <div className="w-24 h-24 md:w-32 md:h-32 bg-[#F8F7F5] relative overflow-hidden rounded">
+                    <Link href={`/products/${item.product.id}`} className="shrink-0 w-full sm:w-auto">
+                      <div className="w-full sm:w-24 h-32 sm:h-24 md:w-32 md:h-32 bg-[#F8F7F5] relative overflow-hidden rounded">
                         <Image
                           src={item.product.image_url || '/placeholder.jpg'}
                           alt={item.product.name}
@@ -145,7 +145,7 @@ export default function CartPage() {
                     </div>
 
                     {/* Line Total */}
-                    <div className="text-right">
+                    <div className="text-right w-full sm:w-auto">                      <p className="text-xs text-[#6B7280] mb-2 sm:hidden">Line Total</p>
                       <p className="font-medium text-[#111827]">
                         ₨{(item.product.price * item.quantity).toLocaleString()}
                       </p>
@@ -162,7 +162,7 @@ export default function CartPage() {
               </div>
 
               {/* Order Summary */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 order-first lg:order-last">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
