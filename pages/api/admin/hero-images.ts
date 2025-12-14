@@ -141,7 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .from('hero_images')
         .select('image_url')
         .eq('id', String(id))
-        .single()
+        .single() as any
 
       const { error } = await supabaseAdmin
         .from('hero_images')

@@ -156,7 +156,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from('featured_collections')
       .select('image_url')
       .eq('id', String(id))
-      .single()
+      .single() as any
 
     const { error } = await supabaseAdmin
       .from('featured_collections')
