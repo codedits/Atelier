@@ -19,9 +19,16 @@ interface Product {
   is_hidden?: boolean
 }
 
+interface Category {
+  id: string
+  name: string
+  created_at: string
+}
+
 export default function ProductsPage() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
@@ -41,18 +48,31 @@ export default function ProductsPage() {
     }
   }, [router.isReady, router.query])
 
-  // Fetch products from API
+  // Fetch products and categories from API
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => {
-        // Filter out hidden products for public view
-        const visibleProducts = data.filter((p: Product) => !p.is_hidden)
+    const fetchData = async () => {
+      try {
+        // Fetch products
+        const productsRes = await fetch('/api/products')
+        const productsData = await productsRes.json()
+        const visibleProducts = productsData.filter((p: Product) => !p.is_hidden)
         setProducts(visibleProducts)
         setFilteredProducts(visibleProducts)
-      })
-      .catch(err => console.error('Failed to load products:', err))
-      .finally(() => setLoading(false))
+
+        // Fetch categories
+        const categoriesRes = await fetch('/api/categories')
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json()
+          setCategories(categoriesData)
+        }
+      } catch (err) {
+        console.error('Failed to load data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchData()
   }, [])
 
   useEffect(() => {
@@ -80,7 +100,14 @@ export default function ProductsPage() {
     setFilteredProducts(filtered)
   }, [selectedCategory, selectedGender, sortBy, products])
 
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))]
+  // Generate category options from API categories plus existing product categories
+  const categoryOptions = [
+    'all',
+    ...Array.from(new Set([
+      ...categories.map(c => c.name),
+      ...products.map(p => p.category)
+    ]))
+  ]
   const genders = ['all', 'women', 'men']
 
   return (
@@ -157,7 +184,7 @@ export default function ProductsPage() {
                       onChange={(e) => setSelectedCategory(e.target.value)}
                       className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors"
                     >
-                      {categories.map(cat => (
+                      {categoryOptions.map(cat => (
                         <option key={cat} value={cat}>
                           {cat === 'all' ? 'All Categories' : cat}
                         </option>

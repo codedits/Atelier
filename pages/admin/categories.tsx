@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -41,6 +42,7 @@ const Icons = {
 
 function CategoriesContent() {
   const api = useAdminApi()
+  const toast = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [newName, setNewName] = useState('')
@@ -70,20 +72,22 @@ function CategoriesContent() {
     try {
       await api.post('/categories', { name: newName.trim() })
       setNewName('')
+      toast.success('Category added successfully')
       loadCategories()
     } catch {
-      alert('Failed to add category')
+      toast.error('Failed to add category')
     }
   }
 
   const performCategoryUpdate = async (id: string, name: string) => {
     try {
       await api.put(`/categories/${id}`, { name: name.trim() })
+      toast.success('Category updated')
       setCategories(prev => prev.map(c => c.id === id ? { ...c, name: name.trim() } : c))
       pendingUpdatesRef.current.delete(id)
     } catch (error) {
       console.error('Failed to update category:', error)
-      alert('Failed to update category')
+      toast.error('Failed to update category')
     }
   }
 
@@ -108,10 +112,11 @@ function CategoriesContent() {
   const deleteCategory = async (id: string) => {
     try {
       await api.del(`/categories/${id}`)
+      toast.success('Category deleted successfully')
       setDeleteConfirm(null)
       loadCategories()
     } catch {
-      alert('Failed to delete category. Make sure no products are using it.')
+      toast.error('Failed to delete category. Make sure no products are using it.')
     }
   }
 
@@ -272,12 +277,14 @@ function CategoriesContent() {
 export default function AdminCategories() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Categories — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Categories">
-        <CategoriesContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Categories — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Categories">
+          <CategoriesContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

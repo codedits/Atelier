@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 
@@ -268,12 +269,14 @@ function DashboardContent() {
 export default function AdminDashboard() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Overview — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Overview">
-        <DashboardContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Overview — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Overview">
+          <DashboardContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

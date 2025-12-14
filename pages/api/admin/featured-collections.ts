@@ -16,6 +16,27 @@ function getAdminFromRequest(req: NextApiRequest) {
   return verifyAdminToken(authHeader.substring(7))
 }
 
+// Helper function to delete file from Supabase Storage
+async function deleteStorageFile(imageUrl: string, folder: string = 'collections') {
+  if (!imageUrl || !supabaseAdmin) return
+
+  try {
+    // Extract filename from URL
+    // URL format: https://[project-id].supabase.co/storage/v1/object/public/[bucket]/[path]/[filename]
+    const urlParts = imageUrl.split('/')
+    const filename = urlParts[urlParts.length - 1]
+    
+    if (!filename) return
+
+    await supabaseAdmin.storage
+      .from('images')
+      .remove([`${folder}/${filename}`])
+  } catch (error) {
+    console.warn('Failed to delete old image file:', error)
+    // Don't fail the request if file deletion fails
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET is public (for frontend)
   if (req.method === 'GET') {
@@ -88,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'PUT') {
-    const { id, title, description, image_url, link, display_order, is_active } = req.body
+    const { id, title, description, image_url, link, display_order, is_active, oldImageUrl } = req.body
 
     if (!id) {
       return res.status(400).json({ error: 'Missing collection ID' })
@@ -114,6 +135,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Collection update error:', error)
       return res.status(500).json({ error: error.message })
     }
+
+    // Delete old image if a new one was uploaded
+    if (oldImageUrl && image_url !== oldImageUrl) {
+      await deleteStorageFile(oldImageUrl, 'collections')
+    }
+
     return res.status(200).json(data)
   }
 
@@ -124,6 +151,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing collection ID' })
     }
 
+    // Get the collection to retrieve the image URL before deletion
+    const { data: collection } = await supabaseAdmin
+      .from('featured_collections')
+      .select('image_url')
+      .eq('id', String(id))
+      .single()
+
     const { error } = await supabaseAdmin
       .from('featured_collections')
       .delete()
@@ -133,6 +167,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Collection deletion error:', error)
       return res.status(500).json({ error: error.message })
     }
+
+    // Delete the image file from storage
+    if (collection?.image_url) {
+      await deleteStorageFile(collection.image_url, 'collections')
+    }
+
     return res.status(200).json({ message: 'Collection deleted' })
   }
 

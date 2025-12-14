@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -44,6 +45,7 @@ const Icons = {
 
 function ProductsContent() {
   const api = useAdminApi()
+  const toast = useToast()
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -144,17 +146,17 @@ function ProductsContent() {
     const remainingSlots = 10 - currentCount
     
     if (files.length > remainingSlots) {
-      alert(`You can only add ${remainingSlots} more image(s). Maximum 10 images allowed.`)
+      toast.error(`You can only add ${remainingSlots} more image(s). Maximum 10 images allowed.`)
       return
     }
 
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
-        alert('Please select only image files')
+        toast.error('Please select only image files')
         return
       }
       if (file.size > 10 * 1024 * 1024) {
-        alert('Each file must be less than 10MB')
+        toast.error('Each file must be less than 10MB')
         return
       }
     }
@@ -227,11 +229,11 @@ function ProductsContent() {
           image_url: allImages[0] || ''
         }))
         setSelectedFiles([])
-        alert(`${uploadedUrls.length} image(s) uploaded successfully!`)
+        toast.success(`${uploadedUrls.length} image(s) uploaded successfully!`)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload images. Make sure SUPABASE_SERVICE_ROLE_KEY is set in .env.local')
+      toast.error('Failed to upload images. Make sure SUPABASE_SERVICE_ROLE_KEY is set in .env.local')
     } finally {
       setUploading(false)
     }
@@ -241,7 +243,7 @@ function ProductsContent() {
     e.preventDefault()
     
     if (!form.images.length && !form.image_url) {
-      alert('Please upload at least one image')
+      toast.error('Please upload at least one image')
       return
     }
 
@@ -261,36 +263,40 @@ function ProductsContent() {
     try {
       if (editingProduct) {
         await api.put(`/products/${editingProduct.id}`, data)
+        toast.success('Product updated successfully')
       } else {
         await api.post('/products', data)
+        toast.success('Product created successfully')
       }
       setShowModal(false)
       loadData()
     } catch (err: any) {
       console.error('Save product error:', err)
       const errorMsg = err?.error || err?.message || 'Failed to save product'
-      alert(`Failed to save product: ${errorMsg}`)
+      toast.error(`Failed to save product: ${errorMsg}`)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await api.del(`/products/${id}`)
+      toast.success('Product deleted successfully')
       setDeleteConfirm(null)
       loadData()
     } catch {
-      alert('Failed to delete product')
+      toast.error('Failed to delete product')
     }
   }
 
   const performStockUpdate = async (id: string, newStock: number) => {
     try {
       await api.put(`/products/${id}`, { stock: newStock })
+      toast.success('Stock updated')
       setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: newStock } : p))
       pendingUpdatesRef.current.delete(id)
     } catch (error) {
       console.error('Failed to update stock:', error)
-      alert('Failed to update stock')
+      toast.error('Failed to update stock')
     }
   }
 
@@ -321,9 +327,10 @@ function ProductsContent() {
   const toggleHidden = async (id: string, hidden: boolean) => {
     try {
       await api.put(`/products/${id}`, { is_hidden: !hidden })
+      toast.success(hidden ? 'Product is now visible' : 'Product is now hidden')
       loadData()
     } catch {
-      alert('Failed to update product')
+      toast.error('Failed to update product')
     }
   }
 
@@ -754,12 +761,14 @@ function ProductsContent() {
 export default function AdminProducts() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Products — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Products">
-        <ProductsContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Products — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Products">
+          <ProductsContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

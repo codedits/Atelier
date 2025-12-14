@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 
@@ -59,6 +60,7 @@ const Icons = {
 
 function SettingsContent() {
   const api = useAdminApi()
+  const toast = useToast()
   const [settings, setSettings] = useState<StoreSettings>(defaultSettings)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -85,10 +87,11 @@ function SettingsContent() {
 
     try {
       await api.put('/settings', settings)
+      toast.success('Settings saved successfully')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch {
-      alert('Failed to save settings')
+      toast.error('Failed to save settings')
     } finally {
       setSaving(false)
     }
@@ -272,12 +275,14 @@ function SettingsContent() {
 export default function AdminSettings() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Settings — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Settings">
-        <SettingsContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Settings — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Settings">
+          <SettingsContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

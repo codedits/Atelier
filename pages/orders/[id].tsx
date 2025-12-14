@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import OrderReviewForm from '@/components/OrderReviewForm'
 import { useUserAuth } from '@/context/UserAuthContext'
 
 interface OrderItem {
@@ -375,6 +376,16 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Review Form - Only show for delivered orders */}
+          {order.status === 'delivered' && (
+            <OrderReviewForm
+              orderId={order.id}
+              items={order.items}
+              userEmail={order.email}
+              userName={order.user_name}
+            />
+          )}
         </div>
       </main>
 

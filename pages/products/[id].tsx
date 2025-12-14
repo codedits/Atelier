@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Header, Footer, ProductCarousel } from '../../components'
+import ProductReviews from '@/components/ProductReviews'
 import { useProduct } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -460,6 +461,9 @@ export default function ProductDetailPage() {
 
               </motion.div>
             </div>
+
+            {/* Customer Reviews Section */}
+            <ProductReviews productId={product.id} />
 
             {/* Related Products Section */}
             <motion.div

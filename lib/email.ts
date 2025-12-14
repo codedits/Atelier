@@ -207,3 +207,137 @@ export async function sendOrderConfirmationEmail({
     return false
   }
 }
+
+interface SendDeliveryNotificationEmailOptions {
+  to: string
+  orderId: string
+  userName: string
+  items: OrderItem[]
+  totalPrice: number
+  storeName?: string
+}
+
+export async function sendDeliveryNotificationEmail({
+  to,
+  orderId,
+  userName,
+  items,
+  totalPrice,
+  storeName = 'Atelier',
+}: SendDeliveryNotificationEmailOptions): Promise<boolean> {
+  // In development without SMTP configured, just log the delivery details
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log(`\n========================================`)
+    console.log(`📧 Delivery Notification Email (DEV MODE - No SMTP configured)`)
+    console.log(`To: ${to}`)
+    console.log(`Order ID: ${orderId}`)
+    console.log(`Customer: ${userName}`)
+    console.log(`Total: ₨${totalPrice.toLocaleString()}`)
+    console.log(`Items: ${items.map(i => `${i.name} x${i.quantity}`).join(', ')}`)
+    console.log(`========================================\n`)
+    return true
+  }
+
+  const itemsHtml = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">x${item.quantity}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">₨${(item.price * item.quantity).toLocaleString()}</td>
+        </tr>
+      `
+    )
+    .join('')
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `"${storeName}" <noreply@atelier.com>`,
+      to,
+      subject: `Your Order Has Been Delivered! - #${orderId.slice(0, 8).toUpperCase()}`,
+      text: `Great news, ${userName}!\n\nYour order #${orderId.slice(0, 8).toUpperCase()} has been delivered.\n\nWe hope you love your new jewelry! Please take a moment to leave a review and share your experience.\n\nThank you for shopping with ${storeName}!`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #111827 0%, #1f2937 100%); padding: 40px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">${storeName.toUpperCase()}</h1>
+              <div style="margin-top: 24px;">
+                <div style="display: inline-block; background: #22c55e; width: 60px; height: 60px; border-radius: 50%; line-height: 60px;">
+                  <span style="color: white; font-size: 32px;">✓</span>
+                </div>
+              </div>
+              <p style="color: #22c55e; margin: 16px 0 0; font-size: 18px; font-weight: 500;">Order Delivered!</p>
+            </div>
+            
+            <div style="padding: 40px 32px;">
+              <h2 style="color: #111827; margin: 0 0 8px; font-size: 22px; font-weight: 500;">Hello ${userName}!</h2>
+              <p style="color: #6b7280; margin: 0 0 24px; font-size: 15px; line-height: 1.6;">Great news! Your order has been successfully delivered. We hope you love your new jewelry!</p>
+              
+              <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #d4a5a5;">
+                <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</p>
+                <p style="color: #111827; margin: 0; font-size: 24px; font-weight: 600;">#${orderId.slice(0, 8).toUpperCase()}</p>
+              </div>
+
+              <h3 style="color: #111827; margin: 0 0 16px; font-size: 16px; font-weight: 600;">What You Received</h3>
+              <table style="width: 100%; margin-bottom: 32px; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #f9fafb;">
+                    <th style="padding: 12px; text-align: left; color: #6b7280; font-weight: 500; font-size: 12px; border-radius: 4px 0 0 4px;">Product</th>
+                    <th style="padding: 12px; text-align: center; color: #6b7280; font-weight: 500; font-size: 12px;">Qty</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-weight: 500; font-size: 12px; border-radius: 0 4px 4px 0;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                  <tr>
+                    <td colspan="2" style="padding: 16px 12px; text-align: right; font-weight: 600; color: #111827; border-top: 2px solid #e5e7eb;">Total</td>
+                    <td style="padding: 16px 12px; text-align: right; font-weight: 600; color: #111827; border-top: 2px solid #e5e7eb;">₨${totalPrice.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Review CTA -->
+              <div style="background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; text-align: center; border: 1px solid #fbcfe8;">
+                <div style="margin-bottom: 12px;">
+                  <span style="color: #d4a5a5; font-size: 28px;">★★★★★</span>
+                </div>
+                <h3 style="color: #111827; margin: 0 0 8px; font-size: 18px; font-weight: 600;">We'd Love Your Feedback!</h3>
+                <p style="color: #6b7280; margin: 0 0 20px; font-size: 14px; line-height: 1.5;">
+                  Share your experience and help other customers make informed decisions.
+                </p>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${orderId}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #d4a5a5 0%, #c99595 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
+                  Write a Review
+                </a>
+              </div>
+
+              <div style="background: #f9fafb; border-radius: 8px; padding: 20px;">
+                <h4 style="color: #111827; margin: 0 0 12px; font-size: 14px; font-weight: 600;">Need Help?</h4>
+                <p style="color: #6b7280; margin: 0; font-size: 13px; line-height: 1.6;">
+                  If you have any questions about your order or need assistance with returns, 
+                  please don't hesitate to contact us. We're here to help!
+                </p>
+              </div>
+            </div>
+
+            <div style="background: #111827; padding: 24px 32px; text-align: center;">
+              <p style="color: #9ca3af; margin: 0 0 8px; font-size: 13px;">Thank you for choosing ${storeName}</p>
+              <p style="color: #6b7280; margin: 0; font-size: 11px;">© ${new Date().getFullYear()} ${storeName}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+    return true
+  } catch (error) {
+    console.error('Failed to send delivery notification email:', error)
+    return false
+  }
+}

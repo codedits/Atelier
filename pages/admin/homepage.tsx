@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import Image from 'next/image'
@@ -77,6 +78,7 @@ const Icons = {
 
 function HomepageContent() {
   const api = useAdminApi()
+  const toast = useToast()
   const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials'>('hero')
   const [loading, setLoading] = useState(true)
 
@@ -152,11 +154,11 @@ function HomepageContent() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
+      toast.error('Please select an image file')
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB')
+      toast.error('File size must be less than 10MB')
       return
     }
     setHeroSelectedFile(file)
@@ -184,6 +186,7 @@ function HomepageContent() {
             if (response.publicUrl) {
               setHeroForm(f => ({ ...f, image_url: response.publicUrl }))
               setHeroPreview(response.publicUrl)
+              toast.success('Hero image uploaded successfully')
             }
             resolve(response)
           } catch (error) {
@@ -194,7 +197,7 @@ function HomepageContent() {
       })
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload image')
+      toast.error('Failed to upload hero image')
     } finally {
       setHeroUploading(false)
     }
@@ -236,14 +239,22 @@ function HomepageContent() {
     e.preventDefault()
     try {
       if (editingHero) {
-        await api.put('/hero-images', { id: editingHero.id, ...heroForm })
+        // If image URL changed, pass old URL so it can be deleted from storage
+        const hasNewImage = heroForm.image_url !== editingHero.image_url
+        await api.put('/hero-images', { 
+          id: editingHero.id,
+          oldImageUrl: hasNewImage ? editingHero.image_url : undefined,
+          ...heroForm 
+        })
+        toast.success('Hero image updated successfully')
       } else {
         await api.post('/hero-images', heroForm)
+        toast.success('Hero image created successfully')
       }
       setHeroModal(false)
       loadData()
     } catch (error) {
-      alert('Failed to save hero image')
+      toast.error('Failed to save hero image')
     }
   }
 
@@ -251,9 +262,10 @@ function HomepageContent() {
     if (!confirm('Delete this hero image?')) return
     try {
       await api.del(`/hero-images?id=${id}`)
+      toast.success('Hero image deleted successfully')
       loadData()
     } catch {
-      alert('Failed to delete hero image')
+      toast.error('Failed to delete hero image')
     }
   }
 
@@ -262,7 +274,7 @@ function HomepageContent() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
+      toast.error('Please select an image file')
       return
     }
     setCollectionSelectedFile(file)
@@ -290,6 +302,7 @@ function HomepageContent() {
             if (response.publicUrl) {
               setCollectionForm(f => ({ ...f, image_url: response.publicUrl }))
               setCollectionPreview(response.publicUrl)
+              toast.success('Collection image uploaded successfully')
             }
             resolve(response)
           } catch (error) {
@@ -299,7 +312,7 @@ function HomepageContent() {
         reader.onerror = reject
       })
     } catch (error) {
-      alert('Failed to upload image')
+      toast.error('Failed to upload collection image')
     } finally {
       setCollectionUploading(false)
     }
@@ -339,14 +352,22 @@ function HomepageContent() {
     e.preventDefault()
     try {
       if (editingCollection) {
-        await api.put('/featured-collections', { id: editingCollection.id, ...collectionForm })
+        // If image URL changed, pass old URL so it can be deleted from storage
+        const hasNewImage = collectionForm.image_url !== editingCollection.image_url
+        await api.put('/featured-collections', { 
+          id: editingCollection.id,
+          oldImageUrl: hasNewImage ? editingCollection.image_url : undefined,
+          ...collectionForm 
+        })
+        toast.success('Collection updated successfully')
       } else {
         await api.post('/featured-collections', collectionForm)
+        toast.success('Collection created successfully')
       }
       setCollectionModal(false)
       loadData()
     } catch (error) {
-      alert('Failed to save collection')
+      toast.error('Failed to save collection')
     }
   }
 
@@ -354,9 +375,10 @@ function HomepageContent() {
     if (!confirm('Delete this collection?')) return
     try {
       await api.del(`/featured-collections?id=${id}`)
+      toast.success('Collection deleted successfully')
       loadData()
     } catch {
-      alert('Failed to delete collection')
+      toast.error('Failed to delete collection')
     }
   }
 
@@ -390,13 +412,15 @@ function HomepageContent() {
     try {
       if (editingTestimonial) {
         await api.put('/testimonials', { id: editingTestimonial.id, ...testimonialForm })
+        toast.success('Testimonial updated successfully')
       } else {
         await api.post('/testimonials', testimonialForm)
+        toast.success('Testimonial created successfully')
       }
       setTestimonialModal(false)
       loadData()
     } catch (error) {
-      alert('Failed to save testimonial')
+      toast.error('Failed to save testimonial')
     }
   }
 
@@ -404,9 +428,10 @@ function HomepageContent() {
     if (!confirm('Delete this testimonial?')) return
     try {
       await api.del(`/testimonials?id=${id}`)
+      toast.success('Testimonial deleted successfully')
       loadData()
     } catch {
-      alert('Failed to delete testimonial')
+      toast.error('Failed to delete testimonial')
     }
   }
 
@@ -993,12 +1018,14 @@ function HomepageContent() {
 export default function AdminHomepage() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Homepage — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Homepage">
-        <HomepageContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Homepage — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Homepage">
+          <HomepageContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

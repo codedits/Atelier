@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -35,6 +36,7 @@ const Icons = {
 
 function OrdersContent() {
   const api = useAdminApi()
+  const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -70,7 +72,7 @@ function OrdersContent() {
       pendingStatusRef.current.delete(id)
     } catch (error) {
       console.error('Failed to update order:', error)
-      alert('Failed to update order')
+      toast.error('Failed to update order')
     }
   }
 
@@ -125,7 +127,7 @@ function OrdersContent() {
 
   const handleDeleteAllOrders = async () => {
     if (!deleteAllConfirmText || deleteAllConfirmText !== String(orders.length)) {
-      alert(`Please type the number of orders (${orders.length}) to confirm deletion`)
+      toast.error(`Please type the number of orders (${orders.length}) to confirm deletion`)
       return
     }
 
@@ -138,10 +140,10 @@ function OrdersContent() {
       setSelectedOrder(null)
       setShowDeleteAllModal(false)
       setDeleteAllConfirmText('')
-      alert('All orders have been successfully deleted!')
+      toast.success('All orders have been successfully deleted!')
     } catch (error) {
       console.error('Error deleting all orders:', error)
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to delete all orders'}`)
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to delete all orders'}`)
     } finally {
       setIsDeleteAllLoading(false)
     }
@@ -161,10 +163,10 @@ function OrdersContent() {
       
       setShowDeleteModal(false)
       setOrderToDelete(null)
-      alert('Order removed successfully')
+      toast.success('Order deleted successfully')
     } catch (error) {
       console.error('Failed to delete order:', error)
-      alert('Failed to remove order: ' + (error as Error).message)
+      toast.error('Failed to remove order: ' + (error as Error).message)
     }
   }
 
@@ -605,12 +607,14 @@ function OrdersContent() {
 export default function AdminOrders() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Orders — Atelier Admin</title>
-      </Head>
-      <AdminLayout title="Orders">
-        <OrdersContent />
-      </AdminLayout>
+      <ToastProvider>
+        <Head>
+          <title>Orders — Atelier Admin</title>
+        </Head>
+        <AdminLayout title="Orders">
+          <OrdersContent />
+        </AdminLayout>
+      </ToastProvider>
     </AdminAuthProvider>
   )
 }

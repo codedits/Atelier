@@ -10,5 +10,7 @@ export { default as Testimonials } from './Testimonials'
 export { default as Newsletter } from './Newsletter'
 export { default as LoginForm } from './LoginForm'
 export { default as Toast } from './Toast'
+export { default as ProductReviews } from './ProductReviews'
+export { default as OrderReviewForm } from './OrderReviewForm'
 
 // Barrel file to simplify imports and improve editor/module resolution.

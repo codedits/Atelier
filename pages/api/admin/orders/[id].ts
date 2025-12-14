@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { sendDeliveryNotificationEmail } from '@/lib/email'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -50,6 +51,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (status) updates.status = status
     if (payment_status) updates.payment_status = payment_status
 
+    // First get the current order to check if status is changing to 'delivered'
+    const { data: currentOrder, error: fetchError } = await supabaseAdmin
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single() as { data: any, error: any }
+
+    if (fetchError || !currentOrder) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
+
     const { data, error } = await supabaseAdmin
       .from('orders')
       // @ts-ignore - Supabase client without typed schema
@@ -59,6 +71,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single()
 
     if (error) return res.status(500).json({ error: error.message })
+
+    // Send delivery notification email if status changed to 'delivered'
+    if (status === 'delivered' && currentOrder.status !== 'delivered') {
+      const customerEmail = currentOrder.user_email || currentOrder.email
+      
+      if (customerEmail) {
+        try {
+          await sendDeliveryNotificationEmail({
+            to: customerEmail,
+            orderId: currentOrder.id,
+            userName: currentOrder.user_name,
+            items: currentOrder.items || [],
+            totalPrice: currentOrder.total_price,
+          })
+          console.log(`Delivery notification email sent to ${customerEmail} for order ${orderId}`)
+        } catch (emailError) {
+          console.error('Failed to send delivery notification email:', emailError)
+          // Don't fail the request if email fails
+        }
+      } else {
+        console.log(`No email address found for order ${orderId}, skipping delivery notification`)
+      }
+    }
+
     return res.status(200).json(data)
   }
 

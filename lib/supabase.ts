@@ -45,10 +45,37 @@ export interface Order {
   payment_status: 'pending' | 'paid'
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled'
   created_at: string
+  user_email?: string
 }
 
 export interface Favorite {
   id: string
   product_id: string
   client_token: string
+}
+
+export interface ProductReview {
+  id: string
+  product_id: string
+  order_id: string
+  user_name: string
+  user_email?: string
+  rating: number
+  title?: string
+  comment: string
+  is_verified_purchase: boolean
+  is_approved: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductReviewStats {
+  product_id: string
+  review_count: number
+  average_rating: number
+  five_star: number
+  four_star: number
+  three_star: number
+  two_star: number
+  one_star: number
 }
