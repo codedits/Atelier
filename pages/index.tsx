@@ -28,35 +28,92 @@ interface Product {
   is_hidden?: boolean
 }
 
+interface Collection {
+  id: string
+  title: string
+  description?: string
+  image_url: string
+  link: string
+  display_order: number
+}
+
 interface HomeProps {
   newArrivals: Product[]
+  featuredCollections: Collection[]
 }
 
 // SSG with ISR - Pre-render at build time, revalidate every 60 seconds
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-  // Fetch only 6 newest visible products (extra for filtering)
-  const { data, error } = await supabase
-    .from('products')
-    .select('id, name, price, old_price, category, image_url, is_hidden')
-    .eq('is_hidden', false)
-    .order('created_at', { ascending: false })
-    .limit(3)
+  // Fetch products and collections in parallel
+  const [productsResult, collectionsResult] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, price, old_price, category, image_url, is_hidden')
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase
+      .from('featured_collections')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+  ])
 
-  if (error) {
-    console.error('Error fetching new arrivals:', error)
+  if (productsResult.error) {
+    console.error('Error fetching new arrivals:', productsResult.error)
   }
+  
+  if (collectionsResult.error) {
+    console.error('Error fetching featured collections:', collectionsResult.error)
+  }
+
+  // Default collections fallback
+  const defaultCollections = [
+    {
+      id: '1',
+      title: "Rings",
+      image_url: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=800&auto=format&fit=crop",
+      link: "/products?category=rings",
+      display_order: 0
+    },
+    {
+      id: '2', 
+      title: "Necklaces",
+      image_url: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
+      link: "/products?category=necklaces",
+      display_order: 1
+    },
+    {
+      id: '3',
+      title: "Bracelets",
+      image_url: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
+      link: "/products?category=bracelets",
+      display_order: 2
+    },
+    {
+      id: '4',
+      title: "Earrings",
+      image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop",
+      link: "/products?category=earrings",
+      display_order: 3
+    }
+  ]
 
   return {
     props: {
-      newArrivals: (data || []) as Product[],
+      newArrivals: (productsResult.data || []) as Product[],
+      featuredCollections: (collectionsResult.data && collectionsResult.data.length > 0) 
+        ? collectionsResult.data as Collection[]
+        : defaultCollections,
     },
     revalidate: 60, // ISR: Regenerate page every 60 seconds
   }
 }
 
-export default function Home({ newArrivals }: HomeProps) {
+export default function Home({ newArrivals, featuredCollections }: HomeProps) {
   // Memoize for stable reference
   const products = useMemo(() => newArrivals, [newArrivals])
+  const collections = useMemo(() => featuredCollections, [featuredCollections])
   return (
     <>
       <Head>
@@ -186,7 +243,7 @@ export default function Home({ newArrivals }: HomeProps) {
           <Hero />
 
           {/* 2. Featured Collections - 4 Card Layout */}
-          <FeaturedCollections />
+          <FeaturedCollections collections={collections} />
 
           {/* 3. Signature Piece Highlight */}
           <SignaturePiece />

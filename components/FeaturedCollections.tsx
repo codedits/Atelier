@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 interface Collection {
@@ -12,50 +11,11 @@ interface Collection {
   display_order: number
 }
 
-const defaultCollections: Collection[] = [
-  {
-    id: '1',
-    title: "Rings",
-    image_url: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=800&auto=format&fit=crop",
-    link: "/products?category=rings",
-    display_order: 0
-  },
-  {
-    id: '2',
-    title: "Necklaces",
-    image_url: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
-    link: "/products?category=necklaces",
-    display_order: 1
-  },
-  {
-    id: '3',
-    title: "Bracelets",
-    image_url: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
-    link: "/products?category=bracelets",
-    display_order: 2
-  },
-  {
-    id: '4',
-    title: "Earrings",
-    image_url: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=800&auto=format&fit=crop",
-    link: "/products?category=earrings",
-    display_order: 3
-  }
-]
+interface FeaturedCollectionsProps {
+  collections: Collection[]
+}
 
-export default function FeaturedCollections() {
-  const [collections, setCollections] = useState<Collection[]>(defaultCollections)
-
-  useEffect(() => {
-    fetch('/api/admin/featured-collections')
-      .then(res => res.json())
-      .then(data => {
-        if (data && Array.isArray(data) && data.length > 0) {
-          setCollections(data)
-        }
-      })
-      .catch(err => console.error('Failed to load collections:', err))
-  }, [])
+export default function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
 
   return (
     <section className="py-12 md:py-20 bg-white">
