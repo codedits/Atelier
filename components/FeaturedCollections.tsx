@@ -69,7 +69,7 @@ export default function FeaturedCollections({ collections }: FeaturedCollections
                     transition={{ delay: index * 0.1 + 0.2 }}
                     className="text-center w-full"
                   >
-                    <h3 className="text-2xl md:text-3xl font-semibold text-white mb-3 group-hover:text-[#D4A5A5] transition-colors duration-300">
+                    <h3 className="text-2xl md:text-3xl font-semibold !text-white mb-3">
                       {collection.title}
                     </h3>
                     <div className="flex items-center justify-center gap-2 text-white text-sm font-medium group-hover:gap-3 transition-all duration-300">

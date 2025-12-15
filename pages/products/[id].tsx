@@ -1,7 +1,7 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/router'
-import { motion } from 'framer-motion'
+import { useReducedMotion } from 'framer-motion'
 import Link from 'next/link'
 import { GetStaticProps, GetStaticPaths } from 'next'
 import { Header, Footer, ProductCarousel } from '../../components'
@@ -203,6 +203,19 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
         
         <link rel="canonical" href={`https://codedits.github.io/Atelier/products/${product.id}`} />
         
+        {/* Performance-optimized animations */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes slideInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes slideInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
+          .animate-slideInRight { animation: slideInRight 0.5s ease-out; animation-delay: 100ms; animation-fill-mode: backwards; }
+          .animate-fadeInUp { animation: fadeInUp 0.4s ease-out; }
+          @media (prefers-reduced-motion: reduce) {
+            .animate-slideInLeft, .animate-slideInRight, .animate-fadeInUp { animation: none; opacity: 1; transform: none; }
+          }
+        `}} />
+        
         {/* JSON-LD Product Schema */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",
@@ -243,43 +256,29 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
           <div className="max-w-6xl mx-auto px-6 lg:px-8">
             
             {/* Breadcrumb */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="mb-8"
-            >
+            <div className="mb-8 animate-fadeInUp">
               <div className="flex items-center gap-2 text-sm text-[#6B7280]">
-                <Link href="/" className="hover:text-[#D4A5A5] transition-colors">Home</Link>
+                <Link href="/" className="hover:text-[#D4A5A5] transition-colors duration-150">Home</Link>
                 <span>/</span>
-                <Link href="/products" className="hover:text-[#D4A5A5] transition-colors">Products</Link>
+                <Link href="/products" className="hover:text-[#D4A5A5] transition-colors duration-150">Products</Link>
                 <span>/</span>
                 <span className="text-[#111827]">{product.name}</span>
               </div>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               
               {/* Image Gallery */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
-              >
+              <div className="animate-slideInLeft">
                 <ProductCarousel
                   images={product.images || [product.image_url]}
                   productName={product.name}
                   saleBadge={product.old_price ? `Save ₨${(product.old_price - product.price).toLocaleString()}` : undefined}
                 />
-              </motion.div>
+              </div>
 
               {/* Product Info */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="space-y-4"
-              >
+              <div className="space-y-4 animate-slideInRight">
                 {/* Category & Title */}
                 <div>
                   <p className="text-sm uppercase tracking-wider text-[#D4A5A5] mb-2">{product.category}</p>
@@ -447,20 +446,16 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
                   </div>
                 </div>
 
-              </motion.div>
+              </div>
             </div>
 
-            {/* Customer Reviews Section */}
-            <ProductReviews productId={product.id} />
+            {/* Customer Reviews Section - use content-visibility for performance */}
+            <div className="content-auto">
+              <ProductReviews productId={product.id} />
+            </div>
 
             {/* Related Products Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="mt-24 border-t border-[#E5E7EB] pt-16"
-            >
+            <div className="mt-24 border-t border-[#E5E7EB] pt-16 content-auto">
               <h2 className="text-3xl font-medium text-[#111827] mb-8 text-center">
                 You May Also Like
               </h2>
@@ -469,7 +464,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
                   View All Products
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
           </div>
         </main>

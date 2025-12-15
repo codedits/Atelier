@@ -1,8 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Optimized font loading - only load weights we need */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap');
 @import "tailwindcss";
+
+/* ============================================ */
+/* PERFORMANCE OPTIMIZATIONS */
+/* ============================================ */
+
+/* Enable GPU acceleration globally for smoother animations */
+* {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
 
 html {
   scroll-behavior: smooth;
+  /* Improve text rendering */
+  text-rendering: optimizeSpeed;
+}
+
+/* Content-visibility for off-screen elements - major perf win */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
+/* CSS containment for isolated components */
+.contain-layout {
+  contain: layout style;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* Optimized skeleton loader - pure CSS, no JS */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Reduced motion - respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: #f0f0f0;
+  }
+}
+
+/* GPU-accelerated transforms only */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Lazy load images placeholder */
+.img-placeholder {
+  background: linear-gradient(135deg, #f8f7f5 0%, #e8e7e5 100%);
+}
+
+/* Optimized hover states - use opacity instead of complex transforms */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift:hover {
+    transform: none;
+  }
 }
 
 /* Typography: Poppins for body/UI, Cormorant Garamond for headings */
@@ -108,6 +187,13 @@ h1, h2, h3, h4, h5, h6 {
 .will-change-transform {
   will-change: transform, opacity;
   transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Performance: Use contain for isolated animation elements */
+.animate-contained {
+  contain: layout style paint;
+  will-change: transform, opacity;
 }
 
 /* Smooth, subtle gold glow animation for CTA focus */
@@ -115,12 +201,33 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 6px 18px rgba(0,0,0,0.45);
 }
 
+/* Reduced motion - comprehensive support */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  
+  .will-change-transform,
+  .gpu-accelerated {
+    will-change: auto;
+    transform: none;
+  }
+}
+
+/* Low-power mode optimizations */
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  img, video {
+    animation: none !important;
+  }
+  
+  .animate-contained {
+    contain: strict;
+    will-change: auto;
   }
 }
 

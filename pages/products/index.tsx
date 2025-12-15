@@ -1,7 +1,6 @@
 import Head from 'next/head'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { useRouter } from 'next/router'
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { GetStaticProps } from 'next'
@@ -31,6 +30,81 @@ interface ProductsPageProps {
   initialProducts: Product[]
   initialCategories: Category[]
 }
+
+// Memoized product card for grid - prevents unnecessary re-renders
+const ProductGridItem = memo(function ProductGridItem({ 
+  product, 
+  index 
+}: { 
+  product: Product
+  index: number 
+}) {
+  return (
+    <div
+      className="animate-fadeIn contain-layout"
+      style={{ 
+        animationDelay: `${Math.min(index * 30, 300)}ms`,
+        animationFillMode: 'backwards'
+      }}
+    >
+      <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
+        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F8F7F5] rounded-lg transition-shadow duration-200 group-hover:shadow-xl">
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated"
+            sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
+            loading={index < 8 ? 'eager' : 'lazy'}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
+          />
+          
+          {/* Sale badge */}
+          {product.old_price && (
+            <div className="absolute top-4 left-4 bg-[#D4A5A5] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+              Sale
+            </div>
+          )}
+          
+          {/* Out of stock badge */}
+          {product.stock === 0 && (
+            <div className="absolute top-4 right-4 bg-gray-800 text-white text-xs font-medium px-3 py-1 rounded-full">
+              Out of Stock
+            </div>
+          )}
+
+          {/* Quick view overlay - simplified opacity transition */}
+          <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <p className="text-center text-sm font-medium text-[#111827] flex items-center justify-center gap-2">
+              View Details
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2 px-1">
+          <p className="text-xs uppercase tracking-wider text-[#6B7280]">{product.category}</p>
+          <h3 className="font-normal text-base text-[#111827] group-hover:text-[#D4A5A5] transition-colors duration-150 line-clamp-1">
+            {product.name}
+          </h3>
+          <div className="flex items-center gap-2">
+            <p className="text-base font-medium text-[#111827]">
+              ₨{product.price.toLocaleString()}
+            </p>
+            {product.old_price && (
+              <p className="text-sm text-[#6B7280] line-through">
+                ₨{product.old_price.toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+})
 
 // ISR: Regenerate every 60 seconds for fresh products
 export const getStaticProps: GetStaticProps<ProductsPageProps> = async () => {
@@ -125,6 +199,25 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
   
   const genders = ['all', 'women', 'men']
 
+  // Memoized filter handlers
+  const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value)
+  }, [])
+
+  const handleGenderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedGender(e.target.value)
+  }, [])
+
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value)
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setSelectedCategory('all')
+    setSelectedGender('all')
+    setSortBy('default')
+  }, [])
+
   return (
     <>
       <Head>
@@ -157,6 +250,18 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
             ]
           }
         }) }} />
+        
+        {/* CSS for fade-in animation */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+          @media (prefers-reduced-motion: reduce) {
+            .animate-fadeIn { animation: none; opacity: 1; transform: none; }
+          }
+        `}} />
       </Head>
 
       <div className="min-h-screen bg-white">
@@ -165,28 +270,18 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
         <main className="pt-24 pb-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             
-            {/* Page Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-12"
-            >
+            {/* Page Header - simple CSS animation */}
+            <div className="text-center mb-12 animate-fadeIn">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#111827] mb-4">
                 All Products
               </h1>
               <p className="text-base text-[#6B7280] max-w-2xl mx-auto">
                 Discover our complete collection of handcrafted jewelry
               </p>
-            </motion.div>
+            </div>
 
-            {/* Filters & Sort */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-12 pb-6 border-b border-[#E5E7EB]"
-            >
+            {/* Filters & Sort - simplified with CSS */}
+            <div className="mb-12 pb-6 border-b border-[#E5E7EB] animate-fadeIn" style={{ animationDelay: '100ms' }}>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 
                 {/* Filters */}
@@ -196,8 +291,8 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                     <label className="text-xs uppercase tracking-wider text-[#6B7280] mb-2 block">Category</label>
                     <select
                       value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                      onChange={handleCategoryChange}
+                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors duration-150"
                     >
                       {categoryOptions.map(cat => (
                         <option key={cat} value={cat}>
@@ -247,11 +342,8 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                 </p>
                 {(selectedCategory !== 'all' || selectedGender !== 'all') && (
                   <button
-                    onClick={() => {
-                      setSelectedCategory('all')
-                      setSelectedGender('all')
-                    }}
-                    className="text-sm text-[#D4A5A5] hover:text-[#c49595] transition-colors flex items-center gap-1"
+                    onClick={clearFilters}
+                    className="text-sm text-[#D4A5A5] hover:text-[#c49595] transition-colors duration-150 flex items-center gap-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -260,98 +352,29 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                   </button>
                 )}
               </div>
-            </motion.div>
+            </div>
 
-            {/* Products Grid */}
+            {/* Products Grid - optimized with memoized components */}
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.3) }}
-                  >
-                    <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
-                      <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F8F7F5] rounded-lg group-hover:shadow-xl transition-all duration-300">
-                        <Image
-                          src={product.image_url}
-                          alt={product.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
-                          loading={index < 8 ? 'eager' : 'lazy'}
-                          placeholder="blur"
-                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBEQCEAxEAPwCwAB//2Q=="
-                        />
-                        
-                        {/* Sale badge */}
-                        {product.old_price && (
-                          <div className="absolute top-4 left-4 bg-[#D4A5A5] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
-                            Sale
-                          </div>
-                        )}
-                        
-                        {/* Out of stock badge */}
-                        {product.stock === 0 && (
-                          <div className="absolute top-4 right-4 bg-gray-800 text-white text-xs font-medium px-3 py-1 rounded-full">
-                            Out of Stock
-                          </div>
-                        )}
-
-                        {/* Quick view overlay */}
-                        <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                          <p className="text-center text-sm font-medium text-[#111827] flex items-center justify-center gap-2">
-                            View Details
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 px-1">
-                        <p className="text-xs uppercase tracking-wider text-[#6B7280]">{product.category}</p>
-                        <h3 className="font-normal text-base text-[#111827] group-hover:text-[#D4A5A5] transition-colors line-clamp-1">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <p className="text-base font-medium text-[#111827]">
-                            ₨{product.price.toLocaleString()}
-                          </p>
-                          {product.old_price && (
-                            <p className="text-sm text-[#6B7280] line-through">
-                              ₨{product.old_price.toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
+                  <ProductGridItem key={product.id} product={product} index={index} />
                 ))}
               </div>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-20"
-              >
+              <div className="text-center py-20 animate-fadeIn">
                 <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <p className="text-[#6B7280] text-lg mb-2">No products found</p>
                 <p className="text-[#9CA3AF] text-sm mb-6">Try adjusting your filters to find what you&apos;re looking for</p>
                 <button
-                  onClick={() => {
-                    setSelectedCategory('all')
-                    setSelectedGender('all')
-                    setSortBy('default')
-                  }}
+                  onClick={clearFilters}
                   className="btn btn-primary"
                 >
                   Clear All Filters
                 </button>
-              </motion.div>
+              </div>
             )}
 
           </div>

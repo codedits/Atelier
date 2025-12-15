@@ -1,7 +1,7 @@
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, memo } from 'react'
 import { CartProvider } from '@/context/CartContext'
 import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
@@ -13,13 +13,29 @@ const SITE_URL = 'https://codedits.github.io/Atelier'
 const DEFAULT_OG = '/og-image.jpg'
 const KEYWORDS = 'fine jewellery, luxury jewelry, handcrafted rings, gold necklaces, diamond earrings, bracelets, artisan jewelry, premium accessories'
 
+// Memoized page component wrapper for performance
+const MemoizedComponent = memo(function MemoizedComponent({ Component, pageProps }: { Component: AppProps['Component'], pageProps: AppProps['pageProps'] }) {
+  return <Component {...pageProps} />
+})
+
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
 
-  // Prefetch critical routes on mount for faster navigation
+  // Prefetch critical routes on mount for faster navigation (only on idle)
   useEffect(() => {
     const criticalRoutes = ['/products', '/cart', '/favorites']
-    criticalRoutes.forEach(route => router.prefetch(route))
+    
+    // Use requestIdleCallback for non-blocking prefetch
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(() => {
+        criticalRoutes.forEach(route => router.prefetch(route))
+      })
+    } else {
+      // Fallback with setTimeout for browsers without requestIdleCallback
+      setTimeout(() => {
+        criticalRoutes.forEach(route => router.prefetch(route))
+      }, 1000)
+    }
   }, [router])
 
   return (
@@ -31,6 +47,16 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta name="description" content={SITE_DESCRIPTION} />
           <meta name="keywords" content={KEYWORDS} />
           <meta name="theme-color" content="#030303" />
+          
+          {/* DNS Prefetch for external resources */}
+          <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+          <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+          <link rel="dns-prefetch" href="https://images.pexels.com" />
+          <link rel="dns-prefetch" href="https://images.unsplash.com" />
+          
+          {/* Preconnect to critical origins */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
           {/* Open Graph */}
           <meta property="og:site_name" content={SITE_NAME} />
@@ -56,7 +82,7 @@ export default function App({ Component, pageProps }: AppProps) {
           {/* Canonical - pages can override if needed */}
           <link rel="canonical" href={SITE_URL} />
           </Head>
-          <Component {...pageProps} />
+          <MemoizedComponent Component={Component} pageProps={pageProps} />
         </FavoritesProvider>
       </CartProvider>
     </UserAuthProvider>

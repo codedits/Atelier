@@ -36,9 +36,13 @@ const nextConfig = {
     ],
     // Keep unoptimized to avoid Vercel quota; use source-side sizing instead
     unoptimized: false,
-    // Reduce image quality slightly for faster loads
+    // Optimize images for faster loads on low-end devices
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    // Use modern formats for smaller file sizes
+    formats: ['image/avif', 'image/webp'],
+    // Reduce quality slightly for performance (still looks great)
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
   // Production caching headers for static assets
   async headers() {
