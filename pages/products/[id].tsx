@@ -3,117 +3,130 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { GetStaticProps, GetStaticPaths } from 'next'
 import { Header, Footer, ProductCarousel } from '../../components'
 import ProductReviews from '@/components/ProductReviews'
-import { useProduct } from '@/hooks/useProducts'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
+import { supabase, Product } from '@/lib/supabase'
 
-// Sample product data - replace with API call
-const productData: Record<string, any> = {
-  '1': {
-    id: '1',
-    name: 'Diamond Solitaire Ring',
-    price: 18500,
-    old_price: 22000,
-    category: 'Rings',
-    gender: 'women',
-    description: 'A stunning solitaire ring featuring a brilliant-cut diamond set in platinum. This timeless piece showcases exceptional craftsmanship and is perfect for engagements or special occasions.',
-    images: [
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1200&auto=format&fit=crop'
-    ],
-    stock: 5,
-    details: {
-      material: 'Platinum',
-      stone: 'Diamond (1.5ct)',
-      dimensions: '6mm band width',
-      care: 'Clean with soft cloth, avoid harsh chemicals'
-    }
-  },
-  '2': {
-    id: '2',
-    name: 'Pearl Elegance Necklace',
-    price: 4200,
-    category: 'Necklaces',
-    gender: 'women',
-    description: 'Elegant freshwater pearl necklace with a 14k gold clasp. Each pearl is hand-selected for its luster and perfectly matched to create a harmonious strand.',
-    images: [
-      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop'
-    ],
-    stock: 8,
-    details: {
-      material: '14K Yellow Gold',
-      stone: 'Freshwater Pearls',
-      dimensions: '18 inch length',
-      care: 'Wipe with damp cloth after wearing'
-    }
-  },
-  '3': {
-    id: '3',
-    name: 'Gold Chain Bracelet',
-    price: 3800,
-    category: 'Bracelets',
-    gender: 'women',
-    description: 'Delicate 18k gold chain bracelet with secure lobster clasp. A versatile piece that can be worn alone or layered with other bracelets.',
-    images: [
-      'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?q=80&w=1200&auto=format&fit=crop'
-    ],
-    stock: 12,
-    details: {
-      material: '18K Yellow Gold',
-      stone: 'None',
-      dimensions: '7.5 inch length',
-      care: 'Polish with jewelry cloth'
-    }
+interface ProductDetailPageProps {
+  product: Product & { images?: string[] } | null
+}
+
+// Generate static paths for all products
+export const getStaticPaths: GetStaticPaths = async () => {
+  const { data: products } = await supabase
+    .from('products')
+    .select('id')
+    .or('is_hidden.is.null,is_hidden.eq.false')
+    .limit(100) // Pre-build top 100 products
+
+  const paths = (products || []).map((p) => ({
+    params: { id: p.id },
+  }))
+
+  return {
+    paths,
+    fallback: 'blocking', // SSR on-demand for new products
   }
 }
 
-export default function ProductDetailPage() {
-  const router = useRouter()
-  const { id } = router.query
-  const { product: fetchedProduct, loading, error } = useProduct(
-    typeof id === 'string' ? id : undefined
-  )
-  const { addItem } = useCart()
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites()
+// ISR: Fetch product data at build time, revalidate every 60 seconds
+export const getStaticProps: GetStaticProps<ProductDetailPageProps> = async ({ params }) => {
+  const id = params?.id as string
 
-  // fallback to local sample data for development when API has no product
-  const rawProduct = fetchedProduct ?? (id ? productData[id as string] : null)
+  if (!id) {
+    return { notFound: true }
+  }
 
-  // Normalize product: ensure images array exists, derive from image_url if needed
-  const product = rawProduct ? {
-    ...rawProduct,
-    images: rawProduct.images && rawProduct.images.length > 0
-      ? rawProduct.images
-      : rawProduct.image_url
-        ? [rawProduct.image_url]
+  const { data: product, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error || !product) {
+    return { notFound: true }
+  }
+
+  // Normalize images array
+  const normalizedProduct = {
+    ...product,
+    images: product.images && product.images.length > 0
+      ? product.images
+      : product.image_url
+        ? [product.image_url]
         : ['https://via.placeholder.com/600?text=No+Image'],
-    stock: rawProduct.stock ?? 0,
-    price: rawProduct.price ?? 0,
-  } : null
+  }
+
+  return {
+    props: {
+      product: normalizedProduct,
+    },
+    revalidate: 60, // Revalidate every 60 seconds
+  }
+}
+
+export default function ProductDetailPage({ product }: ProductDetailPageProps) {
+  const router = useRouter()
+  const { addItem, getItemQuantity } = useCart()
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites()
 
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [stockError, setStockError] = useState(false)
 
-  const isInFavorites = product ? isFavorite(product.id) : false
-  
-  // Get current quantity in cart for this product
-  const { getItemQuantity, canAddMore } = useCart()
-  const currentInCart = product ? getItemQuantity(product.id) : 0
-  const maxCanAdd = product && product.stock > 0 
+  // Handle fallback loading state
+  if (router.isFallback) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="pt-32 pb-20">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Skeleton loader */}
+              <div className="aspect-square bg-gray-100 skeleton rounded-lg" />
+              <div className="space-y-4">
+                <div className="h-4 w-24 skeleton rounded" />
+                <div className="h-10 w-3/4 skeleton rounded" />
+                <div className="h-8 w-32 skeleton rounded" />
+                <div className="h-24 w-full skeleton rounded mt-6" />
+                <div className="h-12 w-full skeleton rounded mt-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="pt-32 pb-20 text-center">
+          <h1 className="text-2xl font-medium text-[#111827] mb-4">Product not found</h1>
+          <Link href="/products" className="btn btn-primary">
+            Browse All Products
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  const isInFavorites = isFavorite(product.id)
+  const currentInCart = getItemQuantity(product.id)
+  const maxCanAdd = product.stock > 0 
     ? Math.max(0, product.stock - currentInCart) 
     : 999
-  const isOutOfStock = product && product.stock > 0 && product.stock <= currentInCart
+  const isOutOfStock = product.stock > 0 && product.stock <= currentInCart
 
   const handleAddToCart = () => {
     if (!product) return
     
-    // Check stock before adding
     if (product.stock > 0 && quantity > maxCanAdd) {
       setStockError(true)
       setTimeout(() => setStockError(false), 3000)
@@ -128,14 +141,14 @@ export default function ProductDetailPage() {
       old_price: product.old_price,
       category: product.category,
       gender: product.gender || 'unisex',
-      image_url: product.images[0],
+      image_url: product.images?.[0] || product.image_url,
       stock: product.stock,
-      created_at: new Date().toISOString(),
+      created_at: product.created_at,
     }, quantity)
     
     if (added) {
       setAddedToCart(true)
-      setQuantity(1) // Reset quantity after adding
+      setQuantity(1)
       setTimeout(() => setAddedToCart(false), 2000)
     } else {
       setStockError(true)
@@ -153,42 +166,15 @@ export default function ProductDetailPage() {
       old_price: product.old_price,
       category: product.category,
       gender: product.gender || 'unisex',
-      image_url: product.images[0],
+      image_url: product.images?.[0] || product.image_url,
       stock: product.stock,
-      created_at: new Date().toISOString(),
+      created_at: product.created_at,
     }
     if (isInFavorites) {
       removeFavorite(product.id)
     } else {
       addFavorite(productData)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="pt-32 pb-20 text-center">
-          <h1 className="text-2xl font-medium text-[#111827] mb-4">Loading...</h1>
-        </div>
-        <Footer />
-      </div>
-    )
-  }
-
-  if (!product || error) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="pt-32 pb-20 text-center">
-          <h1 className="text-2xl font-medium text-[#111827] mb-4">Product not found</h1>
-          <Link href="/products" className="btn btn-primary">
-            Browse All Products
-          </Link>
-        </div>
-        <Footer />
-      </div>
-    )
   }
 
   return (
@@ -201,7 +187,7 @@ export default function ProductDetailPage() {
         {/* Open Graph */}
         <meta property="og:title" content={`${product.name} | Atelier Fine Jewellery`} />
         <meta property="og:description" content={product.description || `Shop ${product.name} from Atelier`} />
-        <meta property="og:image" content={product.images[0]} />
+        <meta property="og:image" content={product.images?.[0] || product.image_url} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="1200" />
         <meta property="og:type" content="product" />
@@ -213,7 +199,7 @@ export default function ProductDetailPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${product.name} | Atelier`} />
         <meta name="twitter:description" content={product.description || `Shop ${product.name}`} />
-        <meta name="twitter:image" content={product.images[0]} />
+        <meta name="twitter:image" content={product.images?.[0] || product.image_url} />
         
         <link rel="canonical" href={`https://codedits.github.io/Atelier/products/${product.id}`} />
         
@@ -223,7 +209,7 @@ export default function ProductDetailPage() {
           "@type": "Product",
           "name": product.name,
           "description": product.description,
-          "image": product.images,
+          "image": product.images || [product.image_url],
           "sku": product.id,
           "category": product.category,
           "brand": {
@@ -254,7 +240,7 @@ export default function ProductDetailPage() {
         <Header />
 
         <main className="pt-24 pb-20">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto px-6 lg:px-8">
             
             {/* Breadcrumb */}
             <motion.div
@@ -272,7 +258,7 @@ export default function ProductDetailPage() {
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               
               {/* Image Gallery */}
               <motion.div
@@ -281,7 +267,7 @@ export default function ProductDetailPage() {
                 transition={{ duration: 0.4 }}
               >
                 <ProductCarousel
-                  images={product.images}
+                  images={product.images || [product.image_url]}
                   productName={product.name}
                   saleBadge={product.old_price ? `Save ₨${(product.old_price - product.price).toLocaleString()}` : undefined}
                 />
@@ -292,18 +278,18 @@ export default function ProductDetailPage() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="space-y-6"
+                className="space-y-4"
               >
                 {/* Category & Title */}
                 <div>
                   <p className="text-sm uppercase tracking-wider text-[#D4A5A5] mb-2">{product.category}</p>
-                  <h1 className="text-4xl md:text-5xl font-medium text-[#111827] mb-4">
+                  <h1 className="text-3xl md:text-4xl lg:text-4xl font-medium text-[#111827] mb-4">
                     {product.name}
                   </h1>
                   
                   {/* Price */}
-                  <div className="flex items-baseline gap-3 mb-6">
-                    <p className="text-3xl font-medium text-[#111827]">
+                  <div className="flex items-baseline gap-3 mb-4">
+                    <p className="text-2xl md:text-3xl font-medium text-[#111827]">
                       ₨{product.price.toLocaleString()}
                     </p>
                     {product.old_price && (
@@ -327,12 +313,14 @@ export default function ProductDetailPage() {
                     Product Details
                   </h3>
                   <div className="space-y-3">
-                    {Object.entries(product.details || {}).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-2 border-b border-[#E5E7EB] last:border-0">
-                        <p className="text-sm text-[#6B7280] capitalize">{key}</p>
-                        <p className="text-sm text-[#111827] font-medium">{value as string}</p>
-                      </div>
-                    ))}
+                    <div className="flex justify-between py-2 border-b border-[#E5E7EB]">
+                      <p className="text-sm text-[#6B7280]">Category</p>
+                      <p className="text-sm text-[#111827] font-medium capitalize">{product.category}</p>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-[#E5E7EB]">
+                      <p className="text-sm text-[#6B7280]">Style</p>
+                      <p className="text-sm text-[#111827] font-medium capitalize">{product.gender}</p>
+                    </div>
                     <div className="flex justify-between py-2">
                       <p className="text-sm text-[#6B7280]">Availability</p>
                       <p className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>

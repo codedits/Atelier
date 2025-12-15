@@ -1,6 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase, Product } from '@/lib/supabase'
 
+// Simple in-memory cache for API responses
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 30 * 1000 // 30 seconds
+
+function getCacheKey(query: Record<string, any>): string {
+  return JSON.stringify(query)
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -8,6 +16,15 @@ export default async function handler(
   if (req.method === 'GET') {
     // Query params for filtering
     const { category, gender, minPrice, maxPrice, limit, offset } = req.query
+    const cacheKey = getCacheKey(req.query)
+
+    // Check cache first
+    const cached = cache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      res.setHeader('X-Cache', 'HIT')
+      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
+      return res.status(200).json(cached.data)
+    }
 
     let query = supabase
       .from('products')
@@ -49,6 +66,12 @@ export default async function handler(
       return res.status(500).json({ error: error.message })
     }
 
+    // Store in cache
+    cache.set(cacheKey, { data: data as Product[], timestamp: Date.now() })
+
+    // Set cache headers for CDN/browser
+    res.setHeader('X-Cache', 'MISS')
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
     return res.status(200).json(data as Product[])
   }
 

@@ -1,10 +1,12 @@
 import Head from 'next/head'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { GetStaticProps } from 'next'
 import { Header, Footer } from '../../components'
+import { supabase } from '@/lib/supabase'
 
 interface Product {
   id: string
@@ -25,15 +27,53 @@ interface Category {
   created_at: string
 }
 
-export default function ProductsPage() {
+interface ProductsPageProps {
+  initialProducts: Product[]
+  initialCategories: Category[]
+}
+
+// ISR: Regenerate every 60 seconds for fresh products
+export const getStaticProps: GetStaticProps<ProductsPageProps> = async () => {
+  let products: Product[] = []
+  let categories: Category[] = []
+
+  try {
+    // Fetch products
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('*')
+      .or('is_hidden.is.null,is_hidden.eq.false')
+      .order('created_at', { ascending: false })
+    
+    products = productsData || []
+
+    // Fetch categories
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name', { ascending: true })
+    
+    categories = categoriesData || []
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+  }
+
+  return {
+    props: {
+      initialProducts: products,
+      initialCategories: categories,
+    },
+    revalidate: 60, // ISR: Revalidate every 60 seconds
+  }
+}
+
+export default function ProductsPage({ initialProducts, initialCategories }: ProductsPageProps) {
   const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [products] = useState<Product[]>(initialProducts)
+  const [categories] = useState<Category[]>(initialCategories)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
   const [sortBy, setSortBy] = useState('default')
-  const [loading, setLoading] = useState(true)
 
   // Read filters from URL query params on mount
   useEffect(() => {
@@ -48,34 +88,8 @@ export default function ProductsPage() {
     }
   }, [router.isReady, router.query])
 
-  // Fetch products and categories from API
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch products
-        const productsRes = await fetch('/api/products')
-        const productsData = await productsRes.json()
-        const visibleProducts = productsData.filter((p: Product) => !p.is_hidden)
-        setProducts(visibleProducts)
-        setFilteredProducts(visibleProducts)
-
-        // Fetch categories
-        const categoriesRes = await fetch('/api/categories')
-        if (categoriesRes.ok) {
-          const categoriesData = await categoriesRes.json()
-          setCategories(categoriesData)
-        }
-      } catch (err) {
-        console.error('Failed to load data:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    fetchData()
-  }, [])
-
-  useEffect(() => {
+  // Memoized filtered products for performance
+  const filteredProducts = useMemo(() => {
     let filtered = [...products]
 
     // Filter by category (case-insensitive)
@@ -97,17 +111,18 @@ export default function ProductsPage() {
       filtered.sort((a, b) => a.name.localeCompare(b.name))
     }
 
-    setFilteredProducts(filtered)
+    return filtered
   }, [selectedCategory, selectedGender, sortBy, products])
 
   // Generate category options from API categories plus existing product categories
-  const categoryOptions = [
+  const categoryOptions = useMemo(() => [
     'all',
     ...Array.from(new Set([
       ...categories.map(c => c.name),
       ...products.map(p => p.category)
     ]))
-  ]
+  ], [categories, products])
+  
   const genders = ['all', 'women', 'men']
 
   return (
@@ -248,21 +263,16 @@ export default function ProductsPage() {
             </motion.div>
 
             {/* Products Grid */}
-            {loading ? (
-              <div className="text-center py-20">
-                <div className="inline-block w-12 h-12 border-4 border-[#D4A5A5] border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-[#6B7280] mt-4">Loading products...</p>
-              </div>
-            ) : filteredProducts.length > 0 ? (
+            {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {filteredProducts.map((product, index) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.3) }}
                   >
-                    <Link href={`/products/${product.id}`} className="group block">
+                    <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
                       <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F8F7F5] rounded-lg group-hover:shadow-xl transition-all duration-300">
                         <Image
                           src={product.image_url}
@@ -270,6 +280,9 @@ export default function ProductsPage() {
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                           sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
+                          loading={index < 8 ? 'eager' : 'lazy'}
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBEQCEAxEAPwCwAB//2Q=="
                         />
                         
                         {/* Sale badge */}

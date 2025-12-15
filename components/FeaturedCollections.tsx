@@ -87,23 +87,42 @@ export default function FeaturedCollections() {
             >
               <Link
                 href={collection.link}
-                className="group relative overflow-hidden bg-[#F8F7F5] hover:shadow-lg transition-shadow duration-300 block"
+                className="group relative overflow-hidden rounded-2xl block h-80 md:h-96 cursor-pointer"
               >
-                <div className="aspect-square overflow-hidden relative">
-                  <Image
-                    src={collection.image_url}
-                    alt={collection.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 50vw"
-                  />
+                {/* Background Image */}
+                <Image
+                  src={collection.image_url}
+                  alt={collection.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                />
+
+                {/* Gradient Overlay - Dark to Transparent */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 group-hover:opacity-80 transition-opacity duration-500"></div>
+
+                {/* Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-end p-6 md:p-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.2 }}
+                    className="text-center w-full"
+                  >
+                    <h3 className="text-2xl md:text-3xl font-semibold text-white mb-3 group-hover:text-[#D4A5A5] transition-colors duration-300">
+                      {collection.title}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 text-white text-sm font-medium group-hover:gap-3 transition-all duration-300">
+                      <span>Explore</span>
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </motion.div>
                 </div>
-                
-                <div className="p-4 text-center">
-                  <h3 className="text-base md:text-lg font-medium text-[#1A1A1A] group-hover:text-[#D4A5A5] transition-colors">
-                    {collection.title}
-                  </h3>
-                </div>
+
+                {/* Accent Border on Hover */}
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#D4A5A5] via-[#E8C0C0] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </Link>
             </motion.div>
           ))}

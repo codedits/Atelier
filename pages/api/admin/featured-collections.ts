@@ -10,6 +10,10 @@ if (supabaseUrl && supabaseServiceKey) {
   supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 }
 
+// Simple in-memory cache for public GET requests
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 60 * 1000 // 60 seconds
+
 function getAdminFromRequest(req: NextApiRequest) {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return null
@@ -37,10 +41,23 @@ async function deleteStorageFile(imageUrl: string, folder: string = 'collections
   }
 }
 
+// Invalidate cache when data changes
+function invalidateCache() {
+  cache.delete('featured-collections')
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
+      // Check cache first
+      const cached = cache.get('featured-collections')
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        res.setHeader('X-Cache', 'HIT')
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+        return res.status(200).json(cached.data)
+      }
+
       const client = supabaseAdmin ?? supabaseAnon
       const { data, error } = await client
         .from('featured_collections')
@@ -59,6 +76,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         return res.status(500).json({ error: msg })
       }
+      
+      // Store in cache
+      cache.set('featured-collections', { data: data || [], timestamp: Date.now() })
+      
+      res.setHeader('X-Cache', 'MISS')
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
       return res.status(200).json(data || [])
     } catch (err: any) {
         const msg = err?.message || String(err)

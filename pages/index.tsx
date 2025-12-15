@@ -1,7 +1,9 @@
 import Head from 'next/head'
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { GetStaticProps } from 'next'
+import { supabase } from '@/lib/supabase'
 import { 
   Header, 
   Hero, 
@@ -23,23 +25,38 @@ interface Product {
   old_price?: number
   category: string
   image_url: string
+  is_hidden?: boolean
 }
 
-export default function Home() {
-  const [newArrivals, setNewArrivals] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+interface HomeProps {
+  newArrivals: Product[]
+}
 
-  useEffect(() => {
-    // Only fetch 3 newest products for the New Arrivals section
-    fetch('/api/products?limit=3')
-      .then(res => res.json())
-      .then(data => {
-        const visible = data.filter((p: Product & { is_hidden?: boolean }) => !p.is_hidden).slice(0, 3)
-        setNewArrivals(visible)
-      })
-      .catch(err => console.error('Failed to load products:', err))
-      .finally(() => setLoading(false))
-  }, [])
+// SSG with ISR - Pre-render at build time, revalidate every 60 seconds
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  // Fetch only 6 newest visible products (extra for filtering)
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, price, old_price, category, image_url, is_hidden')
+    .eq('is_hidden', false)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  if (error) {
+    console.error('Error fetching new arrivals:', error)
+  }
+
+  return {
+    props: {
+      newArrivals: (data || []) as Product[],
+    },
+    revalidate: 60, // ISR: Regenerate page every 60 seconds
+  }
+}
+
+export default function Home({ newArrivals }: HomeProps) {
+  // Memoize for stable reference
+  const products = useMemo(() => newArrivals, [newArrivals])
   return (
     <>
       <Head>
@@ -196,19 +213,15 @@ export default function Home() {
                 </p>
               </motion.div>
               
-              {loading ? (
-                <div className="flex justify-center py-12">
-                  <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
-                </div>
-              ) : newArrivals.length > 0 ? (
+              {products.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {newArrivals.map((product, index) => (
+                  {products.map((product, index) => (
                     <motion.div
                       key={product.id}
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.18 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      transition={{ duration: 0.5, delay: index * 0.08 }}
                       className="will-change-transform"
                     >
                       <ProductCard 

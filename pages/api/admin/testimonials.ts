@@ -10,6 +10,14 @@ if (supabaseUrl && supabaseServiceKey) {
   supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 }
 
+// Simple in-memory cache
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 60 * 1000 // 60 seconds
+
+function invalidateCache() {
+  cache.delete('testimonials')
+}
+
 function getAdminFromRequest(req: NextApiRequest) {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return null
@@ -20,6 +28,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
+      // Check cache first
+      const cached = cache.get('testimonials')
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        res.setHeader('X-Cache', 'HIT')
+        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+        return res.status(200).json(cached.data)
+      }
+
       const client = supabaseAdmin ?? supabaseAnon
       const { data, error } = await client
         .from('testimonials')
@@ -31,6 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error('Testimonials fetch error:', error)
         return res.status(500).json({ error: error.message })
       }
+      
+      // Store in cache
+      cache.set('testimonials', { data: data || [], timestamp: Date.now() })
+      
+      res.setHeader('X-Cache', 'MISS')
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
       return res.status(200).json(data || [])
     } catch (err: any) {
       console.error('Testimonials fetch error:', err)
@@ -71,6 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Testimonial creation error:', error)
       return res.status(500).json({ error: error.message })
     }
+    
+    invalidateCache() // Clear cache on update
     return res.status(201).json(data)
   }
 
@@ -99,6 +123,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Testimonial update error:', error)
       return res.status(500).json({ error: error.message })
     }
+    
+    invalidateCache() // Clear cache on update
     return res.status(200).json(data)
   }
 
@@ -118,6 +144,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Testimonial deletion error:', error)
       return res.status(500).json({ error: error.message })
     }
+    
+    invalidateCache() // Clear cache on update
     return res.status(200).json({ message: 'Testimonial deleted' })
   }
 
