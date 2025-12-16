@@ -111,7 +111,7 @@ export default function OrderConfirmationPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-[#F8F7F5] rounded-lg p-6 text-left mb-8"
+                  className="bg-[#f0e3ce] rounded-lg p-6 text-left mb-8"
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div>

@@ -19,7 +19,7 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, category =
   return (
     <article className="group cursor-pointer contain-layout hover-lift">
       <Link href={productUrl} className="block" prefetch={false}>
-        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F8F7F5] rounded-lg transition-shadow duration-200 group-hover:shadow-lg">
+        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-lg">
           {/* Use CSS transform instead of framer-motion for better perf */}
           <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
             <Image 

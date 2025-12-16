@@ -37,10 +37,10 @@ const Footer = memo(function Footer() {
           <div>
             <h4 className="text-xs font-semibold uppercase text-[#1A1A1A] mb-4 tracking-widest">Information</h4>
             <ul className="space-y-3">
-              <li><a href="/#about" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">About Atelier</a></li>
+              <li><Link href="/about" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">About Atelier</Link></li>
               <li><a href="/#craftsmanship" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Craftsmanship</a></li>
-              <li><a href="/#journal" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Journal</a></li>
-              <li><a href="/#gift-guide" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Gift Guide</a></li>
+              <li><Link href="/journal" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Journal</Link></li>
+              <li><Link href="/gift-guide" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Gift Guide</Link></li>
             </ul>
           </div>
           
@@ -49,9 +49,9 @@ const Footer = memo(function Footer() {
             <h4 className="text-xs font-semibold uppercase text-[#1A1A1A] mb-4 tracking-widest">Support</h4>
             <ul className="space-y-3">
               <li><Link href="/account" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">My Account</Link></li>
-              <li><a href="/#shipping" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Shipping Info</a></li>
-              <li><a href="/#returns" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Returns</a></li>
-              <li><a href="/#faq" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">FAQs</a></li>
+              <li><Link href="/shipping-info" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Shipping Info</Link></li>
+              <li><Link href="/returns" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Returns</Link></li>
+              <li><Link href="/faq" className="text-sm text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">FAQs</Link></li>
             </ul>
           </div>
 
@@ -96,9 +96,9 @@ const Footer = memo(function Footer() {
             <div className="flex flex-col gap-4 w-full md:w-auto">
               <p className="text-xs text-[#6B6B6B]">© {new Date().getFullYear()} Atelier Fine Jewellery. All rights reserved.</p>
               <div className="flex flex-wrap gap-6">
-                <a href="#privacy" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Privacy Policy</a>
-                <a href="#terms" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Terms of Service</a>
-                <a href="#cookies" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Cookie Policy</a>
+                <a href="/privacy-policy" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Privacy Policy</a>
+                <a href="/terms-of-service" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Terms of Service</a>
+                <a href="/cookie-policy" className="text-xs text-[#6B6B6B] hover:text-[#D4A5A5] transition-colors duration-150">Cookie Policy</a>
               </div>
             </div>
             <div className="text-right w-full md:w-auto">

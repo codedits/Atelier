@@ -48,7 +48,7 @@ const ProductGridItem = memo(function ProductGridItem({
       }}
     >
       <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
-        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F8F7F5] rounded-lg transition-shadow duration-200 group-hover:shadow-xl">
+        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-xl">
           <Image
             src={product.image_url}
             alt={product.name}
