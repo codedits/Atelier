@@ -85,7 +85,6 @@ html {
 }
 
 /* Typography: Poppins for body/UI, Cormorant Garamond for headings */
-html,
 body {
   background: #FFFFFF;
   color: #111827;
@@ -98,7 +97,7 @@ body {
 :root{
   --color-white: #FFFFFF;
   --color-offwhite: #F8F7F5;
-  --color-text: #111827;
+  --color-text: #271d11;
   --color-text-muted: #6B7280;
   --color-border: #E5E7EB;
   --color-rose: #D4A5A5;

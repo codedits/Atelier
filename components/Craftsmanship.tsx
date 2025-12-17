@@ -55,7 +55,7 @@ export default function Craftsmanship() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="relative order-1 lg:order-2 will-change-transform"
           >
-            <div className="aspect-[4/5] overflow-hidden bg-[#F8F7F5] relative">
+            <div className="aspect-[4/5] overflow-hidden bg-[#f0e3ce] relative">
               <Image
                 src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?q=80&w=1200&auto=format&fit=crop"
                 alt="Master artisan crafting jewelry"

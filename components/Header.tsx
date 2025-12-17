@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { useFavorites } from '@/context/FavoritesContext'
@@ -8,9 +8,20 @@ import { useFavorites } from '@/context/FavoritesContext'
 export default function Header() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [hasScrolled, setHasScrolled] = useState(false)
   const { totalItems } = useCart()
   const { isAuthenticated, user } = useUserAuth()
   const { favorites } = useFavorites()
+
+  // Detect scroll to change header style on homepage
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 200)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Check if current page matches the link
   const isActive = (path: string) => {
@@ -22,41 +33,55 @@ export default function Header() {
     return router.pathname === path
   }
 
+  // Determine if we're on homepage and should show transparent header
+  const isHomepage = router.pathname === '/'
+  const shouldBeTransparent = isHomepage && !hasScrolled
+
   return (
     <>
-      {/* Promotional Banner */}
-      <div className="bg-[#1A1A1A] text-white text-center py-2.5 px-4">
-        <p className="text-xs font-medium tracking-wide">✨ Free shipping on orders over ₨5,000 | Free returns</p>
-      </div>
+      {/* Promotional Banner - Only visible on non-homepage */}
+      {router.pathname !== '/' && (
+        <div className="bg-[#1A1A1A] text-white text-center py-2.5 px-4">
+          <p className="text-xs font-medium tracking-wide">✨ Free shipping on orders over ₨5,000 | Free returns</p>
+        </div>
+      )}
       
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm">
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        shouldBeTransparent
+          ? 'bg-transparent border-b-0' 
+          : 'bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm'
+      }`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="font-display text-xl tracking-[0.05em] text-[#1A1A1A] hover:text-[#D4A5A5] transition-colors">
+            <Link href="/" className={`font-display text-xl tracking-[0.05em] transition-colors ${
+              shouldBeTransparent
+                ? 'text-white hover:text-white/80' 
+                : 'text-[#1A1A1A] hover:text-[#D4A5A5]'
+            }`}>
               ATELIER
             </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/products" className={`text-sm transition-colors font-medium relative ${isActive('/products') ? 'text-[#D4A5A5]' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products" className={`text-sm transition-colors font-medium relative ${isActive('/products') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
               Shop All
               {isActive('/products') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
             </Link>
-            <Link href="/products?gender=women" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=women') ? 'text-[#D4A5A5]' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products?gender=women" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=women') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
               Women
               {isActive('/products?gender=women') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
             </Link>
-            <Link href="/products?gender=men" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=men') ? 'text-[#D4A5A5]' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products?gender=men" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=men') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
               Men
               {isActive('/products?gender=men') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
             </Link>
-            <Link href="/#collections" className="text-sm text-[#1A1A1A] hover:text-[#D4A5A5] transition-colors font-medium">Collections</Link>
+            <Link href="/#collections" className={`text-sm transition-colors font-medium ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>Collections</Link>
           </nav>            <div className="hidden md:flex items-center gap-6">
-              <button aria-label="Search" className="text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110 transition-all">
+              <button aria-label="Search" className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
-              <Link href="/favorites" aria-label="Favorites" className="text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110 transition-all relative">
+              <Link href="/favorites" aria-label="Favorites" className={`transition-all relative ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -66,7 +91,7 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className="text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110 transition-all relative group">
+              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`transition-all relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -76,7 +101,7 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-              <Link href="/cart" aria-label="Cart" className="text-[#1A1A1A] hover:text-[#D4A5A5] transition-colors relative">
+              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
@@ -90,7 +115,7 @@ export default function Header() {
 
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-4">
-              <Link href="/cart" aria-label="Cart" className="text-[#1A1A1A] hover:text-[#D4A5A5] transition-colors relative">
+              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
@@ -104,7 +129,7 @@ export default function Header() {
                 aria-label="Toggle menu"
                 aria-expanded={open}
                 onClick={() => setOpen(v => !v)}
-                className="p-2 text-[#1A1A1A] hover:text-[#D4A5A5] focus:outline-none"
+                className={`p-2 focus:outline-none ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {open ? (

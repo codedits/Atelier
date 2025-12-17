@@ -52,13 +52,13 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, category =
           </div>
         </div>
         
-        <div className="space-y-1 text-center px-2">
-          <p className="text-xs text-[#6B6B6B] uppercase tracking-wide">{category}</p>
-          <h3 className="font-normal text-base text-[#1A1A1A] group-hover:text-[#D4A5A5] transition-colors duration-150">{name}</h3>
+        <div className="space-y-2 text-center px-2">
+          <p className="text-sm text-[#6B6B6B] uppercase tracking-wide">{category}</p>
+          <h3 className="font-bold text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#D4A5A5] transition-colors duration-150" style={{ fontFamily: "'Poppins', sans-serif" }}>{name}</h3>
           <div className="flex items-center justify-center gap-2">
-            <p className="text-sm text-[#1A1A1A] font-medium">{formattedPrice}</p>
+            <p className="text-base md:text-lg text-[#1A1A1A] font-medium">{formattedPrice}</p>
             {oldPrice && (
-              <p className="text-sm text-[#9CA3AF] line-through">₨{oldPrice.toLocaleString()}</p>
+              <p className="text-base md:text-lg text-[#9CA3AF] line-through">₨{oldPrice.toLocaleString()}</p>
             )}
           </div>
         </div>

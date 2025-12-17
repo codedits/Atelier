@@ -12,7 +12,7 @@ import {
 } from '../components'
 
 // Lazy load below-fold components for faster initial render
-const SignaturePiece = dynamic(() => import('../components/SignaturePiece'), { ssr: true })
+const BentoGrid = dynamic(() => import('../components/BentoGrid'), { ssr: true })
 const Craftsmanship = dynamic(() => import('../components/Craftsmanship'), { ssr: true })
 const Testimonials = dynamic(() => import('../components/Testimonials'), { ssr: true })
 const Newsletter = dynamic(() => import('../components/Newsletter'), { ssr: true })
@@ -245,8 +245,8 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
           {/* 2. Featured Collections - 4 Card Layout */}
           <FeaturedCollections collections={collections} />
 
-          {/* 3. Signature Piece Highlight */}
-          <SignaturePiece />
+          {/* 3. Bento Grid Collection Showcase */}
+          <BentoGrid />
 
           {/* 4. Craftsmanship / Brand Story */}
           <Craftsmanship />

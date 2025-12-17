@@ -17,7 +17,7 @@ const defaultHero: HeroImage = {
   id: 'default',
   title: 'Atelier',
   subtitle: '',
-  image_url: 'https://images.pexels.com/photos/18658121/pexels-photo-18658121.jpeg?w=1920',
+  image_url: '/pexels-coppertist-wu-313365563-15691504.jpg',
   video_url: '',
   cta_text: 'Shop Women',
   cta_link: '/products?gender=women',
@@ -89,7 +89,7 @@ export default function Hero() {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A]" />
         )}
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/50" />
       </div>
 
       {/* Overlay content - Centered Heading Only */}
