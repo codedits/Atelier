@@ -41,11 +41,18 @@ export default async function handler(
   // POST - Create a new order
   if (req.method === 'POST') {
     const user = getUserFromRequest(req)
-    const { user_name, email, phone, address, items, total_price, payment_method, clearCart } = req.body
+    const { user_name, email, phone, address, items, total_price, payment_method, payment_proof, clearCart } = req.body
 
     // Validate required fields
     if (!user_name || !phone || !address || !items || !total_price || !payment_method) {
       return res.status(400).json({ error: 'Missing required fields' })
+    }
+
+    // Validate payment proof for COD orders
+    if (payment_method === 'COD') {
+      if (!payment_proof || !payment_proof.transaction_id || !payment_proof.screenshot_url) {
+        return res.status(400).json({ error: 'Payment proof required for COD orders' })
+      }
     }
 
     // Validate email if provided
@@ -94,8 +101,21 @@ export default async function handler(
       items: items as OrderItem[],
       total_price: Number(total_price),
       payment_method,
-      payment_status: 'pending',
+      payment_status: payment_method === 'COD' ? 'proof_pending' : 'pending',
       status: 'pending',
+    }
+
+    // Add payment proof data for COD orders
+    if (payment_method === 'COD' && payment_proof) {
+      newOrder.payment_proof = {
+        transaction_id: payment_proof.transaction_id,
+        payment_method: payment_proof.payment_method,
+        screenshot_url: payment_proof.screenshot_url,
+        delivery_fee_paid: payment_proof.delivery_fee_paid,
+        uploaded_at: new Date().toISOString()
+      }
+      // Update payment status since proof is provided
+      newOrder.payment_status = 'proof_submitted'
     }
 
     // Add email if provided

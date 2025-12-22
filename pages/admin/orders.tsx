@@ -5,7 +5,7 @@ import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
-import { Order, OrderItem } from '@/lib/supabase'
+import { Order, OrderItem, PaymentProof } from '@/lib/supabase'
 
 // Icons
 const Icons = {
@@ -204,9 +204,15 @@ function OrdersContent() {
   }
 
   const getPaymentBadge = (status: string) => {
-    return status === 'paid'
-      ? 'admin-badge admin-badge-success'
-      : 'admin-badge admin-badge-error'
+    switch (status) {
+      case 'paid': return 'admin-badge admin-badge-success'
+      case 'verified': return 'admin-badge admin-badge-success'
+      case 'proof_submitted': return 'admin-badge bg-[#fbbf24]/10 text-[#fbbf24]'
+      case 'proof_pending': return 'admin-badge admin-badge-warning'
+      case 'rejected': return 'admin-badge admin-badge-error'
+      case 'pending': return 'admin-badge admin-badge-neutral'
+      default: return 'admin-badge admin-badge-neutral'
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -477,6 +483,10 @@ function OrdersContent() {
                       >
                         <option value="pending">Unpaid</option>
                         <option value="paid">Paid</option>
+                        <option value="proof_pending">Proof Pending</option>
+                        <option value="proof_submitted">Proof Submitted</option>
+                        <option value="verified">Verified</option>
+                        <option value="rejected">Rejected</option>
                       </select>
                       <span className="absolute right-1 top-1/2 -translate-y-1/2 text-current opacity-50 pointer-events-none">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -508,6 +518,53 @@ function OrdersContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Payment Proof (for COD orders) */}
+              {selectedOrder.payment_method === 'COD' && selectedOrder.payment_proof && (
+                <div>
+                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Payment Proof</h3>
+                  <div className="bg-[#111] border border-[#262626] rounded-lg p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-[#888]">Method:</span>
+                        <p className="text-white capitalize">{selectedOrder.payment_proof.payment_method}</p>
+                      </div>
+                      <div>
+                        <span className="text-[#888]">Transaction ID:</span>
+                        <p className="text-white font-mono text-xs">{selectedOrder.payment_proof.transaction_id}</p>
+                      </div>
+                      <div>
+                        <span className="text-[#888]">Amount:</span>
+                        <p className="text-white">₨{selectedOrder.payment_proof.delivery_fee_paid}</p>
+                      </div>
+                      <div>
+                        <span className="text-[#888]">Uploaded:</span>
+                        <p className="text-white text-xs">{new Date(selectedOrder.payment_proof.uploaded_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    {selectedOrder.payment_proof.screenshot_url && (
+                      <div>
+                        <span className="text-[#888] text-sm mb-2 block">Payment Screenshot:</span>
+                        <div className="relative">
+                          <img
+                            src={selectedOrder.payment_proof?.screenshot_url}
+                            alt="Payment proof"
+                            className="max-w-full max-h-48 rounded border border-[#262626] cursor-pointer"
+                            onClick={() => window.open(selectedOrder.payment_proof?.screenshot_url, '_blank')}
+                          />
+                          <button
+                            onClick={() => window.open(selectedOrder.payment_proof?.screenshot_url, '_blank')}
+                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded text-xs hover:bg-black/70 transition-colors"
+                          >
+                            View Full Size
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Date */}
               <div>

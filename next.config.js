@@ -7,6 +7,10 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Reduce unused JavaScript
+  experimental: {
+    optimizePackageImports: ['framer-motion', '@supabase/supabase-js'],
+  },
   images: {
     remotePatterns: [
       {
@@ -41,8 +45,10 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
     // Use modern formats for smaller file sizes
     formats: ['image/avif', 'image/webp'],
-    // Reduce quality slightly for performance (still looks great)
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    // Allow quality 85 for hero images
+    qualities: [75, 85],
+    // Cache images for 30 days
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   // Production caching headers for static assets
   async headers() {

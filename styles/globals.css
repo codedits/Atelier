@@ -1,6 +1,52 @@
-/* Optimized font loading - only load weights we need */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap');
+/* Fonts are loaded via _document.tsx for optimal performance */
 @import "tailwindcss";
+
+/* ============================================ */
+/* HERO ANIMATIONS (moved from inline styles) */
+/* ============================================ */
+
+@keyframes heroZoom { 
+  from { transform: scale(1.05); } 
+  to { transform: scale(1); } 
+}
+
+@keyframes heroFadeIn { 
+  from { opacity: 0; transform: translateY(12px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes heroBounce { 
+  0%, 100% { transform: translateY(0); } 
+  50% { transform: translateY(8px); } 
+}
+
+.hero-zoom { 
+  animation: heroZoom 1.6s ease-out forwards; 
+}
+
+.hero-fade { 
+  animation: heroFadeIn 0.85s ease-out forwards; 
+}
+
+.hero-fade-delay { 
+  animation: heroFadeIn 0.8s ease-out 0.18s forwards; 
+  opacity: 0; 
+}
+
+.hero-bounce { 
+  animation: heroBounce 1.5s ease-in-out infinite; 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-zoom, .hero-fade, .hero-fade-delay { 
+    animation: none; 
+    opacity: 1; 
+    transform: none; 
+  }
+  .hero-bounce { 
+    animation: none; 
+  }
+}
 
 /* ============================================ */
 /* PERFORMANCE OPTIMIZATIONS */
@@ -135,6 +181,23 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Cormorant Garamond', 'Poppins', serif;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+/* Scoped utility to force Poppins on a specific page/component */
+.poppins-only,
+.poppins-only * {
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
+}
+
+.poppins-only h1,
+.poppins-only h2,
+.poppins-only h3,
+.poppins-only h4,
+.poppins-only h5,
+.poppins-only h6 {
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
 }
 
 .btn {
@@ -465,5 +528,58 @@ h1, h2, h3, h4, h5, h6 {
 .admin-layout h6 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   color: var(--admin-text);
+}
+
+/* ============================================ */
+/* PRODUCT PAGE ANIMATIONS */
+/* ============================================ */
+
+@keyframes slideInLeft { 
+  from { opacity: 0; transform: translateX(-16px); } 
+  to { opacity: 1; transform: translateX(0); } 
+}
+
+@keyframes slideInRight { 
+  from { opacity: 0; transform: translateX(16px); } 
+  to { opacity: 1; transform: translateX(0); } 
+}
+
+@keyframes fadeInUp { 
+  from { opacity: 0; transform: translateY(8px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideInLeft { 
+  animation: slideInLeft 0.4s ease-out; 
+}
+
+.animate-slideInRight { 
+  animation: slideInRight 0.5s ease-out; 
+  animation-delay: 100ms; 
+  animation-fill-mode: backwards; 
+}
+
+.animate-fadeInUp { 
+  animation: fadeInUp 0.4s ease-out; 
+}
+
+.animate-fadeIn { 
+  animation: fadeIn 0.4s ease-out; 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slideInLeft, 
+  .animate-slideInRight, 
+  .animate-fadeInUp,
+  .animate-fadeIn { 
+    animation: none; 
+    opacity: 1; 
+    transform: none; 
+  }
 }
 

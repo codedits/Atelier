@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { useFavorites } from '@/context/FavoritesContext'
 
-export default function Header() {
+const Header = memo(function Header() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
@@ -13,29 +13,34 @@ export default function Header() {
   const { isAuthenticated, user } = useUserAuth()
   const { favorites } = useFavorites()
 
-  // Detect scroll to change header style on homepage
-  useEffect(() => {
-    const handleScroll = () => {
-      setHasScrolled(window.scrollY > 200)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+  // Memoized scroll handler
+  const handleScroll = useCallback(() => {
+    setHasScrolled(window.scrollY > 200)
   }, [])
 
-  // Check if current page matches the link
-  const isActive = (path: string) => {
+  // Detect scroll to change header style on homepage
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
+
+  // Check if current page matches the link - memoized
+  const isActive = useCallback((path: string) => {
     if (path === '/products' && router.pathname === '/products' && !router.query.gender) return true
     if (path.includes('?gender=')) {
       const gender = path.split('gender=')[1]
       return router.pathname === '/products' && router.query.gender === gender
     }
     return router.pathname === path
-  }
+  }, [router.pathname, router.query.gender])
 
-  // Determine if we're on homepage and should show transparent header
+  // Determine if we're on homepage and should show transparent header - memoized
   const isHomepage = router.pathname === '/'
-  const shouldBeTransparent = isHomepage && !hasScrolled
+  const shouldBeTransparent = useMemo(() => isHomepage && !hasScrolled, [isHomepage, hasScrolled])
+
+  // Memoized toggle handler
+  const toggleMenu = useCallback(() => setOpen(prev => !prev), [])
+  const closeMenu = useCallback(() => setOpen(false), [])
 
   return (
     <>
@@ -180,4 +185,6 @@ export default function Header() {
       </header>
     </>
   )
-}
+})
+
+export default Header

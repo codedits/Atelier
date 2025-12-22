@@ -1,6 +1,6 @@
 import { useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, memo } from 'react'
 
 interface HeroImage {
   id: string
@@ -24,7 +24,7 @@ const defaultHero: HeroImage = {
   display_order: 0
 }
 
-export default function Hero() {
+const Hero = memo(function Hero() {
   const prefersReducedMotion = useReducedMotion()
   const [heroImage] = useState<HeroImage>(defaultHero)
 
@@ -45,23 +45,12 @@ export default function Hero() {
     })
   }, [prefersReducedMotion])
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleScrollDown()
+  }, [handleScrollDown])
+
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden bg-[#0A0A0A]">
-      {/* Inline styles for hero-specific animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes heroZoom { from { transform: scale(1.05); } to { transform: scale(1); } }
-        @keyframes heroFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes heroBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
-        .hero-zoom { animation: heroZoom 1.6s ease-out forwards; }
-        .hero-fade { animation: heroFadeIn 0.85s ease-out forwards; }
-        .hero-fade-delay { animation: heroFadeIn 0.8s ease-out 0.18s forwards; opacity: 0; }
-        .hero-bounce { animation: heroBounce 1.5s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .hero-zoom, .hero-fade, .hero-fade-delay { animation: none; opacity: 1; transform: none; }
-          .hero-bounce { animation: none; }
-        }
-      `}} />
-      
       {/* Background with subtle initial zoom */}
       <div className={`absolute inset-0 ${prefersReducedMotion ? '' : 'hero-zoom'}`}>
         {heroImage.video_url ? (
@@ -136,7 +125,7 @@ export default function Hero() {
         role="button"
         tabIndex={0}
         aria-label="Scroll down"
-        onKeyDown={(e) => e.key === 'Enter' && handleScrollDown()}
+        onKeyDown={handleKeyDown}
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 sm:w-10 sm:h-10">
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -144,4 +133,6 @@ export default function Hero() {
       </div>
     </section>
   )
-}
+})
+
+export default Hero

@@ -251,17 +251,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
           }
         }) }} />
         
-        {/* CSS for fade-in animation */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
-          @media (prefers-reduced-motion: reduce) {
-            .animate-fadeIn { animation: none; opacity: 1; transform: none; }
-          }
-        `}} />
+        {/* Animations are loaded from globals.css for better caching */}
       </Head>
 
       <div className="min-h-screen bg-white">

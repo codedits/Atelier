@@ -1,62 +1,65 @@
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
-export default function BentoGrid() {
-  const bentoItems = [
-    {
-      id: 1,
-      title: 'Handcrafted Excellence',
-      description: 'Each piece meticulously created by master artisans',
-      image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=870&auto=format&fit=crop',
-      size: 'col-span-1 row-span-1', // Default medium
-      span: 'lg:col-span-2 lg:row-span-2'
-    },
-    {
-      id: 2,
-      title: 'Premium Materials',
-      description: '18K Gold & Certified Diamonds',
-      image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=870&auto=format&fit=crop',
-      size: 'col-span-1 row-span-1',
-      span: 'lg:col-span-1 lg:row-span-1'
-    },
-    {
-      id: 3,
-      title: 'Timeless Design',
-      description: 'Collections that transcend trends',
-      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=870&auto=format&fit=crop',
-      size: 'col-span-1 row-span-1',
-      span: 'lg:col-span-1 lg:row-span-1'
-    },
-    {
-      id: 4,
-      title: 'Expert Curation',
-      description: 'Carefully selected pieces for you',
-      image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=870&auto=format&fit=crop',
-      size: 'col-span-1 row-span-1',
-      span: 'lg:col-span-2 lg:row-span-1'
-    }
-  ]
+// Static data moved outside component to prevent recreation on each render
+const bentoItems = [
+  {
+    id: 1,
+    title: 'Handcrafted Excellence',
+    description: 'Each piece meticulously created by master artisans',
+    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=870&auto=format&fit=crop',
+    size: 'col-span-1 row-span-1',
+    span: 'lg:col-span-2 lg:row-span-2'
+  },
+  {
+    id: 2,
+    title: 'Premium Materials',
+    description: '18K Gold & Certified Diamonds',
+    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=870&auto=format&fit=crop',
+    size: 'col-span-1 row-span-1',
+    span: 'lg:col-span-1 lg:row-span-1'
+  },
+  {
+    id: 3,
+    title: 'Timeless Design',
+    description: 'Collections that transcend trends',
+    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=870&auto=format&fit=crop',
+    size: 'col-span-1 row-span-1',
+    span: 'lg:col-span-1 lg:row-span-1'
+  },
+  {
+    id: 4,
+    title: 'Expert Curation',
+    description: 'Carefully selected pieces for you',
+    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=870&auto=format&fit=crop',
+    size: 'col-span-1 row-span-1',
+    span: 'lg:col-span-2 lg:row-span-1'
+  }
+] as const
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      }
+// Animation variants moved outside to prevent recreation
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
     }
   }
+} as const
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    }
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 }
   }
+} as const
 
+const BentoGrid = memo(function BentoGrid() {
   return (
     <section className="py-16 md:py-24 bg-[#1B211A]">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -141,4 +144,6 @@ export default function BentoGrid() {
       </div>
     </section>
   )
-}
+})
+
+export default BentoGrid

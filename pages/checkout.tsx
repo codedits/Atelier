@@ -32,6 +32,18 @@ export default function CheckoutPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [orderCompleted, setOrderCompleted] = useState(false)
   const [orderSuccessful, setOrderSuccessful] = useState(false)
+  
+  // Payment proof state for COD orders
+  const [paymentProof, setPaymentProof] = useState({
+    transactionId: '',
+    screenshot: null as File | null,
+    paymentMethod: 'jazzcash' as 'jazzcash' | 'easypaisa' | 'bank'
+  })
+  const [uploadingProof, setUploadingProof] = useState(false)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  
+  // Delivery fee (Rs. 500)
+  const deliveryFee = 500
 
   // Pre-fill form with user data
   useEffect(() => {
@@ -61,11 +73,31 @@ export default function CheckoutPage() {
   }, [isLoading, items.length, router])
 
   const shipping = totalPrice >= 5000 ? 0 : 500
-  const orderTotal = totalPrice + shipping
+  const codFeeRequired = formData.paymentMethod === 'COD'
+  const orderTotal = totalPrice + shipping + (codFeeRequired ? deliveryFee : 0)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
+    
+    // For COD orders, show payment form instead of submitting directly
+    if (formData.paymentMethod === 'COD' && !showPaymentForm) {
+      setShowPaymentForm(true)
+      return
+    }
+    
+    // Validate payment proof for COD orders
+    if (formData.paymentMethod === 'COD') {
+      if (!paymentProof.transactionId.trim()) {
+        setError('Please enter transaction ID')
+        return
+      }
+      if (!paymentProof.screenshot) {
+        setError('Please upload payment screenshot')
+        return
+      }
+    }
+    
     setSubmitting(true)
     setLoadingProgress(10)
     let redirectTimeout: NodeJS.Timeout | null = null
@@ -88,6 +120,28 @@ export default function CheckoutPage() {
         image_url: item.product.image_url,
       }))
 
+      // Upload payment proof for COD orders
+      let paymentProofUrl = null
+      if (formData.paymentMethod === 'COD' && paymentProof.screenshot) {
+        setUploadingProof(true)
+        const formData2 = new FormData()
+        formData2.append('file', paymentProof.screenshot)
+        
+        const uploadRes = await fetch('/api/upload/payment-proof', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData2,
+        })
+        
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload payment proof')
+        }
+        
+        const uploadData = await uploadRes.json()
+        paymentProofUrl = uploadData.url
+        setUploadingProof(false)
+      }
+      
       // Save user profile data for future orders (non-blocking)
       if (isAuthenticated) {
         fetch('/api/auth/profile', {
@@ -102,7 +156,7 @@ export default function CheckoutPage() {
         }).catch(() => {}) // Silent fail - don't block order
       }
 
-      console.log('Submitting order with data:', {
+      const orderData: any = {
         user_name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -111,22 +165,25 @@ export default function CheckoutPage() {
         total_price: orderTotal,
         payment_method: formData.paymentMethod,
         clearCart: true,
-      })
+      }
+      
+      // Add payment proof data for COD orders
+      if (formData.paymentMethod === 'COD') {
+        orderData.payment_proof = {
+          transaction_id: paymentProof.transactionId,
+          payment_method: paymentProof.paymentMethod,
+          screenshot_url: paymentProofUrl,
+          delivery_fee_paid: deliveryFee
+        }
+      }
+
+      console.log('Submitting order with data:', orderData)
 
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          user_name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          address: `${formData.address}, ${formData.city} ${formData.postalCode}`,
-          items: orderItems,
-          total_price: orderTotal,
-          payment_method: formData.paymentMethod,
-          clearCart: true,
-        }),
+        body: JSON.stringify(orderData),
       })
 
       console.log('Order API response status:', res.status)
@@ -201,7 +258,7 @@ export default function CheckoutPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white poppins-only">
         <Header />
 
         {/* Order Success Banner */}
@@ -359,7 +416,7 @@ export default function CheckoutPage() {
                         />
                         <div>
                           <p className="font-medium text-[#111827]">Cash on Delivery</p>
-                          <p className="text-sm text-[#6B7280]">Pay when you receive your order</p>
+                          <p className="text-sm text-[#6B7280]">Pay when you receive + advance delivery fee (₨{deliveryFee})</p>
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
@@ -378,6 +435,151 @@ export default function CheckoutPage() {
                       </label>
                     </div>
                   </motion.div>
+
+                  {/* COD Payment Form */}
+                  {formData.paymentMethod === 'COD' && showPaymentForm && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-6"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                          <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-amber-800">COD Delivery Fee Payment Required</h3>
+                          <p className="text-sm text-amber-700">Please pay ₨{deliveryFee} delivery fee in advance to confirm your order</p>
+                        </div>
+                      </div>
+
+                      {/* Payment Instructions */}
+                      <div className="space-y-4 mb-6">
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-800">Choose Payment Method:</h4>
+                          <div className="grid gap-2">
+                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded cursor-pointer hover:border-amber-500 transition-colors">
+                              <input
+                                type="radio"
+                                name="paymentProofMethod"
+                                value="jazzcash"
+                                checked={paymentProof.paymentMethod === 'jazzcash'}
+                                onChange={(e) => setPaymentProof({ ...paymentProof, paymentMethod: e.target.value as any })}
+                                className="w-4 h-4 text-amber-600"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-800">JazzCash</p>
+                                <p className="text-sm text-gray-600 font-mono">03XX-XXXXXXX</p>
+                              </div>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded cursor-pointer hover:border-amber-500 transition-colors">
+                              <input
+                                type="radio"
+                                name="paymentProofMethod"
+                                value="easypaisa"
+                                checked={paymentProof.paymentMethod === 'easypaisa'}
+                                onChange={(e) => setPaymentProof({ ...paymentProof, paymentMethod: e.target.value as any })}
+                                className="w-4 h-4 text-amber-600"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-800">EasyPaisa</p>
+                                <p className="text-sm text-gray-600 font-mono">03XX-XXXXXXX</p>
+                              </div>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded cursor-pointer hover:border-amber-500 transition-colors">
+                              <input
+                                type="radio"
+                                name="paymentProofMethod"
+                                value="bank"
+                                checked={paymentProof.paymentMethod === 'bank'}
+                                onChange={(e) => setPaymentProof({ ...paymentProof, paymentMethod: e.target.value as any })}
+                                className="w-4 h-4 text-amber-600"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-800">Bank Transfer</p>
+                                <p className="text-sm text-gray-600">
+                                  <span className="font-mono block">Account: 1234567890</span>
+                                  <span className="font-mono block">IBAN: PK36ABCD0000001234567890</span>
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Proof Upload */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">Transaction ID *</label>
+                          <input
+                            type="text"
+                            required
+                            value={paymentProof.transactionId}
+                            onChange={(e) => setPaymentProof({ ...paymentProof, transactionId: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-amber-500 transition-colors"
+                            placeholder="Enter transaction ID from payment"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">Payment Screenshot *</label>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  const MAX_BYTES = 5 * 1024 * 1024
+                                  if (file.size > MAX_BYTES) {
+                                    setError('File too large. Maximum size is 5MB.')
+                                    return
+                                  }
+                                  setError('')
+                                  setPaymentProof({ ...paymentProof, screenshot: file })
+                                }
+                              }}
+                              className="hidden"
+                              id="screenshot-upload"
+                            />
+                            <label htmlFor="screenshot-upload" className="cursor-pointer">
+                              {paymentProof.screenshot ? (
+                                <div className="flex items-center justify-center gap-2 text-green-600">
+                                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>{paymentProof.screenshot.name}</span>
+                                </div>
+                              ) : (
+                                <div>
+                                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  <div className="mt-2">
+                                    <span className="text-amber-600 font-medium">Click to upload</span>
+                                    <p className="text-gray-500 text-sm mt-1">PNG, JPG up to 5MB</p>
+                                  </div>
+                                </div>
+                              )}
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowPaymentForm(false)}
+                            className="flex-1 py-3 px-4 border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                          >
+                            Back
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* Order Summary */}
@@ -421,6 +623,12 @@ export default function CheckoutPage() {
                         <span>Shipping</span>
                         <span>{shipping === 0 ? 'Free' : `₨${shipping}`}</span>
                       </div>
+                      {codFeeRequired && (
+                        <div className="flex justify-between text-[#6B7280]">
+                          <span>COD Delivery Fee</span>
+                          <span>₨{deliveryFee}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-[#111827] font-medium text-lg pt-2 border-t border-gray-200">
                         <span>Total</span>
                         <span>₨{orderTotal.toLocaleString()}</span>
@@ -453,7 +661,7 @@ export default function CheckoutPage() {
 
                     <button
                       type="submit"
-                      disabled={submitting}
+                      disabled={submitting || uploadingProof}
                       className="w-full py-2.5 sm:py-3.5 px-3 sm:px-4 bg-[#1A1A1A] text-white text-sm sm:text-base font-medium rounded hover:bg-[#333] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                     >
                       {submitting ? (
@@ -462,14 +670,14 @@ export default function CheckoutPage() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          Processing...
+                          {uploadingProof ? 'Uploading...' : 'Processing...'}
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Place Order
+                          {formData.paymentMethod === 'COD' && !showPaymentForm ? 'Continue to Payment' : 'Place Order'}
                         </span>
                       )}
                     </button>

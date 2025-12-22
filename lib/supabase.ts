@@ -34,6 +34,14 @@ export interface OrderItem {
   image_url: string
 }
 
+export interface PaymentProof {
+  transaction_id: string
+  payment_method: 'jazzcash' | 'easypaisa' | 'bank'
+  screenshot_url: string
+  delivery_fee_paid: number
+  uploaded_at: string
+}
+
 export interface Order {
   id: string
   user_name: string
@@ -42,8 +50,9 @@ export interface Order {
   items: OrderItem[]
   total_price: number
   payment_method: 'COD' | 'Bank Transfer'
-  payment_status: 'pending' | 'paid'
+  payment_status: 'pending' | 'paid' | 'proof_pending' | 'proof_submitted' | 'verified' | 'rejected'
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled'
+  payment_proof?: PaymentProof
   created_at: string
   user_email?: string
 }

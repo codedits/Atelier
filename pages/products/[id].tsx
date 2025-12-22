@@ -203,18 +203,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
         
         <link rel="canonical" href={`https://codedits.github.io/Atelier/products/${product.id}`} />
         
-        {/* Performance-optimized animations */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes slideInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
-          @keyframes slideInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
-          @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-          .animate-slideInLeft { animation: slideInLeft 0.4s ease-out; }
-          .animate-slideInRight { animation: slideInRight 0.5s ease-out; animation-delay: 100ms; animation-fill-mode: backwards; }
-          .animate-fadeInUp { animation: fadeInUp 0.4s ease-out; }
-          @media (prefers-reduced-motion: reduce) {
-            .animate-slideInLeft, .animate-slideInRight, .animate-fadeInUp { animation: none; opacity: 1; transform: none; }
-          }
-        `}} />
+        {/* Animations are loaded from globals.css for better caching */}
         
         {/* JSON-LD Product Schema */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

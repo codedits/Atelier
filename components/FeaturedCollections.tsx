@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,8 +16,7 @@ interface FeaturedCollectionsProps {
   collections: Collection[]
 }
 
-export default function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
-
+const FeaturedCollections = memo(function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
   return (
     <section className="py-12 md:py-20 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -90,4 +90,6 @@ export default function FeaturedCollections({ collections }: FeaturedCollections
       </div>
     </section>
   )
-}
+})
+
+export default FeaturedCollections
