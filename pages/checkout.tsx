@@ -8,6 +8,7 @@ import { Header, Footer } from '@/components'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import Toast from '@/components/Toast'
+import EngagingMessage from '@/components/EngagingMessage'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -258,8 +259,9 @@ export default function CheckoutPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="min-h-screen bg-white poppins-only">
+      <div className="min-h-screen bg-white">
         <Header />
+        <div className="poppins-only">
 
         {/* Order Success Banner */}
         {orderCompleted && (
@@ -404,6 +406,7 @@ export default function CheckoutPage() {
                     className="bg-[#F8F7F5] rounded-lg p-6"
                   >
                     <h2 className="text-lg font-medium text-[#111827] mb-6">Payment Method</h2>
+                    <EngagingMessage context="checkout" />
                     <div className="space-y-2 sm:space-y-3">
                       <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
                         <input
@@ -701,7 +704,7 @@ export default function CheckoutPage() {
             </form>
           </div>
         </main>
-
+        </div>
         <Footer />
       </div>
 
