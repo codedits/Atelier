@@ -3,7 +3,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Header, Footer } from '@/components'
-import EngagingMessage from '@/components/EngagingMessage'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 
@@ -33,7 +32,6 @@ export default function CartPage() {
                 </div>
                 <h1 className="text-2xl font-medium text-[#111827] mb-4">Your cart is empty</h1>
                 <p className="text-[#6B7280] mb-8">Looks like you haven&apos;t added any items yet.</p>
-                <EngagingMessage context="cart" />
                 <Link
                   href="/products"
                   className="inline-flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] transition-colors"
@@ -95,7 +93,7 @@ export default function CartPage() {
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <Link href={`/products/${item.product.id}`}>
-                        <h3 className="font-medium text-[#111827] hover:text-[#D4A5A5] transition-colors">
+                        <h3 className="font-medium text-[#111827] hover:text-[#B91C1C] transition-colors">
                           {item.product.name}
                         </h3>
                       </Link>
@@ -172,7 +170,6 @@ export default function CartPage() {
                   className="bg-[#F8F7F5] rounded-lg p-6 sticky top-24"
                 >
                   <h2 className="text-lg font-medium text-[#111827] mb-6">Order Summary</h2>
-                  <EngagingMessage context="cart" />
 
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-[#6B7280]">

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react'
 import { Product } from '@/lib/supabase'
 
 export interface CartItem {
@@ -115,14 +115,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return true
   }
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setItems([])
-  }
+  }, [])
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-  const totalPrice = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
+  // Memoize computed values to prevent recalculation on every render
+  const totalItems = useMemo(() => 
+    items.reduce((sum, item) => sum + item.quantity, 0), 
+    [items]
+  )
+  
+  const totalPrice = useMemo(() => 
+    items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [items]
   )
 
   return (

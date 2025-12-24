@@ -58,7 +58,7 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
 
         {/* Sale Badge */}
         {saleBadge && (
-          <div className="absolute top-4 left-4 bg-[#D4A5A5] text-white text-sm font-medium px-3 py-1.5 rounded z-10">
+          <div className="absolute top-4 left-4 bg-[#B91C1C] text-white text-sm font-medium px-3 py-1.5 rounded z-10">
             {saleBadge}
           </div>
         )}
@@ -89,7 +89,7 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
 
             {/* Dots */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {images.map((_, idx) => (
+                {images.map((_, idx) => (
                 <button
                   key={idx}
                   type="button"
@@ -108,15 +108,15 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
       {/* Thumbnails */}
       {hasMultiple && (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {images.map((src, idx) => (
+                {images.map((src, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => selectImage(idx)}
               className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-all duration-150 ${
                 idx === selected
-                  ? 'border-[#D4A5A5] ring-2 ring-[#D4A5A5]/30'
-                  : 'border-transparent hover:border-[#D4A5A5]/50'
+                  ? 'border-[#B91C1C] ring-2 ring-[#B91C1C]/30'
+                  : 'border-transparent hover:border-[#B91C1C]/50'
               }`}
             >
               <div className="relative w-full h-full bg-[#F8F7F5]">

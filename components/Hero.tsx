@@ -1,6 +1,7 @@
 import { useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import { useState, useCallback, memo } from 'react'
+import Link from 'next/link'
 
 interface HeroImage {
   id: string
@@ -16,11 +17,11 @@ interface HeroImage {
 const defaultHero: HeroImage = {
   id: 'default',
   title: 'Atelier',
-  subtitle: '',
-  image_url: '/pexels-coppertist-wu-313365563-15691504.jpg',
+  subtitle: 'Timeless elegance, crafted for you',
+  image_url: 'https://images.unsplash.com/photo-1766185794911-7f50f1df5cbd?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   video_url: '',
-  cta_text: 'Shop Women',
-  cta_link: '/products?gender=women',
+  cta_text: 'Explore Collection',
+  cta_link: '/products',
   display_order: 0
 }
 
@@ -28,15 +29,7 @@ const Hero = memo(function Hero() {
   const prefersReducedMotion = useReducedMotion()
   const [heroImage] = useState<HeroImage>(defaultHero)
 
-  // Memoized scroll handler
-  const handleShopNowClick = useCallback(() => {
-    const el = typeof document !== 'undefined' ? document.getElementById('categories') : null
-    if (el) {
-      el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
-    } else {
-      window.location.href = '/products'
-    }
-  }, [prefersReducedMotion])
+  // Optimized scroll handler
 
   const handleScrollDown = useCallback(() => {
     window.scrollTo({
@@ -82,39 +75,40 @@ const Hero = memo(function Hero() {
       </div>
 
       {/* Overlay content - Centered Heading Only */}
-      <div className="relative h-full flex flex-col items-center justify-center px-4">
-        <div className="max-w-4xl mx-auto text-center px-4">
+      <div className="relative h-screen flex flex-col items-center justify-start pt-20 px-4">
+        <div className="w-full text-center px-4">
           <div className={`mx-auto ${prefersReducedMotion ? '' : 'hero-fade'}`}>
-            <div className="relative mx-auto w-36 sm:w-48 md:w-56 lg:w-72 xl:w-80 h-auto">
-              <img 
-                src={encodeURI('/atelier s.svg')} 
-                alt={heroImage.title} 
-                className="w-full h-auto mx-auto" 
-                loading="eager"
-              />
-            </div>
+            <h1 className="hero-title">
+              {heroImage.title}
+            </h1>
           </div>
 
-          <button
-            type="button"
-            aria-label="Shop now - go to categories"
-            onClick={handleShopNowClick}
-            className={`mt-4 inline-flex items-center gap-2 text-sm font-medium text-white/90 px-3 py-1.5 border border-white/10 rounded-md bg-transparent hover:bg-white/5 hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150 mx-auto ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}
-          >
-            <span>Shop Now</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 4l6 6-6 6" />
-            </svg>
-          </button>
-
           {heroImage.subtitle && (
-            <p className={`mt-4 text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto font-normal ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+            <p className={`mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
               {heroImage.subtitle}
             </p>
           )}
 
+          <div className={`flex flex-col sm:flex-row gap-4 justify-center mt-8 ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+            <Link
+              href={heroImage.cta_link}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1A1A1A] font-medium rounded-lg hover:bg-[#F5F5F5] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
+            >
+              {heroImage.cta_text}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 4l6 6-6 6" />
+              </svg>
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
+            >
+              Our Story
+            </Link>
+          </div>
+
           {/* Subtle accent */}
-          <div className={`mt-6 mx-auto w-16 h-[2px] bg-white/15 rounded ${prefersReducedMotion ? '' : 'hero-fade-delay'}`} />
+          <div className={`mt-10 mx-auto w-16 h-[2px] bg-white/15 rounded ${prefersReducedMotion ? '' : 'hero-fade-delay'}`} />
         </div>
       </div>
 

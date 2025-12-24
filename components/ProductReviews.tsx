@@ -91,10 +91,10 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         transition={{ duration: 0.5 }}
         className="border-t border-[#E5E7EB] mt-16 pt-12"
       >
-        <h2 className="text-2xl font-medium text-[#111827] mb-6">Customer Reviews</h2>
-        <div className="text-center py-12 bg-[#F9FAFB] rounded-lg">
-          <div className="text-[#6B7280] mb-2">No reviews yet</div>
-          <p className="text-sm text-[#9CA3AF]">
+        <h2 className="text-2xl md:text-3xl font-medium font-display text-[#1A1A1A] mb-6">Customer Reviews</h2>
+        <div className="text-center py-12 bg-[#F8F7F5] rounded-lg font-poppins">
+          <div className="text-[#1A1A1A] mb-2 font-semibold">No reviews yet</div>
+          <p className="text-sm text-[#4B5563] font-normal">
             Be the first to review this product after your purchase
           </p>
         </div>
@@ -112,18 +112,18 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       transition={{ duration: 0.5 }}
       className="border-t border-[#E5E7EB] mt-16 pt-12"
     >
-      <h2 className="text-2xl font-medium text-[#111827] mb-8">Customer Reviews</h2>
+      <h2 className="text-2xl md:text-3xl font-medium font-display text-[#1A1A1A] mb-8">Customer Reviews</h2>
 
       {/* Stats Summary */}
       {stats && stats.review_count > 0 && (
-        <div className="flex flex-col md:flex-row gap-8 mb-10 pb-10 border-b border-[#E5E7EB]">
+        <div className="flex flex-col md:flex-row gap-8 mb-10 pb-10 border-b border-[#E5E7EB] font-poppins">
           {/* Average Rating */}
           <div className="text-center md:text-left md:pr-8 md:border-r md:border-[#E5E7EB]">
-            <div className="text-5xl font-light text-[#111827] mb-2">
+            <div className="text-5xl font-medium text-[#1A1A1A] mb-2">
               {stats.average_rating}
             </div>
             <div className="mb-2">{renderStars(Math.round(stats.average_rating), 20)}</div>
-            <div className="text-sm text-[#6B7280]">
+            <div className="text-sm text-[#4B5563] font-normal">
               Based on {stats.review_count} review{stats.review_count !== 1 ? 's' : ''}
             </div>
           </div>
@@ -135,14 +135,14 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               const percentage = getRatingPercentage(count)
               return (
                 <div key={rating} className="flex items-center gap-3">
-                  <span className="text-sm text-[#6B7280] w-12">{rating} star</span>
+                  <span className="text-sm text-[#4B5563] w-12 font-normal">{rating} star</span>
                   <div className="flex-1 h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-[#FDB022] rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <span className="text-sm text-[#6B7280] w-10 text-right">{count}</span>
+                  <span className="text-sm text-[#4B5563] w-10 text-right font-normal">{count}</span>
                 </div>
               )
             })}
@@ -151,7 +151,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       )}
 
       {/* Reviews List */}
-      <div className="space-y-6">
+      <div className="space-y-6 font-poppins">
         {displayedReviews.map((review, index) => (
           <motion.div
             key={review.id}
@@ -166,23 +166,23 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                 <div className="flex items-center gap-3 mb-1">
                   {renderStars(review.rating)}
                   {review.is_verified_purchase && (
-                    <span className="text-xs px-2 py-0.5 bg-[#FDB022]/10 text-[#FDB022] rounded-full">
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-[#FDB022]/10 text-[#FDB022] rounded-full font-bold">
                       Verified Purchase
                     </span>
                   )}
                 </div>
                 {review.title && (
-                  <h4 className="font-medium text-[#111827]">{review.title}</h4>
+                  <h4 className="font-bold text-[#1A1A1A]">{review.title}</h4>
                 )}
               </div>
-              <span className="text-xs text-[#9CA3AF]">
+              <span className="text-xs text-[#6B7280] font-normal">
                 {formatDate(review.created_at)}
               </span>
             </div>
-            <p className="text-[#4B5563] text-sm leading-relaxed mb-2">
+            <p className="text-[#374151] text-base leading-relaxed mb-2 font-normal">
               {review.comment}
             </p>
-            <p className="text-xs text-[#9CA3AF]">
+            <p className="text-xs text-[#1A1A1A] font-semibold">
               — {review.user_name}
             </p>
           </motion.div>
@@ -194,7 +194,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         <div className="text-center mt-8">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="px-6 py-2 border border-[#E5E7EB] text-[#111827] hover:border-[#FDB022] hover:text-[#FDB022] transition-colors text-sm"
+            className="px-8 py-3 border border-[#E5E7EB] text-[#111827] hover:border-[#7A4A2B] hover:text-[#7A4A2B] transition-all duration-300 text-xs uppercase tracking-widest font-bold font-poppins rounded-full"
           >
             {showAll ? 'Show Less' : `Show All ${reviews.length} Reviews`}
           </button>

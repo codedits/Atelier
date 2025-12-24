@@ -12,7 +12,7 @@ module.exports = {
         bone: '#f5f5f5',
         slate: '#94a3b8',
         gold: {
-          DEFAULT: '#d4af37',
+          DEFAULT: '#7a4a2b',
           light: '#e8c547',
           dark: '#b8943d',
         },
@@ -21,8 +21,9 @@ module.exports = {
         brand: '0.25em',
       },
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        display: ['Cinzel', 'serif'],
         sans: ['Poppins', 'system-ui', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
       },
     },
   },

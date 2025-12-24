@@ -62,7 +62,7 @@ export default function ShippingInfo() {
                 ].map((option, index) => (
                   <div key={index} className="border border-[#E5E5E5] rounded-lg p-6">
                     <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">{option.title}</h3>
-                    <p className="text-[#D4A5A5] font-semibold mb-2">{option.time}</p>
+                    <p className="text-[#B91C1C] font-semibold mb-2">{option.time}</p>
                     <p className="text-[#6B6B6B] mb-3">{option.cost}</p>
                     <p className="text-sm text-[#9CA3AF]">{option.details}</p>
                   </div>
@@ -85,7 +85,7 @@ export default function ShippingInfo() {
                   'Fully insured during transit'
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="text-[#D4A5A5] font-bold mt-1">✓</span>
+                    <span className="text-[#B91C1C] font-bold mt-1">✓</span>
                     <span className="text-[#6B6B6B]">{item}</span>
                   </li>
                 ))}
@@ -124,7 +124,7 @@ export default function ShippingInfo() {
               </p>
               <a 
                 href="mailto:hello@atelier.com" 
-                className="inline-block px-6 py-2 bg-[#1A1A1A] text-white rounded hover:bg-[#D4A5A5] transition-colors"
+                className="inline-block px-6 py-2 bg-[#1A1A1A] text-white rounded hover:bg-[#B91C1C] transition-colors"
               >
                 Get in Touch
               </a>

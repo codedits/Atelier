@@ -8,7 +8,6 @@ import { Header, Footer } from '@/components'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import Toast from '@/components/Toast'
-import EngagingMessage from '@/components/EngagingMessage'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -322,7 +321,7 @@ export default function CheckoutPage() {
                           required
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                           placeholder="Your full name"
                         />
                       </div>
@@ -333,7 +332,7 @@ export default function CheckoutPage() {
                           required
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                           placeholder="your@email.com"
                         />
                       </div>
@@ -344,7 +343,7 @@ export default function CheckoutPage() {
                           required
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                          className="w-full px-4 py-3 border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                           placeholder="+1 234 567 8900"
                         />
                       </div>
@@ -367,7 +366,7 @@ export default function CheckoutPage() {
                           required
                           value={formData.address}
                           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                           placeholder="123 Main Street, Apt 4B"
                         />
                       </div>
@@ -379,7 +378,7 @@ export default function CheckoutPage() {
                             required
                             value={formData.city}
                             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                             placeholder="New York"
                           />
                         </div>
@@ -390,7 +389,7 @@ export default function CheckoutPage() {
                             required
                             value={formData.postalCode}
                             onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#B91C1C] transition-colors"
                             placeholder="10001"
                           />
                         </div>
@@ -406,30 +405,30 @@ export default function CheckoutPage() {
                     className="bg-[#F8F7F5] rounded-lg p-6"
                   >
                     <h2 className="text-lg font-medium text-[#111827] mb-6">Payment Method</h2>
-                    <EngagingMessage context="checkout" />
+
                     <div className="space-y-2 sm:space-y-3">
-                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
+                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#B91C1C] transition-colors">
                         <input
                           type="radio"
                           name="payment"
                           value="COD"
                           checked={formData.paymentMethod === 'COD'}
                           onChange={() => setFormData({ ...formData, paymentMethod: 'COD' })}
-                          className="w-4 h-4 text-[#D4A5A5]"
+                          className="w-4 h-4 text-[#B91C1C]"
                         />
                         <div>
                           <p className="font-medium text-[#111827]">Cash on Delivery</p>
                           <p className="text-sm text-[#6B7280]">Pay when you receive + advance delivery fee (₨{deliveryFee})</p>
                         </div>
                       </label>
-                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#D4A5A5] transition-colors">
+                      <label className="flex items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded cursor-pointer hover:border-[#B91C1C] transition-colors">
                         <input
                           type="radio"
                           name="payment"
                           value="Bank Transfer"
                           checked={formData.paymentMethod === 'Bank Transfer'}
                           onChange={() => setFormData({ ...formData, paymentMethod: 'Bank Transfer' })}
-                          className="w-4 h-4 text-[#D4A5A5]"
+                          className="w-4 h-4 text-[#B91C1C]"
                         />
                         <div>
                           <p className="font-medium text-[#111827]">Bank Transfer</p>
@@ -651,11 +650,11 @@ export default function CheckoutPage() {
                       <div className="mb-4">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-medium text-[#6B7280]">Processing Order</span>
-                          <span className="text-xs font-medium text-[#D4A5A5]">{Math.round(loadingProgress)}%</span>
+                          <span className="text-xs font-medium text-[#B91C1C]">{Math.round(loadingProgress)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                           <div
-                            className="bg-gradient-to-r from-[#D4A5A5] to-amber-400 h-full rounded-full transition-all duration-300"
+                            className="bg-gradient-to-r from-[#B91C1C] to-red-400 h-full rounded-full transition-all duration-300"
                             style={{ width: `${loadingProgress}%` }}
                           />
                         </div>

@@ -58,45 +58,48 @@ const Header = memo(function Header() {
       }`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className={`font-display text-xl tracking-[0.05em] transition-colors ${
+            <Link href="/" className={`font-display text-xl font-semibold tracking-[0.05em] transition-colors ${
+              // Hide on mobile homepage while hero is visible to avoid collision with large editorial text
+              isHomepage && !hasScrolled ? 'hidden sm:inline-block' : 'inline-block'
+            } ${
               shouldBeTransparent
                 ? 'text-white hover:text-white/80' 
-                : 'text-[#1A1A1A] hover:text-[#D4A5A5]'
+                : 'text-[#1A1A1A] hover:text-[#7A4A2B]'
             }`}>
               ATELIER
             </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/products" className={`text-sm transition-colors font-medium relative ${isActive('/products') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products" className={`text-sm transition-colors font-semibold relative ${isActive('/products') ? 'text-[#7A4A2B]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
               Shop All
-              {isActive('/products') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
+              {isActive('/products') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#7A4A2B] rounded-full" />}
             </Link>
-            <Link href="/products?gender=women" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=women') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products?gender=women" className={`text-sm transition-colors font-semibold relative ${isActive('/products?gender=women') ? 'text-[#7A4A2B]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
               Women
-              {isActive('/products?gender=women') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
+              {isActive('/products?gender=women') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#7A4A2B] rounded-full" />}
             </Link>
-            <Link href="/products?gender=men" className={`text-sm transition-colors font-medium relative ${isActive('/products?gender=men') ? 'text-[#D4A5A5]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+            <Link href="/products?gender=men" className={`text-sm transition-colors font-semibold relative ${isActive('/products?gender=men') ? 'text-[#7A4A2B]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
               Men
-              {isActive('/products?gender=men') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#D4A5A5] rounded-full" />}
+              {isActive('/products?gender=men') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#7A4A2B] rounded-full" />}
             </Link>
-            <Link href="/#collections" className={`text-sm transition-colors font-medium ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>Collections</Link>
+            <Link href="/#collections" className={`text-sm transition-colors font-semibold ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>Collections</Link>
           </nav>            <div className="hidden md:flex items-center gap-6">
-              <button aria-label="Search" className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
+              <button aria-label="Search" className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#7A4A2B] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
-              <Link href="/favorites" aria-label="Favorites" className={`transition-all relative ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
+              <Link href="/favorites" aria-label="Favorites" className={`transition-all relative ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#7A4A2B] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
                 {favorites.length > 0 && (
-                  <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#D4A5A5] text-white text-[10px] rounded-full flex items-center justify-center font-medium">
+                    <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#7A4A2B] text-white text-[10px] rounded-full flex items-center justify-center font-medium">
                     {favorites.length > 9 ? '9+' : favorites.length}
                   </span>
                 )}
               </Link>
-              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`transition-all relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#D4A5A5] hover:scale-110'}`}>
+              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`transition-all relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#7A4A2B] hover:scale-110'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
@@ -106,12 +109,12 @@ const Header = memo(function Header() {
                   </span>
                 )}
               </Link>
-              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#D4A5A5] text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#7A4A2B] text-white text-xs rounded-full flex items-center justify-center font-medium">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
@@ -120,12 +123,12 @@ const Header = memo(function Header() {
 
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-4">
-              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}>
+              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#D4A5A5] text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#7A4A2B] text-white text-xs rounded-full flex items-center justify-center font-medium">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
@@ -133,8 +136,8 @@ const Header = memo(function Header() {
               <button
                 aria-label="Toggle menu"
                 aria-expanded={open}
-                onClick={() => setOpen(v => !v)}
-                className={`p-2 focus:outline-none ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#D4A5A5]'}`}
+                onClick={toggleMenu}
+                className={`p-2 focus:outline-none ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {open ? (
@@ -152,11 +155,11 @@ const Header = memo(function Header() {
         <div className={`md:hidden transition-all duration-300 overflow-hidden bg-white border-t border-[#E5E5E5] ${open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-6 py-6">
             <div className="flex flex-col gap-4">
-              <Link onClick={() => setOpen(false)} href="/products" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium">Shop All</Link>
-              <Link onClick={() => setOpen(false)} href="/products?gender=women" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium">Women</Link>
-              <Link onClick={() => setOpen(false)} href="/products?gender=men" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium">Men</Link>
-              <Link onClick={() => setOpen(false)} href="/#collections" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium">Collections</Link>
-              <Link onClick={() => setOpen(false)} href="/favorites" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium flex items-center gap-2">
+              <Link onClick={closeMenu} href="/products" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold">Shop All</Link>
+              <Link onClick={closeMenu} href="/products?gender=women" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold">Women</Link>
+              <Link onClick={closeMenu} href="/products?gender=men" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold">Men</Link>
+              <Link onClick={closeMenu} href="/#collections" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold">Collections</Link>
+              <Link onClick={closeMenu} href="/favorites" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-medium flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -164,14 +167,14 @@ const Header = memo(function Header() {
               </Link>
               <div className="border-t border-[#E5E5E5] pt-4 mt-2">
                 {isAuthenticated ? (
-                  <Link onClick={() => setOpen(false)} href="/account" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium flex items-center gap-2">
+                    <Link onClick={closeMenu} href="/account" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     My Account
                   </Link>
                 ) : (
-                  <Link onClick={() => setOpen(false)} href="/login" className="text-base text-[#1A1A1A] hover:text-[#D4A5A5] font-medium flex items-center gap-2">
+                    <Link onClick={closeMenu} href="/login" className="text-base text-[#1A1A1A] hover:text-[#B91C1C] font-semibold flex items-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>

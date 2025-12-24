@@ -18,8 +18,8 @@ interface FeaturedCollectionsProps {
 
 const FeaturedCollections = memo(function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
   return (
-    <section className="py-12 md:py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <section className="pt-12 pb-0 md:pt-20 md:pb-20 bg-gradient-to-b from-white to-[#F5F3F0] overflow-hidden">
+      <div className="w-full mx-auto px-0">
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           whileInView={{ opacity: 1, y: 0 }} 
@@ -35,7 +35,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
           {collections.map((collection, index) => (
             <motion.div
               key={collection.id}
@@ -47,7 +47,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
             >
               <Link
                 href={collection.link}
-                className="group relative overflow-hidden rounded-2xl block h-80 md:h-96 cursor-pointer"
+                className="group relative overflow-hidden  block h-[60vh] md:h-[80vh] min-h-[320px] w-full cursor-pointer"
               >
                 {/* Background Image */}
                 <Image
@@ -82,7 +82,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
                 </div>
 
                 {/* Accent Border on Hover */}
-                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#D4A5A5] via-[#E8C0C0] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#7A4A2B] via-[#E8C0C0] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </Link>
             </motion.div>
           ))}

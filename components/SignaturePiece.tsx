@@ -35,7 +35,7 @@ export default function SignaturePiece() {
             className="space-y-6 will-change-transform"
           >
             <div>
-              <p className="text-sm uppercase tracking-wider text-[#D4A5A5] mb-3">Signature Collection</p>
+              <p className="text-sm uppercase tracking-wider text-[#B91C1C] mb-3">Signature Collection</p>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#1A1A1A] leading-tight mb-4">
                 Diamond Elegance Necklace
               </h2>

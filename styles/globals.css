@@ -10,6 +10,45 @@
   to { transform: scale(1); } 
 }
 
+/* Editorial hero heading - consolidated styles for performance */
+.hero-title {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  white-space: normal;
+  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-size: clamp(5rem, 24vw, 35rem);
+  font-weight: 50;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  color: #F5F5F0;
+  mix-blend-mode: difference;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-transform: uppercase;
+}
+
+.hero-editorial {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  white-space: normal;
+}
+
+/* Apply the subtle negative left optical margin only on medium+ screens */
+@media (min-width: 768px) {
+  .hero-title, .hero-editorial { margin-left: -0.02em; }
+}
+
+/* Reduce the H1 scale on small screens to prevent clipping */
+@media (max-width: 640px) {
+  .hero-title, .hero-editorial {
+    font-size: clamp(3rem, 18vw, 10rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.03em !important;
+  }
+}
+
 @keyframes heroFadeIn { 
   from { opacity: 0; transform: translateY(12px); } 
   to { opacity: 1; transform: translateY(0); } 
@@ -79,6 +118,12 @@ html {
   contain: paint;
 }
 
+/* Force white text inside the CollectionsHighlight section to avoid accidental overrides */
+.collections-highlight,
+.collections-highlight * {
+  color: #FFFFFF !important;
+}
+
 .contain-strict {
   contain: strict;
 }
@@ -146,8 +191,8 @@ body {
   --color-text: #271d11;
   --color-text-muted: #6B7280;
   --color-border: #E5E7EB;
-  --color-rose: #D4A5A5;
-  --color-rose-dark: #B88585;
+  --color-rose: #7A4A2B;
+  --color-rose-dark: #62381F;
   --transition-fast: 200ms;
   --transition-medium: 350ms;
   

@@ -3,8 +3,8 @@ import Image from 'next/image'
 
 export default function Craftsmanship() {
   return (
-    <section className="py-12 md:py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <section className="py-24 md:py-32 bg-[#F8F7F5] w-full overflow-hidden">
+      <div className="w-full mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           
           {/* Content First */}
@@ -16,13 +16,13 @@ export default function Craftsmanship() {
             className="space-y-6 order-2 lg:order-1 will-change-transform"
           >
             <div>
-              <p className="text-sm uppercase tracking-wider text-[#D4A5A5] mb-3">Our Heritage</p>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#1A1A1A] leading-tight">
+              <p className="text-sm uppercase tracking-[0.3em] text-[#7A4A2B] font-bold font-poppins mb-3">Our Heritage</p>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium font-display text-[#1A1A1A] leading-tight">
                 Handcrafted Excellence
               </h2>
             </div>
             
-            <div className="space-y-4 text-base text-[#6B6B6B] leading-relaxed">
+            <div className="space-y-6 text-lg text-[#374151] leading-relaxed font-poppins font-normal">
               <p>
                 Every piece is meticulously crafted by our master artisans, blending traditional techniques with contemporary design.
               </p>
@@ -31,18 +31,18 @@ export default function Craftsmanship() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-[#1A1A1A]/10">
               <div className="text-center">
-                <div className="text-3xl md:text-4xl text-[#1A1A1A] font-medium mb-1">35+</div>
-                <div className="text-xs text-[#6B6B6B] uppercase tracking-wider">Years</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">35+</div>
+                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Years of Artistry</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl text-[#1A1A1A] font-medium mb-1">12</div>
-                <div className="text-xs text-[#6B6B6B] uppercase tracking-wider">Artisans</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">12</div>
+                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Master Artisans</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl text-[#1A1A1A] font-medium mb-1">5000+</div>
-                <div className="text-xs text-[#6B6B6B] uppercase tracking-wider">Pieces</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">5000+</div>
+                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Unique Pieces</div>
               </div>
             </div>
           </motion.div>

@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo, CSSProperties } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -16,6 +16,7 @@ interface Product {
   category: string
   gender: string
   image_url: string
+  images?: string[] // Array of image URLs for rollover effect
   stock: number
   is_hidden?: boolean
 }
@@ -39,30 +40,67 @@ const ProductGridItem = memo(function ProductGridItem({
   product: Product
   index: number 
 }) {
+  const [isHovered, setIsHovered] = useState(false)
+  
+  // Get secondary image from images array (index 1)
+  const secondaryImg = product.images && product.images.length > 1 ? product.images[1] : undefined
+  
+  // Memoized handlers to prevent re-renders
+  const handleMouseEnter = useCallback(() => setIsHovered(true), [])
+  const handleMouseLeave = useCallback(() => setIsHovered(false), [])
+  
+  // Memoize animation delay to prevent style object recreation
+  const animationStyle = useMemo(() => ({
+    animationDelay: `${Math.min(index * 30, 300)}ms`,
+    animationFillMode: 'backwards' as const
+  }), [index])
+  
   return (
     <div
       className="animate-fadeIn contain-layout"
-      style={{ 
-        animationDelay: `${Math.min(index * 30, 300)}ms`,
-        animationFillMode: 'backwards'
-      }}
+      style={animationStyle}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
         <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-xl">
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated"
-            sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
-            loading={index < 8 ? 'eager' : 'lazy'}
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
-          />
+          {/* Primary Image */}
+          <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
+            <Image
+              src={product.image_url}
+              alt={product.name}
+              fill
+              className={`object-cover transition-opacity duration-300 ${
+                isHovered && secondaryImg ? 'opacity-0' : 'opacity-100'
+              }`}
+              sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
+              loading={index < 8 ? 'eager' : 'lazy'}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
+            />
+          </div>
+          
+          {/* Secondary Image - Only render if available */}
+          {secondaryImg && (
+            <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
+              <Image
+                src={secondaryImg}
+                alt={`${product.name} - alternate view`}
+                fill
+                className={`object-cover transition-opacity duration-300 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+                sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
+              />
+            </div>
+          )}
           
           {/* Sale badge */}
           {product.old_price && (
-            <div className="absolute top-4 left-4 bg-[#D4A5A5] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+            <div className="absolute top-4 left-4 bg-[#B91C1C] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
               Sale
             </div>
           )}
@@ -85,17 +123,17 @@ const ProductGridItem = memo(function ProductGridItem({
           </div>
         </div>
 
-        <div className="space-y-2 px-1">
+        <div className="space-y-2 px-1 font-poppins">
           <p className="text-xs uppercase tracking-wider text-[#6B7280]">{product.category}</p>
-          <h3 className="font-normal text-base text-[#111827] group-hover:text-[#D4A5A5] transition-colors duration-150 line-clamp-1">
+          <h3 className="font-normal text-base text-[#111827] group-hover:text-[#B91C1C] transition-colors duration-150 line-clamp-1 font-display">
             {product.name}
           </h3>
           <div className="flex items-center gap-2">
-            <p className="text-base font-medium text-[#111827]">
+            <p className="text-base font-medium text-[#111827] font-display">
               ₨{product.price.toLocaleString()}
             </p>
             {product.old_price && (
-              <p className="text-sm text-[#6B7280] line-through">
+              <p className="text-sm text-[#6B7280] line-through font-display">
                 ₨{product.old_price.toLocaleString()}
               </p>
             )}
@@ -254,7 +292,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
         {/* Animations are loaded from globals.css for better caching */}
       </Head>
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white font-poppins">
         <Header />
 
         <main className="pt-24 pb-20">
@@ -262,7 +300,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
             
             {/* Page Header - simple CSS animation */}
             <div className="text-center mb-12 animate-fadeIn">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#111827] mb-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#111827] mb-4 font-display">
                 All Products
               </h1>
               <p className="text-base text-[#6B7280] max-w-2xl mx-auto">
@@ -282,7 +320,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                     <select
                       value={selectedCategory}
                       onChange={handleCategoryChange}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors duration-150"
+                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors duration-150"
                     >
                       {categoryOptions.map(cat => (
                         <option key={cat} value={cat}>
@@ -298,7 +336,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                     <select
                       value={selectedGender}
                       onChange={(e) => setSelectedGender(e.target.value)}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors"
                     >
                       {genders.map(gender => (
                         <option key={gender} value={gender}>
@@ -315,7 +353,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#D4A5A5] transition-colors"
+                    className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors"
                   >
                     <option value="default">Default</option>
                     <option value="price-low">Price: Low to High</option>
@@ -333,7 +371,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                 {(selectedCategory !== 'all' || selectedGender !== 'all') && (
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-[#D4A5A5] hover:text-[#c49595] transition-colors duration-150 flex items-center gap-1"
+                    className="text-sm text-[#B91C1C] hover:text-[#991B1B] transition-colors duration-150 flex items-center gap-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

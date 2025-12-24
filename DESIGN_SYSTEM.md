@@ -4,7 +4,8 @@
 
 ### Primary Colors
 - **Deep Black** `#1A1A1A` - Main text, headings, primary elements
-- **Dusty Rose/Mauve** `#D4A5A5` - Accent color, hover states, highlights, CTAs
+- **Luxury Red** `#B91C1C` - Accent color, hover states, highlights, CTAs
+- **Artisan Brown** `#7A4A2B` - Secondary accent, warm highlights
 - **Cream/Off-White** `#F8F7F5` - Background sections, light surfaces
 
 ### Secondary Colors
@@ -16,7 +17,7 @@
 ```
 Headlines & Primary Text     → #1A1A1A
 Body Copy & Descriptions     → #6B6B6B
-Accent & Interactive Elements → #D4A5A5
+Accent & Interactive Elements → #B91C1C
 Section Backgrounds          → #F8F7F5
 Borders & Dividers           → #E5E5E5
 Disabled/Muted Text          → #9CA3AF
@@ -25,23 +26,23 @@ Disabled/Muted Text          → #9CA3AF
 ## 🔤 Typography
 
 ### Font Stack
-- **Display Font**: `font-display` - Used for headings and brand elements (Elegant, luxury serif)
-- **Body Font**: System fonts (San-serif for readability)
+- **Display Font**: `Cinzel` (`font-display`) - Used for headings, prices, and brand elements (Elegant, luxury serif)
+- **Body/UI Font**: `Poppins` (`font-poppins`) - Used for UI elements, buttons, and body copy for modern readability
 - **Fallback**: Clean, modern sans-serif stack
 
 ### Typography Scale
 
 #### Headings
-- **H1**: `text-4xl md:text-5xl lg:text-6xl` - Main page titles
-- **H2**: `font-display text-3xl md:text-4xl` - Section headings
-- **H3**: `text-xl font-semibold` - Subsections
-- **H4**: `text-xs font-semibold uppercase` - Category labels
+- **H1**: `text-4xl md:text-5xl lg:text-6xl` - Main page titles (Cinzel)
+- **H2**: `font-display text-3xl md:text-4xl` - Section headings (Cinzel)
+- **H3**: `text-xl font-semibold` - Subsections (Poppins)
+- **H4**: `text-xs font-semibold uppercase` - Category labels (Poppins)
 
 #### Body Text
-- **Large**: `text-lg` - Introductions, key messages
-- **Regular**: `text-sm` / `text-base` - Main body copy
-- **Small**: `text-xs` - Captions, metadata, fine print
-- **Extra Small**: `text-[10px]` - Tags, badges
+- **Large**: `text-lg` - Introductions, key messages (Poppins)
+- **Regular**: `text-sm` / `text-base` - Main body copy (Poppins)
+- **Small**: `text-xs` - Captions, metadata, fine print (Poppins)
+- **Extra Small**: `text-[10px]` - Tags, badges (Poppins)
 
 #### Font Weights
 - **Regular**: 400 - Body text
@@ -60,13 +61,13 @@ Disabled/Muted Text          → #9CA3AF
 ### Brand Character
 - **Luxury & Elegance** - Premium jewelry brand aesthetic
 - **Timeless & Sophisticated** - Classic color palette with modern execution
-- **Handcrafted & Artisanal** - Warm, sophisticated aesthetic
+- **Handcrafted & Artisanal** - Warm, sophisticated aesthetic (Brown/Red accents)
 - **Exclusive & Refined** - High-end positioning reflected in design
 
 ### Design Principles
 1. **Minimalist Elegance** - Clean layouts with breathing room
-2. **Hierarchy through Color** - Dusty rose accents guide attention
-3. **Premium Feel** - Generous spacing, quality typography
+2. **Hierarchy through Color** - Luxury red accents guide attention
+3. **Premium Feel** - Generous spacing, quality typography (Cinzel/Poppins)
 4. **Accessibility** - High contrast ratios, readable copy
 5. **Luxury Simplicity** - Less is more approach
 
@@ -74,7 +75,7 @@ Disabled/Muted Text          → #9CA3AF
 
 ### Buttons
 - **Primary CTA**: Background `#1A1A1A`, Text `white`
-- **Hover State**: Background `#D4A5A5`, Text `white` or `#1A1A1A`
+- **Hover State**: Background `#B91C1C`, Text `white`
 - **Secondary**: Border `#1A1A1A`, Text `#1A1A1A`, Hover background `#1A1A1A`
 - **Disabled**: Background `#E5E5E5`, Text `#9CA3AF`
 
@@ -84,18 +85,18 @@ Disabled/Muted Text          → #9CA3AF
 - **Hover**: Subtle shadow elevation
 
 ### Badges & Labels
-- **Background**: `#D4A5A5`
+- **Background**: `#B91C1C`
 - **Text**: `white`
-- **Alternative**: Text only with color `#D4A5A5`
+- **Alternative**: Text only with color `#B91C1C`
 
 ### Links & Interactive Elements
 - **Default**: `#1A1A1A`
-- **Hover**: `#D4A5A5`
-- **Active**: `#D4A5A5` with underline
+- **Hover**: `#B91C1C`
+- **Active**: `#B91C1C` with underline
 - **Visited**: `#9CA3AF`
 
 ### Form Elements
-- **Focus**: Border `#D4A5A5`
+- **Focus**: Border `#B91C1C`
 - **Background**: `white`
 - **Border**: `#E5E5E5`
 - **Placeholder**: `#9CA3AF`
@@ -117,7 +118,7 @@ Built on Tailwind's spacing scale (multiples of 0.25rem):
 
 ### Borders
 - `border` with `#E5E5E5` - Main borders (1px)
-- `border-l-4` with `#D4A5A5` - Accent left border
+- `border-l-4` with `#B91C1C` - Accent left border
 
 ### Shadows
 - Subtle: `shadow-sm` - Hover states
@@ -157,11 +158,11 @@ Tailwind standard breakpoints used throughout:
 ### Color Contrast
 - Text on background meets WCAG AA standards
 - `#1A1A1A` on `white`: 21:1 ratio (AAA)
-- `#D4A5A5` on `white`: 7.5:1 ratio (AA)
+- `#B91C1C` on `white`: 5.5:1 ratio (AA)
 - `#6B6B6B` on `white`: 8.59:1 ratio (AA)
 
 ### Interactive Elements
-- Focus states with visible borders (`border-#D4A5A5`)
+- Focus states with visible borders (`border-#B91C1C`)
 - Hover states clearly visible
 - Links and buttons distinguishable
 - Alt text on all images
@@ -190,7 +191,7 @@ className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6"
 
 ### Hover State for Links
 ```tsx
-className="hover:text-[#D4A5A5] transition-colors duration-150"
+className="hover:text-[#B91C1C] transition-colors duration-150"
 ```
 
 ### Card Component

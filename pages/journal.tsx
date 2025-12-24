@@ -105,7 +105,7 @@ export default function Journal() {
                 </div>
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-xs font-semibold text-[#D4A5A5] uppercase tracking-wider">Featured</span>
+                    <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wider">Featured</span>
                     <span className="text-xs text-[#9CA3AF]">•</span>
                     <span className="text-xs text-[#6B6B6B]">{blogPosts[0].category}</span>
                   </div>
@@ -137,9 +137,9 @@ export default function Journal() {
                       />
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-[#D4A5A5] uppercase tracking-wider">{post.category}</span>
+                      <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wider">{post.category}</span>
                     </div>
-                    <h3 className="font-display text-xl text-[#1A1A1A] mb-3 group-hover:text-[#D4A5A5] transition-colors">
+                    <h3 className="font-display text-xl text-[#1A1A1A] mb-3 group-hover:text-[#B91C1C] transition-colors">
                       {post.title}
                     </h3>
                     <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">
@@ -173,12 +173,12 @@ export default function Journal() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#D4A5A5]"
+                className="flex-1 px-4 py-3 border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#B91C1C]"
                 required
               />
               <button
                 type="submit"
-                className="px-6 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#D4A5A5] transition-colors font-medium"
+                className="px-6 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-medium"
               >
                 Subscribe
               </button>

@@ -83,7 +83,7 @@ export default function FAQ() {
                     <h3 className="text-lg font-semibold text-[#1A1A1A] text-left">
                       {faq.question}
                     </h3>
-                    <span className={`text-[#D4A5A5] text-xl transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
+                    <span className={`text-[#B91C1C] text-xl transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
                       +
                     </span>
                   </button>
@@ -108,7 +108,7 @@ export default function FAQ() {
               </p>
               <a 
                 href="mailto:hello@atelier.com" 
-                className="inline-block px-8 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#D4A5A5] transition-colors font-medium"
+                className="inline-block px-8 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-medium"
               >
                 Contact Us
               </a>

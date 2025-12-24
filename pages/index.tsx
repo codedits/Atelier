@@ -12,9 +12,13 @@ import {
 } from '../components'
 
 // Lazy load below-fold components for faster initial render
-const BentoGrid = dynamic(() => import('../components/BentoGrid'), { ssr: true })
+const ValueProposition = dynamic(() => import('../components/ValueProposition'), { ssr: true })
+
+const CollectionsHighlight = dynamic(() => import('../components/CollectionsHighlight'), { ssr: true })
+const ProcessSteps = dynamic(() => import('../components/ProcessSteps'), { ssr: true })
 const Craftsmanship = dynamic(() => import('../components/Craftsmanship'), { ssr: true })
 const Testimonials = dynamic(() => import('../components/Testimonials'), { ssr: true })
+const InstagramGallery = dynamic(() => import('../components/InstagramGallery'), { ssr: true })
 const Newsletter = dynamic(() => import('../components/Newsletter'), { ssr: true })
 const Footer = dynamic(() => import('../components/Footer'), { ssr: true })
 
@@ -25,6 +29,7 @@ interface Product {
   old_price?: number
   category: string
   image_url: string
+  images?: string[] // Array of image URLs for rollover effect
   is_hidden?: boolean
 }
 
@@ -48,7 +53,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   const [productsResult, collectionsResult] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, price, old_price, category, image_url, is_hidden')
+      .select('id, name, price, old_price, category, image_url, images, is_hidden')
       .eq('is_hidden', false)
       .order('created_at', { ascending: false })
       .limit(3),
@@ -235,26 +240,34 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
         }) }} />
       </Head>
       
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#FAFAF8]">
         <Header />
         
         <main>
           {/* 1. Hero Section - Ultra Premium */}
           <Hero />
 
-          {/* 2. Featured Collections - 4 Card Layout */}
+          {/* 2. Value Proposition - Trust Indicators */}
+          <ValueProposition />
+
+          {/* 3. Featured Collections - 4 Card Layout */}
           <FeaturedCollections collections={collections} />
 
-          {/* 3. Bento Grid Collection Showcase */}
-          <BentoGrid />
 
-          {/* 4. Craftsmanship / Brand Story */}
+
+          {/* 5. Collections Highlight - Curated Showcase */}
+          <CollectionsHighlight />
+
+          {/* 6. Process Steps - How We Create */}
+          <ProcessSteps />
+
+          {/* 7. Craftsmanship / Brand Story */}
           <Craftsmanship />
 
-          {/* 5. New Arrivals / Best Sellers - Grid */}
+          {/* 8. New Arrivals / Best Sellers - Grid */}
           <section 
             id="new-arrivals" 
-            className="py-12 md:py-20 bg-white will-change-transform"
+            className="py-12 md:py-20 bg-[#FAFAF8] will-change-transform"
           >
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
               <motion.div 
@@ -287,6 +300,7 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
                         price={product.price}
                         oldPrice={product.old_price}
                         img={product.image_url}
+                        images={product.images}
                         category={product.category}
                       />
                     </motion.div>
@@ -313,10 +327,13 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
             </div>
           </section>
 
-          {/* 6. Testimonials - High-End Style */}
+          {/* 9. Testimonials - High-End Style */}
           <Testimonials />
 
-          {/* 7. Newsletter - Inner Circle */}
+          {/* 10. Instagram Gallery - Social Proof */}
+          <InstagramGallery />
+
+          {/* 11. Newsletter - Inner Circle */}
           <Newsletter />
 
         </main>

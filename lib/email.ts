@@ -143,14 +143,14 @@ export async function sendOrderConfirmationEmail({
           <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <div style="background: #111827; padding: 32px; text-align: center;">
               <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">${storeName.toUpperCase()}</h1>
-              <p style="color: #d4a5a5; margin: 8px 0 0; font-size: 14px;">Order Confirmation</p>
+              <p style="color: #B91C1C; margin: 8px 0 0; font-size: 14px;">Order Confirmation</p>
             </div>
             
             <div style="padding: 40px 32px;">
               <h2 style="color: #111827; margin: 0 0 8px; font-size: 20px; font-weight: 500;">Thank You, ${userName}!</h2>
               <p style="color: #6b7280; margin: 0 0 24px; font-size: 14px;">Your order has been successfully placed.</p>
               
-              <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #d4a5a5;">
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #B91C1C;">
                 <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</p>
                 <p style="color: #111827; margin: 0; font-size: 22px; font-weight: 600;">#${orderId.slice(0, 8).toUpperCase()}</p>
               </div>
@@ -279,7 +279,7 @@ export async function sendDeliveryNotificationEmail({
               <h2 style="color: #111827; margin: 0 0 8px; font-size: 22px; font-weight: 500;">Hello ${userName}!</h2>
               <p style="color: #6b7280; margin: 0 0 24px; font-size: 15px; line-height: 1.6;">Great news! Your order has been successfully delivered. We hope you love your new jewelry!</p>
               
-              <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #d4a5a5;">
+              <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #B91C1C;">
                 <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</p>
                 <p style="color: #111827; margin: 0; font-size: 24px; font-weight: 600;">#${orderId.slice(0, 8).toUpperCase()}</p>
               </div>
@@ -303,16 +303,16 @@ export async function sendDeliveryNotificationEmail({
               </table>
 
               <!-- Review CTA -->
-              <div style="background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; text-align: center; border: 1px solid #fbcfe8;">
+              <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: 12px; padding: 24px; margin-bottom: 32px; text-align: center; border: 1px solid #fecaca;">
                 <div style="margin-bottom: 12px;">
-                  <span style="color: #d4a5a5; font-size: 28px;">★★★★★</span>
+                  <span style="color: #B91C1C; font-size: 28px;">★★★★★</span>
                 </div>
                 <h3 style="color: #111827; margin: 0 0 8px; font-size: 18px; font-weight: 600;">We'd Love Your Feedback!</h3>
                 <p style="color: #6b7280; margin: 0 0 20px; font-size: 14px; line-height: 1.5;">
                   Share your experience and help other customers make informed decisions.
                 </p>
                 <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders/${orderId}" 
-                   style="display: inline-block; background: linear-gradient(135deg, #d4a5a5 0%, #c99595 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
+                   style="display: inline-block; background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
                   Write a Review
                 </a>
               </div>

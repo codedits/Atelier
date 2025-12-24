@@ -23,7 +23,16 @@ function getClientToken(): string {
   
   let token = localStorage.getItem(TOKEN_KEY)
   if (!token) {
-    token = crypto.randomUUID()
+    // Fallback for crypto.randomUUID() if not available (e.g. non-secure context)
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      token = crypto.randomUUID()
+    } else {
+      token = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+      })
+    }
     localStorage.setItem(TOKEN_KEY, token)
   }
   return token

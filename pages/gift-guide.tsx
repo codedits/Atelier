@@ -109,14 +109,14 @@ export default function GiftGuide() {
                     </p>
                     <div className="mb-6">
                       <p className="text-sm font-semibold text-[#1A1A1A] mb-2">PRICE RANGE</p>
-                      <p className="text-[#D4A5A5] font-medium text-lg">{category.priceRange}</p>
+                      <p className="text-[#B91C1C] font-medium text-lg">{category.priceRange}</p>
                     </div>
                     <div className="mb-6">
                       <p className="text-sm font-semibold text-[#1A1A1A] mb-3">COLLECTION INCLUDES</p>
                       <ul className="space-y-2">
                         {category.items.map((item, i) => (
                           <li key={i} className="flex items-center gap-2 text-[#6B6B6B]">
-                            <span className="w-1.5 h-1.5 bg-[#D4A5A5] rounded-full"></span>
+                            <span className="w-1.5 h-1.5 bg-[#B91C1C] rounded-full"></span>
                             {item}
                           </li>
                         ))}
@@ -184,7 +184,7 @@ export default function GiftGuide() {
               Our expert team is ready to help you find the perfect piece. Schedule a personal consultation or call us for styling advice tailored to your recipient.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-[#1A1A1A] text-white rounded hover:bg-[#D4A5A5] transition-colors font-medium">
+              <button className="px-8 py-3 bg-[#1A1A1A] text-white rounded hover:bg-[#B91C1C] transition-colors font-medium">
                 Schedule Consultation
               </button>
               <a 

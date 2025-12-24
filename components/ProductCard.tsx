@@ -1,42 +1,75 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { memo } from 'react'
+import { memo, useState, useCallback } from 'react'
 
 type Props = {
   id?: string
   name: string
   price: string | number
   img: string
+  images?: string[] // Array of image URLs for rollover effect
   category?: string
   oldPrice?: number
 }
 
 // Memoized component to prevent unnecessary re-renders
-const ProductCard = memo(function ProductCard({ id, name, price, img, category = 'Fine Jewellery', oldPrice }: Props) {
+const ProductCard = memo(function ProductCard({ id, name, price, img, images, category = 'Fine Jewellery', oldPrice }: Props) {
+  const [isHovered, setIsHovered] = useState(false)
   const formattedPrice = typeof price === 'number' ? `₨${price.toLocaleString()}` : price
   const productUrl = id ? `/products/${id}` : '/products'
+  
+  // Get secondary image from images array (index 1)
+  const secondaryImg = images && images.length > 1 ? images[1] : undefined
+  
+  // Memoized handlers to prevent re-renders
+  const handleMouseEnter = useCallback(() => setIsHovered(true), [])
+  const handleMouseLeave = useCallback(() => setIsHovered(false), [])
 
   return (
-    <article className="group cursor-pointer contain-layout hover-lift">
+    <article 
+      className="group cursor-pointer contain-layout hover-lift"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <Link href={productUrl} className="block" prefetch={false}>
         <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-lg">
-          {/* Use CSS transform instead of framer-motion for better perf */}
+          {/* Primary Image */}
           <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
             <Image 
               src={img} 
               alt={name} 
               fill 
-              className="object-cover" 
+              className={`object-cover transition-opacity duration-300 ${
+                isHovered && secondaryImg ? 'opacity-0' : 'opacity-100'
+              }`}
               sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 100vw"
               loading="lazy"
               placeholder="blur"
               blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
             />
           </div>
+          
+          {/* Secondary Image - Only render if available in array */}
+          {secondaryImg && (
+            <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
+              <Image 
+                src={secondaryImg} 
+                alt={`${name} - alternate view`} 
+                fill 
+                className={`object-cover transition-opacity duration-300 ${
+                  isHovered ? 'opacity-100' : 'opacity-0'
+                }`}
+                sizes="(min-width:1024px) 33vw, (min-width:768px) 50vw, 100vw"
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
+              />
+            </div>
+          )}
 
           {/* Sale badge */}
           {oldPrice && (
-            <div className="absolute top-3 left-3 bg-[#D4A5A5] text-white text-xs font-medium px-2 py-1 rounded">
+            <div className="absolute top-3 left-3 bg-[#B91C1C] text-white text-xs font-medium px-2 py-1 rounded">
               Sale
             </div>
           )}
@@ -54,7 +87,7 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, category =
         
         <div className="space-y-2 text-center px-2">
           <p className="text-sm text-[#6B6B6B] uppercase tracking-wide">{category}</p>
-          <h3 className="font-bold text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#D4A5A5] transition-colors duration-150" style={{ fontFamily: "'Poppins', sans-serif" }}>{name}</h3>
+          <h3 className="font-bold text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#B91C1C] transition-colors duration-150" style={{ fontFamily: "'Poppins', sans-serif" }}>{name}</h3>
           <div className="flex items-center justify-center gap-2">
             <p className="text-base md:text-lg text-[#1A1A1A] font-medium">{formattedPrice}</p>
             {oldPrice && (
