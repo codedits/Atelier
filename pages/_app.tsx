@@ -81,6 +81,25 @@ export default function App({ Component, pageProps }: AppProps) {
 
           {/* Canonical - pages can override if needed */}
           <link rel="canonical" href={SITE_URL} />
+
+          {/* Organization Schema */}
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": SITE_NAME,
+            "url": SITE_URL,
+            "logo": `${SITE_URL}/atelier%20s.svg`,
+            "sameAs": [
+              "https://instagram.com/atelier",
+              "https://facebook.com/atelier",
+              "https://pinterest.com/atelier"
+            ],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": "English"
+            }
+          }) }} />
           </Head>
           <MemoizedComponent Component={Component} pageProps={pageProps} />
         </FavoritesProvider>

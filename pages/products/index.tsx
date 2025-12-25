@@ -298,6 +298,16 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
         <meta property="og:url" content="https://codedits.github.io/Atelier/products" />
         <link rel="canonical" href="https://codedits.github.io/Atelier/products" />
         
+        {/* Breadcrumb Schema */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://codedits.github.io/Atelier" },
+            { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://codedits.github.io/Atelier/products" }
+          ]
+        }) }} />
+
         {/* JSON-LD CollectionPage */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           "@context": "https://schema.org",

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { color, motion } from 'framer-motion'
 import { useState } from 'react'
 
 export default function Newsletter() {
@@ -22,7 +22,7 @@ export default function Newsletter() {
           transition={{ duration: 0.6 }}
           className="space-y-6 will-change-transform"
         >
-          <h2 className="text-3xl md:text-4xl font-medium text-white">
+          <h2 className="text-3xl md:text-4xl font-medium !text-white drop-shadow-md" >
             Join Our Newsletter
           </h2>
 

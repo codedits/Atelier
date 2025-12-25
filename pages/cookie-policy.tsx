@@ -122,7 +122,7 @@ export default function CookiePolicy() {
               <div className="space-y-2">
                 <p>Email: hello@atelier.com</p>
                 <p>Phone: +92 (300) 123-4567</p>
-                <p>Address: Atelier Fine Jewellery, Karachi, Pakistan</p>
+                <p>Address: Atelier Fine Jewellery, Lahore, Pakistan</p>
               </div>
             </div>
           </div>

@@ -55,7 +55,7 @@ export default function ShippingInfo() {
                   },
                   {
                     title: 'Same Day Delivery',
-                    time: 'Karachi only',
+                    time: 'Lahore only',
                     cost: '₨1,500',
                     details: 'Order before 12 PM for same-day delivery'
                   }

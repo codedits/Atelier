@@ -37,7 +37,7 @@ export default function About() {
               <div>
                 <div className="relative h-96 md:h-full min-h-96">
                   <Image
-                    src="/atelier-about-hero-13807923.jpg"
+                    src="https://images.pexels.com/photos/19346493/pexels-photo-19346493.jpeg"
                     alt="Handcrafted jewelry"
                     fill
                     className="object-cover rounded-lg"

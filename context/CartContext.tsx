@@ -18,6 +18,7 @@ interface CartContextType {
   totalPrice: number
   getItemQuantity: (productId: string) => number
   canAddMore: (product: Product, additionalQty?: number) => boolean
+  isLoading: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -142,6 +143,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalPrice,
         getItemQuantity,
         canAddMore,
+        isLoading: !isHydrated,
       }}
     >
       {children}

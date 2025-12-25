@@ -1,6 +1,6 @@
 import { useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, memo, useEffect } from 'react'
 import Link from 'next/link'
 
 interface HeroImage {
@@ -14,11 +14,17 @@ interface HeroImage {
   display_order: number
 }
 
+const heroImages = [
+  '/hero1.jpg',
+  '/hero2.jpg',
+  '/hero3.jpg'
+]
+
 const defaultHero: HeroImage = {
   id: 'default',
   title: 'Atelier',
   subtitle: 'Timeless elegance, crafted for you',
-  image_url: 'https://images.unsplash.com/photo-1766185794911-7f50f1df5cbd?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  image_url: heroImages[0],
   video_url: '',
   cta_text: 'Explore Collection',
   cta_link: '/products',
@@ -27,7 +33,27 @@ const defaultHero: HeroImage = {
 
 const Hero = memo(function Hero() {
   const prefersReducedMotion = useReducedMotion()
-  const [heroImage] = useState<HeroImage>(defaultHero)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [heroImage, setHeroImage] = useState<HeroImage>(defaultHero)
+
+  // Rotate images every 5 seconds
+  useEffect(() => {
+    if (prefersReducedMotion) return
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [prefersReducedMotion])
+
+  // Update hero image when index changes
+  useEffect(() => {
+    setHeroImage((prev) => ({
+      ...prev,
+      image_url: heroImages[currentImageIndex]
+    }))
+  }, [currentImageIndex])
 
   // Optimized scroll handler
 
@@ -44,34 +70,27 @@ const Hero = memo(function Hero() {
 
   return (
     <section className="relative h-screen md:min-h-[600px] overflow-hidden bg-[#0A0A0A]">
-      {/* Background with subtle initial zoom */}
-      <div className={`absolute inset-0 ${prefersReducedMotion ? '' : 'hero-zoom'}`}>
-        {heroImage.video_url ? (
-          <video
-            src={heroImage.video_url}
-            poster={heroImage.image_url || undefined}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectFit: 'cover' }}
-            aria-hidden
-          />
-        ) : heroImage.image_url ? (
-          <Image 
-            src={heroImage.image_url} 
-            alt={heroImage.title} 
-            fill 
-            className="object-cover" 
-            priority 
-            sizes="100vw"
-            quality={85}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A]" />
-        )}
-        <div className="absolute inset-0 bg-black/30" />
+      {/* Background image carousel with smooth fade transition */}
+      <div className="absolute inset-0 overflow-hidden">
+        {heroImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
+              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+            } ${prefersReducedMotion ? '' : 'hero-zoom'}`}
+          >
+            <Image
+              src={image}
+              alt={`Hero background ${index + 1}`}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              sizes="100vw"
+              quality={85}
+            />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-black/30 pointer-events-none" />
       </div>
 
       {/* Overlay content - Centered Heading Only */}

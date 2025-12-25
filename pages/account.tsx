@@ -157,8 +157,33 @@ export default function AccountPage() {
           <title>My Account | Atelier</title>
         </Head>
         <Header />
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-900 border-t-transparent rounded-full" />
+        <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+          {/* Hero Banner Skeleton */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+              <div className="flex items-center gap-6">
+                <div className="h-20 w-20 rounded-full bg-gray-200 animate-pulse" />
+                <div className="space-y-3">
+                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column Skeleton */}
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-white rounded-xl p-6 h-64 animate-pulse" />
+              </div>
+              {/* Right Column Skeleton */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-white rounded-xl p-6 h-32 animate-pulse" />
+                <div className="bg-white rounded-xl p-6 h-32 animate-pulse" />
+              </div>
+            </div>
+          </div>
         </main>
         <Footer />
       </>

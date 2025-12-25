@@ -7,8 +7,44 @@ import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
+  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice, isLoading } = useCart()
   const { isAuthenticated } = useUserAuth()
+
+  if (isLoading) {
+    return (
+      <>
+        <Head>
+          <title>Shopping Cart — Atelier</title>
+        </Head>
+        <div className="min-h-screen bg-white">
+          <Header />
+          <main className="pt-24 pb-20">
+            <div className="max-w-6xl mx-auto px-6 lg:px-8">
+              <div className="h-10 w-48 bg-gray-100 rounded animate-pulse mb-8" />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+                <div className="lg:col-span-2 space-y-6">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="flex gap-6 pb-6 border-b border-gray-100">
+                      <div className="w-24 h-32 bg-gray-100 rounded animate-pulse" />
+                      <div className="flex-1 space-y-3">
+                        <div className="h-6 w-3/4 bg-gray-100 rounded animate-pulse" />
+                        <div className="h-4 w-1/4 bg-gray-100 rounded animate-pulse" />
+                        <div className="h-5 w-20 bg-gray-100 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="bg-gray-50 rounded-lg p-6 h-64 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    )
+  }
 
   if (items.length === 0) {
     return (
