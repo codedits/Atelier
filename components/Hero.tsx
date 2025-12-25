@@ -63,14 +63,18 @@ const Hero = memo(function Hero() {
 
   return (
     <section className="relative h-screen md:min-h-[600px] overflow-hidden bg-[#0A0A0A]">
-      {/* Dynamic hero carousel: 3-image crossfade with LCP optimization */}
+      {/* Dynamic hero carousel: render only active image initially for LCP, add others after hydration */}
       <div className="absolute inset-0">
         {heroImageUrls.map((imageUrl, index) => (
           <div
             key={index}
             className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+              index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
             } ${prefersReducedMotion ? '' : 'hero-zoom'}`}
+            style={{
+             // Only render the active image in DOM to help LCP detection
+              display: index === currentImageIndex || index <= 1 ? 'block' : 'none'
+            }}
           >
             <Image
               src={imageUrl}
@@ -78,6 +82,7 @@ const Hero = memo(function Hero() {
               fill
               className="object-cover"
               priority={index === 0}
+              loading={index === 0 ? 'eager' : 'lazy'}
               sizes="100vw"
               quality={85}
             />
