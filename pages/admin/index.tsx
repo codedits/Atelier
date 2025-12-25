@@ -1,210 +1,78 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 
 function LoginForm() {
-  const DEV_NO_AUTH = process.env.NEXT_PUBLIC_ADMIN_UNLOCK === 'true' || process.env.NEXT_PUBLIC_ADMIN_NO_AUTH === 'true'
-  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [useOtp, setUseOtp] = useState(false)
-  const [otp, setOtp] = useState('')
-  const [otpMessage, setOtpMessage] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { login, isLoading, admin } = useAdminAuth()
-  const { generateOtp, loginWithOtp } = useAdminAuth()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { login, isAuthenticated, isLoading } = useAdminAuth()
   const router = useRouter()
 
-  // Redirect if already logged in
-  if (admin) {
-    router.push('/admin/dashboard')
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      router.push('/admin/dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
-    // In dev no-auth mode, skip OTP/password prompts and call login with minimal data
-    if (DEV_NO_AUTH) {
-      const success = await login(username, '')
-      if (success) {
-        router.push('/admin/dashboard')
-      } else {
-        setError('Failed to sign in (dev)')
-      }
-      setLoading(false)
-      return
-    }
-
-    if (useOtp) {
-      // verify OTP
-      const success = await loginWithOtp(username, otp)
-      if (success) {
-        router.push('/admin/dashboard')
-      } else {
-        setError('Invalid or expired OTP')
-      }
-      setLoading(false)
-      return
-    }
-
-    const success = await login(username, password)
-
+    setIsSubmitting(true)
+    
+    const success = await login(password)
     if (success) {
       router.push('/admin/dashboard')
     } else {
-      setError('Invalid username or password')
+      setError('Invalid password')
+      setIsSubmitting(false)
     }
-
-    setLoading(false)
   }
 
-  if (isLoading) {
-    return (
-      <div className="admin-layout min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-[#a1a1a1]">
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
-          <span className="text-sm">Loading...</span>
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return null
 
   return (
-    <div className="admin-layout min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-[360px]">
-        {/* Logo */}
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <Head>
+        <title>Admin Login | Atelier</title>
+      </Head>
+      
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-xl mb-4">
-            <span className="text-black text-xl font-bold">A</span>
-          </div>
-          <h1 className="text-xl font-semibold text-white">Sign in to Atelier</h1>
-          <p className="text-[#666] text-sm mt-2">Admin Dashboard</p>
+          <h1 className="text-2xl font-bold mb-2">Atelier Admin</h1>
+          <p className="text-gray-400">Enter password to continue</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-6">
-          {/* Error */}
+        <form onSubmit={handleSubmit} className="bg-zinc-900 p-8 rounded-xl border border-zinc-800">
           {error && (
-            <div className="flex items-center gap-2 bg-[#ff616610] border border-[#ff616633] text-[#ff6166] text-[13px] px-4 py-3 rounded-lg mb-5">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <span>{error}</span>
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded text-sm">
+              {error}
             </div>
           )}
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-400 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-black border border-zinc-800 rounded px-4 py-2 text-white focus:outline-none focus:border-white transition-colors"
+              placeholder="Enter admin password"
+              disabled={isSubmitting}
+            />
+          </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="admin-input w-full h-10"
-                placeholder="Enter username"
-                required
-              />
-            </div>
-
-            {!useOtp && (
-              <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="admin-input w-full h-10"
-                  placeholder="Enter password"
-                  required
-                />
-              </div>
-            )}
-
-            {useOtp && (
-              <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">One-time code</label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value)}
-                  className="admin-input w-full h-10"
-                  placeholder="Enter one-time code"
-                  required
-                />
-                {otpMessage && <p className="text-xs text-[#9aa] mt-2">{otpMessage}</p>}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="admin-btn admin-btn-primary w-full h-10 mt-2"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                  </svg>
-                  Signing in...
-                </span>
-              ) : (
-                'Continue'
-              )}
-            </button>
-          </form>
-
-          {/* OTP controls */}
-          {!DEV_NO_AUTH && (
-            <div className="mt-3 flex items-center justify-between">
-              <button
-                type="button"
-                className="text-sm text-[#9aa] underline"
-                onClick={async () => {
-                  setError('')
-                  setOtpMessage('')
-                  if (!username) return setError('Enter username first')
-                  const res = await generateOtp(username)
-                  if (res.ok) {
-                    // simple flow: show the code in the UI so user can use it
-                    setOtpMessage(`One-time code: ${res.code}`)
-                    setUseOtp(true)
-                  } else {
-                    setError('Failed to generate OTP')
-                  }
-                }}
-              >
-                Send one-time password
-              </button>
-
-              <button
-                type="button"
-                className="text-sm text-[#9aa] underline"
-                onClick={() => {
-                  setUseOtp(prev => !prev)
-                  setError('')
-                  setOtpMessage('')
-                }}
-              >
-                {useOtp ? 'Use password' : 'Use one-time code'}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Hint */}
-        <p className="text-[#444] text-[11px] text-center mt-6">
-          {DEV_NO_AUTH ? 'Dev mode: admin sign-in unlocked (no password)' : 'Default credentials: admin / admin123'}
-        </p>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-white text-black font-medium py-2 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? 'Checking...' : 'Login'}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -213,9 +81,6 @@ function LoginForm() {
 export default function AdminLoginPage() {
   return (
     <AdminAuthProvider>
-      <Head>
-        <title>Sign In — Atelier Admin</title>
-      </Head>
       <LoginForm />
     </AdminAuthProvider>
   )

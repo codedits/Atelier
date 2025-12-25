@@ -97,18 +97,18 @@ const navItems = [
 ]
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
-  const { admin, logout, isLoading } = useAdminAuth()
+  const { isAuthenticated, logout, isLoading } = useAdminAuth()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   useEffect(() => {
-    if (!isLoading && !admin) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/admin')
     }
-  }, [admin, isLoading, router])
+  }, [isAuthenticated, isLoading, router])
 
-  if (isLoading || !admin) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="admin-layout min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3 text-[#a1a1a1]">
@@ -187,11 +187,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                   <span className="text-white text-xs font-medium">
-                    {admin.username.charAt(0).toUpperCase()}
+                    A
                   </span>
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-[13px] font-medium text-white">{admin.username}</p>
+                  <p className="text-[13px] font-medium text-white">Admin</p>
                   <p className="text-[11px] text-[#666]">Administrator</p>
                 </div>
                 <span className="text-[#666]">{Icons.chevronDown}</span>
