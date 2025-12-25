@@ -8,6 +8,8 @@ import { useFavorites } from '@/context/FavoritesContext'
 const Header = memo(function Header() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [hasScrolled, setHasScrolled] = useState(false)
   const { totalItems } = useCart()
   const { isAuthenticated, user } = useUserAuth()
@@ -42,8 +44,77 @@ const Header = memo(function Header() {
   const toggleMenu = useCallback(() => setOpen(prev => !prev), [])
   const closeMenu = useCallback(() => setOpen(false), [])
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+      setIsSearchOpen(false)
+      setSearchQuery('')
+    }
+  }
+
   return (
     <>
+      {/* Search Overlay */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-[100] bg-white animate-fadeIn">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 h-full flex flex-col">
+            <div className="flex items-center justify-between h-20 border-b border-[#E5E5E5]">
+              <span className="font-display text-xl font-semibold tracking-[0.05em] text-[#1A1A1A]">SEARCH</span>
+              <button 
+                onClick={() => setIsSearchOpen(false)}
+                className="p-2 text-[#1A1A1A] hover:text-[#7A4A2B] transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center max-w-3xl mx-auto w-full">
+              <form onSubmit={handleSearch} className="w-full">
+                <div className="relative">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search for jewelry, collections..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full text-3xl md:text-5xl font-display border-b-2 border-[#1A1A1A] py-4 focus:outline-none placeholder:text-[#E5E5E5] text-[#1A1A1A]"
+                  />
+                  <button 
+                    type="submit"
+                    className="absolute right-0 bottom-6 text-[#1A1A1A] hover:text-[#7A4A2B] transition-colors"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </form>
+              <div className="mt-12 w-full">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#888] mb-6">Quick Links</p>
+                <div className="flex flex-wrap gap-4">
+                  {['New Arrivals', 'Best Sellers', 'Rings', 'Necklaces', 'Earrings'].map((link) => (
+                    <button
+                      key={link}
+                      onClick={() => {
+                        setSearchQuery(link)
+                        router.push(`/products?search=${encodeURIComponent(link)}`)
+                        setIsSearchOpen(false)
+                        setSearchQuery('')
+                      }}
+                      className="px-6 py-2 border border-[#E5E5E5] text-sm hover:border-[#1A1A1A] transition-colors"
+                    >
+                      {link}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Promotional Banner - Only visible on non-homepage */}
       {router.pathname !== '/' && (
         <div className="bg-[#1A1A1A] text-white text-center py-2.5 px-4">
@@ -84,7 +155,11 @@ const Header = memo(function Header() {
             </Link>
             <Link href="/#collections" className={`text-sm transition-colors font-semibold ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>Collections</Link>
           </nav>            <div className="hidden md:flex items-center gap-6">
-              <button aria-label="Search" className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#7A4A2B] hover:scale-110'}`}>
+              <button 
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search" 
+                className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#7A4A2B] hover:scale-110'}`}
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -123,6 +198,15 @@ const Header = memo(function Header() {
 
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center gap-4">
+              <button 
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search" 
+                className={`transition-colors ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
               <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#7A4A2B]'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

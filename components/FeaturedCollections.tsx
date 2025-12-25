@@ -18,7 +18,7 @@ interface FeaturedCollectionsProps {
 
 const FeaturedCollections = memo(function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
   return (
-    <section className="pt-12 pb-0 md:pt-20 md:pb-20 bg-gradient-to-b from-white to-[#F5F3F0] overflow-hidden">
+    <section className="pt-12 pb-0 md:pt-20 md:pb-0 bg-gradient-to-b from-white to-[#F5F3F0] overflow-hidden">
       <div className="w-full mx-auto px-0">
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 

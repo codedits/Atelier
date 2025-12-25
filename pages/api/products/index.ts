@@ -15,7 +15,7 @@ export default async function handler(
 ) {
   if (req.method === 'GET') {
     // Query params for filtering
-    const { category, gender, minPrice, maxPrice, limit, offset } = req.query
+    const { category, gender, minPrice, maxPrice, limit, offset, search } = req.query
     const cacheKey = getCacheKey(req.query)
 
     // Check cache first
@@ -40,6 +40,9 @@ export default async function handler(
     }
 
     // Apply filters
+    if (search) {
+      query = query.ilike('name', `%${search}%`)
+    }
     if (category) {
       query = query.eq('category', category)
     }

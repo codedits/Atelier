@@ -288,15 +288,15 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
               </ol>
             </nav>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16 items-start">
               
-              {/* Left Column: Image Gallery (Stacked for Desktop) */}
-              <div className="lg:col-span-1 space-y-6 animate-fadeIn">
+              {/* Left Column: Image Gallery (larger on desktop) */}
+              <div className="lg:col-span-7 space-y-6 animate-fadeIn">
                 <div className="hidden lg:flex flex-col gap-6">
                   {(product.images || [product.image_url]).map((img, idx) => (
                     <div 
                       key={idx} 
-                      className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden"
+                      className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden shadow-sm"
                       style={{ aspectRatio: '4 / 5' }}
                     >
                       <Image
@@ -327,33 +327,39 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
               </div>
 
               {/* Right Column: Product Info (Sticky) */}
-              <div className="lg:col-span-1 lg:sticky lg:top-32 space-y-10 animate-fadeIn">
+              <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-10 animate-fadeIn">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-[0.3em] text-[#7A4A2B] font-bold font-poppins">
                       {product.category}
                     </p>
-                    <h1 className="text-4xl md:text-6xl font-medium font-display text-[#1A1A1A] leading-[1.1]">
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium font-display text-[#1A1A1A] leading-[1.02] tracking-tight">
                       {product.name}
                     </h1>
                   </div>
                   
                   <div className="flex items-baseline gap-6">
-                    <p className="text-3xl font-medium font-display text-[#1A1A1A]">
+                    <p className="text-3xl md:text-4xl lg:text-5xl font-semibold font-display text-[#1A1A1A]">
                       ₨{product.price.toLocaleString()}
                     </p>
                     {product.old_price && (
-                      <p className="text-xl text-[#9CA3AF] line-through font-normal font-poppins">
+                      <p className="text-lg md:text-xl text-[#9CA3AF] line-through font-normal font-poppins">
                         ₨{product.old_price.toLocaleString()}
                       </p>
                     )}
                   </div>
 
-                  <div className="w-12 h-[1px] bg-[#7A4A2B]/30" />
+                  <div className="w-16 h-[1px] bg-[#7A4A2B]/30 my-4" />
 
                   <p className="text-lg text-[#374151] font-normal font-poppins leading-relaxed max-w-xl">
                     {product.description}
                   </p>
+
+                  <ul className="flex flex-wrap gap-6 mt-4 text-sm text-[#374151]">
+                    <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#7A4A2B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h4l3 8 4-16 3 8h4" /></svg> Free shipping</li>
+                    <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#7A4A2B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l2 2" /></svg> 30-day returns</li>
+                    <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#7A4A2B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg> Warranty</li>
+                  </ul>
                 </div>
 
                 {/* Actions Section */}
@@ -389,14 +395,14 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
                   </div>
 
                   {/* Main Buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                       onClick={handleAddToCart}
                       disabled={isOutOfStock || (product.stock > 0 && maxCanAdd === 0)}
-                      className={`relative h-16 w-full overflow-hidden rounded-full font-bold font-poppins tracking-[0.2em] text-xs uppercase transition-all duration-500 ${
+                      className={`relative h-14 md:h-16 w-full overflow-hidden rounded-lg font-semibold font-poppins transition-all duration-300 flex items-center justify-center gap-3 px-6 ${
                         addedToCart 
                           ? 'bg-green-600 text-white' 
-                          : 'bg-[#1A1A1A] text-white hover:bg-[#7A4A2B] hover:shadow-2xl active:scale-[0.98]'
+                          : 'bg-[#1A1A1A] text-white hover:bg-[#7A4A2B] shadow-lg active:scale-[0.99]'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <AnimatePresence mode="wait">
@@ -428,7 +434,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
 
                     <button
                       onClick={handleToggleFavorite}
-                      className={`h-16 w-full rounded-full border font-bold font-poppins tracking-[0.2em] text-xs uppercase transition-all duration-500 flex items-center justify-center gap-3 ${
+                      className={`h-14 md:h-16 w-full rounded-lg border font-semibold font-poppins transition-all duration-300 flex items-center justify-center gap-3 px-4 ${
                         isInFavorites 
                           ? 'bg-[#F8F7F5] border-[#7A4A2B] text-[#7A4A2B]' 
                           : 'border-[#E5E7EB] text-[#1A1A1A] hover:border-[#7A4A2B] hover:text-[#7A4A2B]'

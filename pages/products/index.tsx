@@ -1,11 +1,37 @@
 import Head from 'next/head'
-import { useState, useEffect, useMemo, useCallback, memo, CSSProperties } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Image from 'next/image'
 import { GetStaticProps } from 'next'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Header, Footer } from '../../components'
 import { supabase } from '@/lib/supabase'
+
+// Inline SVG Icons to avoid extra dependencies
+const ChevronDown = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+)
+
+const FilterIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+  </svg>
+)
+
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+)
+
+const ArrowRight = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+  </svg>
+)
 
 interface Product {
   id: string
@@ -49,98 +75,84 @@ const ProductGridItem = memo(function ProductGridItem({
   const handleMouseEnter = useCallback(() => setIsHovered(true), [])
   const handleMouseLeave = useCallback(() => setIsHovered(false), [])
   
-  // Memoize animation delay to prevent style object recreation
-  const animationStyle = useMemo(() => ({
-    animationDelay: `${Math.min(index * 30, 300)}ms`,
-    animationFillMode: 'backwards' as const
-  }), [index])
-  
   return (
-    <div
-      className="animate-fadeIn contain-layout"
-      style={animationStyle}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.5) }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      className="group"
     >
-      <Link href={`/products/${product.id}`} className="group block" prefetch={false}>
-        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-xl">
+      <Link href={`/products/${product.id}`} className="block" prefetch={false}>
+        <div className="relative aspect-[4/5] mb-5 overflow-hidden bg-[#F9F8F6]">
           {/* Primary Image */}
-          <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className={`object-cover transition-all duration-700 ease-out ${
+              isHovered && secondaryImg ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+            }`}
+            sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
+            loading={index < 4 ? 'eager' : 'lazy'}
+          />
+          
+          {/* Secondary Image */}
+          {secondaryImg && (
             <Image
-              src={product.image_url}
-              alt={product.name}
+              src={secondaryImg}
+              alt={`${product.name} - alternate view`}
               fill
-              className={`object-cover transition-opacity duration-300 ${
-                isHovered && secondaryImg ? 'opacity-0' : 'opacity-100'
+              className={`object-cover transition-all duration-700 ease-out ${
+                isHovered ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
               }`}
               sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
-              loading={index < 8 ? 'eager' : 'lazy'}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
             />
+          )}
+          
+          {/* Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {product.old_price && (
+              <span className="bg-[#1A1A1A] text-white text-[10px] uppercase tracking-widest px-2.5 py-1">
+                Sale
+              </span>
+            )}
+            {product.stock === 0 && (
+              <span className="bg-white/90 backdrop-blur-sm text-[#1A1A1A] text-[10px] uppercase tracking-widest px-2.5 py-1 border border-black/5">
+                Sold Out
+              </span>
+            )}
           </div>
-          
-          {/* Secondary Image - Only render if available */}
-          {secondaryImg && (
-            <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
-              <Image
-                src={secondaryImg}
-                alt={`${product.name} - alternate view`}
-                fill
-                className={`object-cover transition-opacity duration-300 ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                }`}
-                sizes="(min-width:1280px)25vw, (min-width:1024px)33vw, (min-width:640px)50vw, 100vw"
-                loading="lazy"
-                placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUzMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
-              />
-            </div>
-          )}
-          
-          {/* Sale badge */}
-          {product.old_price && (
-            <div className="absolute top-4 left-4 bg-[#B91C1C] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
-              Sale
-            </div>
-          )}
-          
-          {/* Out of stock badge */}
-          {product.stock === 0 && (
-            <div className="absolute top-4 right-4 bg-gray-800 text-white text-xs font-medium px-3 py-1 rounded-full">
-              Out of Stock
-            </div>
-          )}
 
-          {/* Quick view overlay - simplified opacity transition */}
-          <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <p className="text-center text-sm font-medium text-[#111827] flex items-center justify-center gap-2">
+          {/* Quick View Button - Minimalist */}
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+            <div className="w-full bg-white/90 backdrop-blur-md py-3 text-center text-[11px] uppercase tracking-[0.2em] font-medium text-[#1A1A1A] border border-black/5">
               View Details
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2 px-1 font-poppins">
-          <p className="text-xs uppercase tracking-wider text-[#6B7280]">{product.category}</p>
-          <h3 className="font-normal text-base text-[#111827] group-hover:text-[#B91C1C] transition-colors duration-150 line-clamp-1 font-display">
+        <div className="space-y-1.5 text-center">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-medium">
+            {product.category}
+          </p>
+          <h3 className="font-display text-lg text-[#1A1A1A] group-hover:text-[#888] transition-colors duration-300">
             {product.name}
           </h3>
-          <div className="flex items-center gap-2">
-            <p className="text-base font-medium text-[#111827] font-display">
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-sm font-medium text-[#1A1A1A]">
               ₨{product.price.toLocaleString()}
             </p>
             {product.old_price && (
-              <p className="text-sm text-[#6B7280] line-through font-display">
+              <p className="text-sm text-[#AAA] line-through decoration-[#AAA]/50">
                 ₨{product.old_price.toLocaleString()}
               </p>
             )}
           </div>
         </div>
       </Link>
-    </div>
+    </motion.div>
   )
 })
 
@@ -185,17 +197,23 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
   const [categories] = useState<Category[]>(initialCategories)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('default')
 
   // Read filters from URL query params on mount
   useEffect(() => {
     if (router.isReady) {
-      const { category, gender } = router.query
+      const { category, gender, search } = router.query
       if (category && typeof category === 'string') {
         setSelectedCategory(category.toLowerCase())
       }
       if (gender && typeof gender === 'string') {
         setSelectedGender(gender.toLowerCase())
+      }
+      if (search && typeof search === 'string') {
+        setSearchQuery(search.toLowerCase())
+      } else {
+        setSearchQuery('')
       }
     }
   }, [router.isReady, router.query])
@@ -203,6 +221,15 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
   // Memoized filtered products for performance
   const filteredProducts = useMemo(() => {
     let filtered = [...products]
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchQuery) || 
+        p.description.toLowerCase().includes(searchQuery) ||
+        p.category.toLowerCase().includes(searchQuery)
+      )
+    }
 
     // Filter by category (case-insensitive)
     if (selectedCategory !== 'all') {
@@ -224,7 +251,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
     }
 
     return filtered
-  }, [selectedCategory, selectedGender, sortBy, products])
+  }, [selectedCategory, selectedGender, searchQuery, sortBy, products])
 
   // Generate category options from API categories plus existing product categories
   const categoryOptions = useMemo(() => [
@@ -253,8 +280,11 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
   const clearFilters = useCallback(() => {
     setSelectedCategory('all')
     setSelectedGender('all')
+    setSearchQuery('')
     setSortBy('default')
-  }, [])
+    // Also clear the URL query params
+    router.push('/products', undefined, { shallow: true })
+  }, [router])
 
   return (
     <>
@@ -288,39 +318,63 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
             ]
           }
         }) }} />
-        
-        {/* Animations are loaded from globals.css for better caching */}
       </Head>
 
       <div className="min-h-screen bg-white font-poppins">
         <Header />
 
-        <main className="pt-24 pb-20">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <main className="pt-32 pb-24">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
             
-            {/* Page Header - simple CSS animation */}
-            <div className="text-center mb-12 animate-fadeIn">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#111827] mb-4 font-display">
-                All Products
-              </h1>
-              <p className="text-base text-[#6B7280] max-w-2xl mx-auto">
-                Discover our complete collection of handcrafted jewelry
-              </p>
+            {/* Editorial Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+              <div className="max-w-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <span className="text-[11px] uppercase tracking-[0.3em] text-[#888] font-medium mb-4 block">
+                    The Collection
+                  </span>
+                  <h1 className="text-5xl md:text-7xl font-display text-[#1A1A1A] leading-[1.1] mb-6">
+                    {searchQuery ? `Results for "${searchQuery}"` : 'All Creations'}
+                  </h1>
+                  <p className="text-lg text-[#666] leading-relaxed font-light">
+                    {searchQuery 
+                      ? `Discover our pieces matching your search for "${searchQuery}". Each creation is handcrafted with precision and care.`
+                      : 'Explore our curated selection of handcrafted jewelry, where traditional craftsmanship meets contemporary elegance. Each piece is a testament to our commitment to beauty and quality.'
+                    }
+                  </p>
+                </motion.div>
+              </div>
+              
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="hidden md:block"
+              >
+                <p className="text-[11px] uppercase tracking-[0.2em] text-[#AAA]">
+                  Showing {filteredProducts.length} Results
+                </p>
+              </motion.div>
             </div>
 
-            {/* Filters & Sort - simplified with CSS */}
-            <div className="mb-12 pb-6 border-b border-[#E5E7EB] animate-fadeIn" style={{ animationDelay: '100ms' }}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                
-                {/* Filters */}
-                <div className="flex flex-wrap gap-4">
+            {/* Refined Filter Bar */}
+            <div className="sticky top-[80px] z-30 bg-white/80 backdrop-blur-md border-y border-[#EEE] mb-12 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-6">
+                <div className="flex items-center gap-8">
                   {/* Category Filter */}
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-[#6B7280] mb-2 block">Category</label>
+                  <div className="relative group">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-[#1A1A1A] font-medium">Category</span>
+                      <ChevronDown className="w-3 h-3 text-[#AAA]" />
+                    </div>
                     <select
                       value={selectedCategory}
                       onChange={handleCategoryChange}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors duration-150"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     >
                       {categoryOptions.map(cat => (
                         <option key={cat} value={cat}>
@@ -328,15 +382,21 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                         </option>
                       ))}
                     </select>
+                    <div className="mt-0.5 text-[10px] text-[#888] uppercase tracking-wider">
+                      {selectedCategory === 'all' ? 'All' : selectedCategory}
+                    </div>
                   </div>
 
                   {/* Gender Filter */}
-                  <div>
-                    <label className="text-xs uppercase tracking-wider text-[#6B7280] mb-2 block">For</label>
+                  <div className="relative group">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-[#1A1A1A] font-medium">For</span>
+                      <ChevronDown className="w-3 h-3 text-[#AAA]" />
+                    </div>
                     <select
                       value={selectedGender}
-                      onChange={(e) => setSelectedGender(e.target.value)}
-                      className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors"
+                      onChange={handleGenderChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     >
                       {genders.map(gender => (
                         <option key={gender} value={gender}>
@@ -344,66 +404,99 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
                         </option>
                       ))}
                     </select>
+                    <div className="mt-0.5 text-[10px] text-[#888] uppercase tracking-wider">
+                      {selectedGender === 'all' ? 'Everyone' : selectedGender}
+                    </div>
                   </div>
                 </div>
 
-                {/* Sort */}
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-[#6B7280] mb-2 block">Sort By</label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-4 py-2 border border-[#E5E7EB] rounded text-sm text-[#111827] focus:outline-none focus:border-[#B91C1C] transition-colors"
-                  >
-                    <option value="default">Default</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="name">Name: A-Z</option>
-                  </select>
-                </div>
-              </div>
+                <div className="flex items-center gap-8">
+                  {/* Sort */}
+                  <div className="relative group">
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-[#1A1A1A] font-medium">Sort By</span>
+                      <ChevronDown className="w-3 h-3 text-[#AAA]" />
+                    </div>
+                    <select
+                      value={sortBy}
+                      onChange={handleSortChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    >
+                      <option value="default">Default</option>
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                      <option value="name">Name: A-Z</option>
+                    </select>
+                    <div className="mt-0.5 text-[10px] text-[#888] uppercase tracking-wider">
+                      {sortBy === 'default' ? 'Default' : sortBy.replace('-', ' ')}
+                    </div>
+                  </div>
 
-              {/* Results count */}
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-[#6B7280]">
-                  Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-                </p>
-                {(selectedCategory !== 'all' || selectedGender !== 'all') && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-[#B91C1C] hover:text-[#991B1B] transition-colors duration-150 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Clear filters
-                  </button>
-                )}
+                  {searchQuery && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-[#F9F8F6] border border-[#EEE]">
+                      <span className="text-[10px] uppercase tracking-wider text-[#888]">Search:</span>
+                      <span className="text-[10px] font-medium text-[#1A1A1A]">{searchQuery}</span>
+                      <button onClick={() => {
+                        setSearchQuery('')
+                        router.push('/products', undefined, { shallow: true })
+                      }}>
+                        <XIcon className="w-3 h-3 text-[#AAA] hover:text-[#1A1A1A]" />
+                      </button>
+                    </div>
+                  )}
+
+                  {(selectedCategory !== 'all' || selectedGender !== 'all' || searchQuery || sortBy !== 'default') && (
+                    <button
+                      onClick={clearFilters}
+                      className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#B91C1C] hover:text-[#991B1B] transition-colors"
+                    >
+                      <XIcon className="w-3 h-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Products Grid - optimized with memoized components */}
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredProducts.map((product, index) => (
-                  <ProductGridItem key={product.id} product={product} index={index} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 animate-fadeIn">
-                <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <p className="text-[#6B7280] text-lg mb-2">No products found</p>
-                <p className="text-[#9CA3AF] text-sm mb-6">Try adjusting your filters to find what you&apos;re looking for</p>
-                <button
-                  onClick={clearFilters}
-                  className="btn btn-primary"
+            {/* Products Grid */}
+            <AnimatePresence mode="wait">
+              {filteredProducts.length > 0 ? (
+                <motion.div 
+                  key="grid"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
                 >
-                  Clear All Filters
-                </button>
-              </div>
-            )}
+                  {filteredProducts.map((product, index) => (
+                    <ProductGridItem key={product.id} product={product} index={index} />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="empty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center py-32"
+                >
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#F9F8F6] mb-8">
+                    <FilterIcon className="w-8 h-8 text-[#AAA]" />
+                  </div>
+                  <h3 className="font-display text-2xl text-[#1A1A1A] mb-4">No pieces found</h3>
+                  <p className="text-[#666] mb-10 max-w-md mx-auto">
+                    We couldn&apos;t find any jewelry matching your current filters. Try adjusting your selection or clear all filters.
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-[#1A1A1A] text-white text-[11px] uppercase tracking-[0.2em] hover:bg-[#333] transition-colors"
+                  >
+                    Clear All Filters
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
           </div>
         </main>

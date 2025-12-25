@@ -9,6 +9,7 @@ import {
   Hero, 
   ProductCard,
   FeaturedCollections,
+  LogoMarquee,
 } from '../components'
 
 // Lazy load below-fold components for faster initial render
@@ -253,7 +254,11 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
           {/* 3. Featured Collections - 4 Card Layout */}
           <FeaturedCollections collections={collections} />
 
-
+          {/* Logo marquee between Featured Collections and Curated Collections */}
+          {/* Lazy small component - dynamic import isn't necessary for this small asset-driven UI */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/** logo marquee component **/}
+          <LogoMarquee />
 
           {/* 5. Collections Highlight - Curated Showcase */}
           <CollectionsHighlight />

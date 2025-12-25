@@ -7,6 +7,7 @@ interface UseProductsOptions {
   minPrice?: number
   maxPrice?: number
   limit?: number
+  search?: string
 }
 
 export function useProducts(options: UseProductsOptions = {}) {
@@ -24,6 +25,7 @@ export function useProducts(options: UseProductsOptions = {}) {
     if (options.minPrice !== undefined) params.set('minPrice', String(options.minPrice))
     if (options.maxPrice !== undefined) params.set('maxPrice', String(options.maxPrice))
     if (options.limit) params.set('limit', String(options.limit))
+    if (options.search) params.set('search', options.search)
 
     try {
       const res = await fetch(`/api/products?${params}`)
@@ -35,7 +37,7 @@ export function useProducts(options: UseProductsOptions = {}) {
     } finally {
       setLoading(false)
     }
-  }, [options.category, options.gender, options.minPrice, options.maxPrice, options.limit])
+  }, [options.category, options.gender, options.minPrice, options.maxPrice, options.limit, options.search])
 
   useEffect(() => {
     fetchProducts()

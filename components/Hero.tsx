@@ -43,7 +43,7 @@ const Hero = memo(function Hero() {
   }, [handleScrollDown])
 
   return (
-    <section className="relative h-screen min-h-[600px] overflow-hidden bg-[#0A0A0A]">
+    <section className="relative h-screen md:min-h-[600px] overflow-hidden bg-[#0A0A0A]">
       {/* Background with subtle initial zoom */}
       <div className={`absolute inset-0 ${prefersReducedMotion ? '' : 'hero-zoom'}`}>
         {heroImage.video_url ? (
@@ -71,11 +71,11 @@ const Hero = memo(function Hero() {
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A]" />
         )}
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/30" />
       </div>
 
       {/* Overlay content - Centered Heading Only */}
-      <div className="relative h-screen flex flex-col items-center justify-start pt-20 px-4">
+      <div className="relative h-screen flex flex-col items-center justify-center md:justify-start md:pt-20 px-4">
         <div className="w-full text-center px-4">
           <div className={`mx-auto ${prefersReducedMotion ? '' : 'hero-fade'}`}>
             <h1 className="hero-title">
@@ -84,12 +84,12 @@ const Hero = memo(function Hero() {
           </div>
 
           {heroImage.subtitle && (
-            <p className={`mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+            <p className={`mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
               {heroImage.subtitle}
             </p>
           )}
 
-          <div className={`flex flex-col sm:flex-row gap-4 justify-center mt-8 ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+          <div className={`flex flex-col sm:flex-row gap-4 justify-center mt-6 sm:mt-8 ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
             <Link
               href={heroImage.cta_link}
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1A1A1A] font-medium rounded-lg hover:bg-[#F5F5F5] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
@@ -108,7 +108,7 @@ const Hero = memo(function Hero() {
           </div>
 
           {/* Subtle accent */}
-          <div className={`mt-10 mx-auto w-16 h-[2px] bg-white/15 rounded ${prefersReducedMotion ? '' : 'hero-fade-delay'}`} />
+          <div className={`mt-8 sm:mt-10 mx-auto w-16 h-[2px] bg-white/15 rounded ${prefersReducedMotion ? '' : 'hero-fade-delay'}`} />
         </div>
       </div>
 

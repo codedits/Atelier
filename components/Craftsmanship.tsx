@@ -57,7 +57,7 @@ export default function Craftsmanship() {
           >
             <div className="aspect-[4/5] overflow-hidden bg-[#f0e3ce] relative">
               <Image
-                src="https://images.unsplash.com/photo-1611085583191-a3b181a88401?q=80&w=1200&auto=format&fit=crop"
+                src="/pexels-peter-ohis-322737401-13726059.jpg"
                 alt="Master artisan crafting jewelry"
                 fill
                 className="object-cover"

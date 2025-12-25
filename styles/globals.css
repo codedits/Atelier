@@ -189,7 +189,7 @@ body {
   --color-white: #FFFFFF;
   --color-offwhite: #F8F7F5;
   --color-text: #271d11;
-  --color-text-muted: #6B7280;
+  --color-text-muted: #313133;
   --color-border: #E5E7EB;
   --color-rose: #7A4A2B;
   --color-rose-dark: #62381F;
@@ -224,7 +224,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .font-display {
   font-family: 'Cormorant Garamond', 'Poppins', serif;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.04em;
 }
 
@@ -257,6 +257,47 @@ h1, h2, h3, h4, h5, h6 {
   border: none;
   cursor: pointer;
   border-radius: 4px;
+}
+
+/* Logo marquee for homepage between Featured and Curated collections */
+.logo-marquee {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: marquee 18s linear infinite;
+  min-width: 200%;
+  will-change: transform;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-marquee { animation: none; }
+}
+
+/* Marquee text item styling */
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding-right: 1rem;
+  flex: 0 0 auto;
+}
+
+.marquee-text {
+  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
+
+@media (min-width: 768px) {
+  .marquee-text { font-size: 1.25rem; }
 }
 
 .btn-primary {
