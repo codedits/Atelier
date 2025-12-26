@@ -6,7 +6,7 @@
 /* ============================================ */
 
 @keyframes heroZoom { 
-  from { transform: scale(1.05); } 
+  from { transform: scale(1.03); } 
   to { transform: scale(1); } 
 }
 
@@ -61,6 +61,7 @@
 
 .hero-zoom { 
   animation: heroZoom 1.6s ease-out forwards; 
+  will-change: transform;
 }
 
 .hero-fade { 

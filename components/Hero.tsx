@@ -63,24 +63,20 @@ const Hero = memo(function Hero() {
 
   return (
     <section className="relative h-screen md:min-h-[600px] overflow-hidden bg-[#0A0A0A]">
-      {/* Dynamic hero carousel: render only active image initially for LCP, add others after hydration */}
+      {/* Dynamic hero carousel: render all images but only active is visible */}
       <div className="absolute inset-0">
         {heroImageUrls.map((imageUrl, index) => (
           <div
             key={index}
             className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
               index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            } ${prefersReducedMotion ? '' : 'hero-zoom'}`}
-            style={{
-             // Only render the active image in DOM to help LCP detection
-              display: index === currentImageIndex || index <= 1 ? 'block' : 'none'
-            }}
+            }`}
           >
             <Image
               src={imageUrl}
               alt={index === 0 ? heroImage.title : `${heroImage.title} background ${index + 1}`}
               fill
-              className="object-cover"
+              className={`object-cover ${index === currentImageIndex && !prefersReducedMotion ? 'hero-zoom' : ''}`}
               priority={index === 0}
               loading={index === 0 ? 'eager' : 'lazy'}
               sizes="100vw"
@@ -94,22 +90,22 @@ const Hero = memo(function Hero() {
       {/* Overlay content - Centered Heading Only */}
       <div className="relative h-screen flex flex-col items-center justify-center md:justify-start md:pt-20 px-4">
         <div className="w-full text-center px-4">
-          <div className={`mx-auto ${prefersReducedMotion ? '' : 'hero-fade'}`}>
+          <div className="mx-auto">
             <h1 className="hero-title">
               {heroImage.title}
             </h1>
           </div>
 
           {heroImage.subtitle && (
-            <p className={`mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide">
               {heroImage.subtitle}
             </p>
           )}
 
-          <div className={`flex flex-col sm:flex-row gap-4 justify-center mt-6 sm:mt-8 ${prefersReducedMotion ? '' : 'hero-fade-delay'}`}>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6 sm:mt-8">
             <Link
               href={heroImage.cta_link}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1A1A1A] font-medium rounded-lg hover:bg-[#F5F5F5] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1A1A1A] font-medium  hover:bg-[#F5F5F5] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
             >
               {heroImage.cta_text}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
@@ -118,7 +114,7 @@ const Hero = memo(function Hero() {
             </Link>
             <Link
               href="/about"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/30 text-white font-medium rounded-lg hover:bg-white/10 hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/30 text-white font-medium  hover:bg-white/10 hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
             >
               Our Story
             </Link>
