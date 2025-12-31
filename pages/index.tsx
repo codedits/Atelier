@@ -12,6 +12,8 @@ import {
   LogoMarquee,
 } from '../components'
 
+import { SITE_URL, SITE_NAME, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL } from '@/lib/constants'
+
 // Lazy load below-fold components for faster initial render
 const ValueProposition = dynamic(() => import('../components/ValueProposition'), { ssr: true })
 
@@ -149,36 +151,36 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
           "@graph": [
             {
               "@type": "WebSite",
-              "@id": "https://codedits.github.io/Atelier/#website",
-              "url": "https://codedits.github.io/Atelier",
-              "name": "Atelier Fine Jewellery",
+              "@id": `${SITE_URL}/#website`,
+              "url": SITE_URL,
+              "name": SITE_NAME,
               "description": "Exquisite handcrafted fine jewellery",
-              "publisher": { "@id": "https://codedits.github.io/Atelier/#organization" },
+              "publisher": { "@id": `${SITE_URL}/#organization` },
               "potentialAction": {
                 "@type": "SearchAction",
                 "target": {
                   "@type": "EntryPoint",
-                  "urlTemplate": "https://codedits.github.io/Atelier/products?q={search_term_string}"
+                  "urlTemplate": `${SITE_URL}/products?q={search_term_string}`
                 },
                 "query-input": "required name=search_term_string"
               }
             },
             {
               "@type": "Organization",
-              "@id": "https://codedits.github.io/Atelier/#organization",
-              "name": "Atelier Fine Jewellery",
-              "url": "https://codedits.github.io/Atelier",
+              "@id": `${SITE_URL}/#organization`,
+              "name": SITE_NAME,
+              "url": SITE_URL,
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://codedits.github.io/Atelier/atelier%20s.svg",
+                "url": `${SITE_URL}/atelier%20s.svg`,
                 "width": 512,
                 "height": 512
               },
               "description": "Luxury fine jewellery handcrafted by master artisans",
               "sameAs": [
-                "https://instagram.com/atelier",
-                "https://facebook.com/atelier",
-                "https://pinterest.com/atelier"
+                INSTAGRAM_URL,
+                FACEBOOK_URL,
+                PINTEREST_URL
               ],
               "contactPoint": {
                 "@type": "ContactPoint",
@@ -188,11 +190,11 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
             },
             {
               "@type": "WebPage",
-              "@id": "https://codedits.github.io/Atelier/#webpage",
-              "url": "https://codedits.github.io/Atelier",
+              "@id": `${SITE_URL}/#webpage`,
+              "url": SITE_URL,
               "name": "Atelier — Luxury Fine Jewellery",
-              "isPartOf": { "@id": "https://codedits.github.io/Atelier/#website" },
-              "about": { "@id": "https://codedits.github.io/Atelier/#organization" },
+              "isPartOf": { "@id": `${SITE_URL}/#website` },
+              "about": { "@id": `${SITE_URL}/#organization` },
               "description": "Shop luxury handcrafted fine jewellery including rings, necklaces, bracelets, and earrings"
             },
             {
@@ -205,7 +207,7 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
                   "item": {
                     "@type": "Product",
                     "name": "Rings",
-                    "url": "https://codedits.github.io/Atelier/products?category=rings"
+                    "url": `${SITE_URL}/products?category=rings`
                   }
                 },
                 {
@@ -214,7 +216,7 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
                   "item": {
                     "@type": "Product",
                     "name": "Necklaces",
-                    "url": "https://codedits.github.io/Atelier/products?category=necklaces"
+                    "url": `${SITE_URL}/products?category=necklaces`
                   }
                 },
                 {
@@ -223,7 +225,7 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
                   "item": {
                     "@type": "Product",
                     "name": "Bracelets",
-                    "url": "https://codedits.github.io/Atelier/products?category=bracelets"
+                    "url": `${SITE_URL}/products?category=bracelets`
                   }
                 },
                 {
@@ -232,7 +234,7 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
                   "item": {
                     "@type": "Product",
                     "name": "Earrings",
-                    "url": "https://codedits.github.io/Atelier/products?category=earrings"
+                    "url": `${SITE_URL}/products?category=earrings`
                   }
                 }
               ]

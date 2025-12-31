@@ -12,6 +12,7 @@ import ProductCard from '@/components/ProductCard'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { supabase, Product } from '@/lib/supabase'
+import { SITE_URL, SITE_NAME } from '@/lib/constants'
 
 interface ProductDetailPageProps {
   product: Product & { images?: string[] } | null
@@ -209,12 +210,12 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
   return (
     <>
       <Head>
-        <title>{product.name} — Buy Luxury Jewelry | Atelier Fine Jewellery</title>
-        <meta name="description" content={`${product.description?.slice(0, 155)}...` || `Shop ${product.name} - handcrafted luxury ${product.category?.toLowerCase()} from Atelier Fine Jewellery.`} />
+        <title>{product.name} — Buy Luxury Jewelry | {SITE_NAME}</title>
+        <meta name="description" content={`${product.description?.slice(0, 155)}...` || `Shop ${product.name} - handcrafted luxury ${product.category?.toLowerCase()} from ${SITE_NAME}.`} />
         <meta name="keywords" content={`${product.name}, ${product.category}, luxury jewelry, fine jewellery, handcrafted, buy online`} />
         
         {/* Open Graph */}
-        <meta property="og:title" content={`${product.name} | Atelier Fine Jewellery`} />
+        <meta property="og:title" content={`${product.name} | {SITE_NAME}`} />
         <meta property="og:description" content={product.description || `Shop ${product.name} from Atelier`} />
         <meta property="og:image" content={product.images?.[0] || product.image_url} />
         <meta property="og:image:width" content="1200" />
@@ -226,7 +227,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${product.name} | Atelier`} />
+        <meta name="twitter:title" content={`${product.name} | ${SITE_NAME}`} />
         <meta name="twitter:description" content={product.description || `Shop ${product.name}`} />
         <meta name="twitter:image" content={product.images?.[0] || product.image_url} />
         
@@ -245,11 +246,11 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
           "category": product.category,
           "brand": {
             "@type": "Brand",
-            "name": "Atelier Fine Jewellery"
+            "name": SITE_NAME
           },
           "offers": {
             "@type": "Offer",
-            "url": `https://codedits.github.io/Atelier/products/${product.id}`,
+            "url": `${SITE_URL}/products/${product.id}`,
             "priceCurrency": "PKR",
             "price": product.price,
             "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -259,9 +260,9 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://codedits.github.io/Atelier" },
-              { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://codedits.github.io/Atelier/products" },
-              { "@type": "ListItem", "position": 3, "name": product.name, "item": `https://codedits.github.io/Atelier/products/${product.id}` }
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+              { "@type": "ListItem", "position": 2, "name": "Products", "item": `${SITE_URL}/products` },
+              { "@type": "ListItem", "position": 3, "name": product.name, "item": `${SITE_URL}/products/${product.id}` }
             ]
           }
         }) }} />

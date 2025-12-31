@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { SITE_NAME, CONTACT_EMAIL } from './constants'
 
 // Create transporter - configure based on your email provider
 // For development, you can use services like Mailtrap or Ethereal
@@ -20,7 +21,7 @@ interface SendOtpEmailOptions {
   storeName?: string
 }
 
-export async function sendOtpEmail({ to, otp, storeName = 'Atelier' }: SendOtpEmailOptions): Promise<boolean> {
+export async function sendOtpEmail({ to, otp, storeName = SITE_NAME }: SendOtpEmailOptions): Promise<boolean> {
   // In development without SMTP configured, just log the OTP
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     // Only log in development
@@ -36,7 +37,7 @@ export async function sendOtpEmail({ to, otp, storeName = 'Atelier' }: SendOtpEm
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || `"${storeName}" <noreply@atelier.com>`,
+      from: process.env.SMTP_FROM || `"${storeName}" <${CONTACT_EMAIL}>`,
       to,
       subject: `Your ${storeName} Login Code: ${otp}`,
       text: `Your one-time login code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.`,
@@ -131,7 +132,7 @@ export async function sendOrderConfirmationEmail({
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || `"${storeName}" <noreply@atelier.com>`,
+      from: process.env.SMTP_FROM || `"${storeName}" <${CONTACT_EMAIL}>`,
       to,
       subject: `Order Confirmation: ${orderId.slice(0, 8).toUpperCase()}`,
       text: `Thank you for your order!\n\nOrder ID: ${orderId}\nTotal: ₨${totalPrice.toLocaleString()}\n\nWe will process your ${paymentMethod} payment and ship your order soon.`,
@@ -255,7 +256,7 @@ export async function sendDeliveryNotificationEmail({
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || `"${storeName}" <noreply@atelier.com>`,
+      from: process.env.SMTP_FROM || `"${storeName}" <${CONTACT_EMAIL}>`,
       to,
       subject: `Your Order Has Been Delivered! - #${orderId.slice(0, 8).toUpperCase()}`,
       text: `Great news, ${userName}!\n\nYour order #${orderId.slice(0, 8).toUpperCase()} has been delivered.\n\nWe hope you love your new jewelry! Please take a moment to leave a review and share your experience.\n\nThank you for shopping with ${storeName}!`,

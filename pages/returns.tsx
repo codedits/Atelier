@@ -1,15 +1,16 @@
 import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 export default function ReturnsPolicy() {
   return (
     <>
       <Head>
-        <title>Returns Policy | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier's comprehensive returns and refund policy. Easy returns within 30 days." />
-        <meta property="og:title" content="Returns Policy | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Learn about Atelier's returns policy, warranty, and customer satisfaction guarantee." />
+        <title>Returns Policy | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME}'s comprehensive returns and refund policy. Easy returns within 30 days.`} />
+        <meta property="og:title" content={`Returns Policy | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Learn about ${SITE_NAME}'s returns policy, warranty, and customer satisfaction guarantee.`} />
       </Head>
 
       <Header />
@@ -63,7 +64,7 @@ export default function ReturnsPolicy() {
                   {
                     step: '1',
                     title: 'Contact Us',
-                    description: 'Email hello@atelier.com or call us to initiate a return. Provide your order number and reason for return.'
+                    description: `Email ${CONTACT_EMAIL} or call us to initiate a return. Provide your order number and reason for return.`
                   },
                   {
                     step: '2',
@@ -146,10 +147,10 @@ export default function ReturnsPolicy() {
               </p>
               <div className="space-y-3">
                 <a 
-                  href="mailto:hello@atelier.com" 
+                  href={`mailto:${CONTACT_EMAIL}`} 
                   className="block text-[#B91C1C] hover:text-[#1A1A1A] transition-colors font-medium"
                 >
-                  Email: hello@atelier.com
+                  Email: {CONTACT_EMAIL}
                 </a>
                 <a 
                   href="tel:+923001234567" 

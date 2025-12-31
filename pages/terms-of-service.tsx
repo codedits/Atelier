@@ -1,15 +1,16 @@
 import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 export default function TermsOfService() {
   return (
     <>
       <Head>
-        <title>Terms of Service | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier's terms of service and conditions of use." />
-        <meta property="og:title" content="Terms of Service | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Read Atelier's terms of service and conditions." />
+        <title>Terms of Service | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME}'s terms of service and conditions of use.`} />
+        <meta property="og:title" content={`Terms of Service | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Read ${SITE_NAME}'s terms of service and conditions.`} />
       </Head>
 
       <Header />
@@ -34,7 +35,7 @@ export default function TermsOfService() {
             <div>
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">1. Agreement to Terms</h2>
               <p className="leading-relaxed">
-                By accessing and using Atelier Fine Jewellery's website and services, you accept and agree to be bound by and comply with these Terms of Service. If you do not agree to abide by the above, please do not use this service.
+                By accessing and using {SITE_NAME}'s website and services, you accept and agree to be bound by and comply with these Terms of Service. If you do not agree to abide by the above, please do not use this service.
               </p>
             </div>
 
@@ -102,14 +103,14 @@ export default function TermsOfService() {
             <div>
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">8. Intellectual Property</h2>
               <p className="leading-relaxed">
-                All content on this website, including text, graphics, logos, images, and software, is the property of Atelier Fine Jewellery or its content suppliers and is protected by international copyright laws. Unauthorized use of any content is prohibited.
+                All content on this website, including text, graphics, logos, images, and software, is the property of {SITE_NAME} or its content suppliers and is protected by international copyright laws. Unauthorized use of any content is prohibited.
               </p>
             </div>
 
             <div>
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">9. Limitation of Liability</h2>
               <p className="leading-relaxed">
-                In no event shall Atelier Fine Jewellery or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Atelier's website, even if Atelier or its authorized representative has been notified of the possibility of such damages.
+                In no event shall {SITE_NAME} or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on {SITE_NAME}'s website, even if {SITE_NAME} or its authorized representative has been notified of the possibility of such damages.
               </p>
             </div>
 
@@ -145,9 +146,9 @@ export default function TermsOfService() {
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">14. Contact Information</h2>
               <p className="mb-3">If you have any questions about these Terms of Service, please contact us:</p>
               <div className="space-y-2">
-                <p>Email: hello@atelier.com</p>
+                <p>Email: {CONTACT_EMAIL}</p>
                 <p>Phone: +92 (300) 123-4567</p>
-                <p>Address: Atelier Fine Jewellery, Karachi, Pakistan</p>
+                <p>Address: {SITE_NAME}, Karachi, Pakistan</p>
               </div>
             </div>
           </div>

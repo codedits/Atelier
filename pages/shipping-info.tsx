@@ -1,15 +1,16 @@
 import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 export default function ShippingInfo() {
   return (
     <>
       <Head>
-        <title>Shipping Information | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier shipping information, delivery times, costs, and tracking details." />
-        <meta property="og:title" content="Shipping Information | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Learn about Atelier's shipping options, delivery times, and policies." />
+        <title>Shipping Information | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME} shipping information, delivery times, costs, and tracking details.`} />
+        <meta property="og:title" content={`Shipping Information | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Learn about ${SITE_NAME}'s shipping options, delivery times, and policies.`} />
       </Head>
 
       <Header />
@@ -123,7 +124,7 @@ export default function ShippingInfo() {
                 Contact our customer service team for more information.
               </p>
               <a 
-                href="mailto:hello@atelier.com" 
+                href={`mailto:${CONTACT_EMAIL}`} 
                 className="inline-block px-6 py-2 bg-[#1A1A1A] text-white rounded hover:bg-[#B91C1C] transition-colors"
               >
                 Get in Touch

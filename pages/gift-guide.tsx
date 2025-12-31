@@ -2,6 +2,7 @@ import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Image from 'next/image'
+import { SITE_NAME } from '@/lib/constants'
 
 interface GiftGuideCategory {
   title: string
@@ -60,10 +61,10 @@ export default function GiftGuide() {
   return (
     <>
       <Head>
-        <title>Gift Guide | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier's gift guide to find the perfect piece for every occasion, personality, and budget." />
-        <meta property="og:title" content="Gift Guide | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Discover the perfect jewelry gift from our curated collections." />
+        <title>Gift Guide | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME}'s gift guide to find the perfect piece for every occasion, personality, and budget.`} />
+        <meta property="og:title" content={`Gift Guide | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Discover the perfect jewelry gift from our curated collections.`} />
       </Head>
 
       <Header />

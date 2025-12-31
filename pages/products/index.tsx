@@ -7,6 +7,7 @@ import { GetStaticProps } from 'next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Header, Footer } from '../../components'
 import { supabase } from '@/lib/supabase'
+import { SITE_URL, SITE_NAME } from '@/lib/constants'
 
 // Inline SVG Icons to avoid extra dependencies
 const ChevronDown = ({ className }: { className?: string }) => (
@@ -292,7 +293,7 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
         <title>Shop All Jewelry — Rings, Necklaces, Bracelets & Earrings | Atelier</title>
         <meta name="description" content="Browse our complete collection of luxury handcrafted jewelry. Shop fine rings, elegant necklaces, stunning bracelets, and exquisite earrings with free shipping." />
         <meta name="keywords" content="jewelry shop, buy rings, gold necklaces, diamond bracelets, earrings online, luxury jewelry store" />
-        <meta property="og:title" content="Shop All Jewelry | Atelier Fine Jewellery" />
+        <meta property="og:title" content={`Shop All Jewelry | ${SITE_NAME}`} />
         <meta property="og:description" content="Browse our complete collection of handcrafted jewelry. Rings, necklaces, bracelets, and earrings." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'}/products`} />
@@ -304,17 +305,17 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
           "@type": "CollectionPage",
           "name": "Shop All Jewelry",
           "description": "Browse our complete collection of luxury handcrafted jewelry",
-          "url": "https://codedits.github.io/Atelier/products",
+          "url": `${SITE_URL}/products`,
           "isPartOf": {
             "@type": "WebSite",
-            "name": "Atelier Fine Jewellery",
-            "url": "https://codedits.github.io/Atelier"
+            "name": SITE_NAME,
+            "url": SITE_URL
           },
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://codedits.github.io/Atelier" },
-              { "@type": "ListItem", "position": 2, "name": "Products", "item": "https://codedits.github.io/Atelier/products" }
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+              { "@type": "ListItem", "position": 2, "name": "Products", "item": `${SITE_URL}/products` }
             ]
           }
         }) }} />

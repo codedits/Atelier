@@ -2,6 +2,7 @@ import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import { useState } from 'react'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 interface FAQItem {
   question: string
@@ -49,10 +50,10 @@ export default function FAQ() {
   return (
     <>
       <Head>
-        <title>FAQs | Atelier Fine Jewellery</title>
-        <meta name="description" content="Frequently asked questions about Atelier jewelry, shipping, returns, warranties, and custom design." />
-        <meta property="og:title" content="FAQs | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Frequently asked questions about Atelier jewelry, shipping, returns, warranties, and custom design." />
+        <title>FAQs | {SITE_NAME}</title>
+        <meta name="description" content={`Frequently asked questions about ${SITE_NAME} jewelry, shipping, returns, warranties, and custom design.`} />
+        <meta property="og:title" content={`FAQs | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Frequently asked questions about ${SITE_NAME} jewelry, shipping, returns, warranties, and custom design.`} />
       </Head>
 
       <Header />
@@ -107,7 +108,7 @@ export default function FAQ() {
                 Our customer service team is here to help. Reach out to us for any additional questions.
               </p>
               <a 
-                href="mailto:hello@atelier.com" 
+                href={`mailto:${CONTACT_EMAIL}`} 
                 className="inline-block px-8 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-medium"
               >
                 Contact Us

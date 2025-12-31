@@ -1,5 +1,5 @@
 # Atelier Fine Jewellery - robots.txt
-# https://codedits.github.io/Atelier
+# https://atelier-amber.vercel.app
 
 User-agent: *
 Allow: /

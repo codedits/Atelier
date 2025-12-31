@@ -1,15 +1,16 @@
 import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 export default function PrivacyPolicy() {
   return (
     <>
       <Head>
-        <title>Privacy Policy | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier's privacy policy explains how we collect, use, and protect your personal information." />
-        <meta property="og:title" content="Privacy Policy | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Read Atelier's comprehensive privacy policy." />
+        <title>Privacy Policy | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME}'s privacy policy explains how we collect, use, and protect your personal information.`} />
+        <meta property="og:title" content={`Privacy Policy | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Read ${SITE_NAME}'s comprehensive privacy policy.`} />
       </Head>
 
       <Header />
@@ -34,7 +35,7 @@ export default function PrivacyPolicy() {
             <div>
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">1. Introduction</h2>
               <p className="leading-relaxed mb-4">
-                Atelier Fine Jewellery ("we," "us," "our," or "Company") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+                {SITE_NAME} ("we," "us," "our," or "Company") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
               </p>
             </div>
 
@@ -128,9 +129,9 @@ export default function PrivacyPolicy() {
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">11. Contact Us</h2>
               <p className="mb-3">If you have questions about this Privacy Policy, please contact us:</p>
               <div className="space-y-2">
-                <p>Email: hello@atelier.com</p>
+                <p>Email: {CONTACT_EMAIL}</p>
                 <p>Phone: +92 (300) 123-4567</p>
-                <p>Address: Atelier Fine Jewellery, Karachi, Pakistan</p>
+                <p>Address: {SITE_NAME}, Karachi, Pakistan</p>
               </div>
             </div>
           </div>

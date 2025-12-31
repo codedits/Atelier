@@ -1,15 +1,16 @@
 import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
+import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
 
 export default function CookiePolicy() {
   return (
     <>
       <Head>
-        <title>Cookie Policy | Atelier Fine Jewellery</title>
-        <meta name="description" content="Atelier's cookie policy explains how we use cookies and similar technologies." />
-        <meta property="og:title" content="Cookie Policy | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Learn about Atelier's use of cookies and tracking technologies." />
+        <title>Cookie Policy | {SITE_NAME}</title>
+        <meta name="description" content={`${SITE_NAME}'s cookie policy explains how we use cookies and similar technologies.`} />
+        <meta property="og:title" content={`Cookie Policy | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Learn about ${SITE_NAME}'s use of cookies and tracking technologies.`} />
       </Head>
 
       <Header />
@@ -120,9 +121,9 @@ export default function CookiePolicy() {
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">9. Contact Us</h2>
               <p className="mb-3">If you have questions about this Cookie Policy or our use of cookies, please contact us:</p>
               <div className="space-y-2">
-                <p>Email: hello@atelier.com</p>
+                <p>Email: {CONTACT_EMAIL}</p>
                 <p>Phone: +92 (300) 123-4567</p>
-                <p>Address: Atelier Fine Jewellery, Karachi, Pakistan</p>
+                <p>Address: {SITE_NAME}, Karachi, Pakistan</p>
               </div>
             </div>
           </div>

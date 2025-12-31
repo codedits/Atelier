@@ -7,11 +7,7 @@ import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
 import '../styles/globals.css'
 
-const SITE_NAME = 'Atelier Fine Jewellery'
-const SITE_DESCRIPTION = 'Discover exquisite handcrafted fine jewellery at Atelier. Shop luxury rings, necklaces, bracelets, and earrings crafted by master artisans with premium materials.'
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'
-const DEFAULT_OG = '/og-image.jpg'
-const KEYWORDS = 'fine jewellery, luxury jewelry, handcrafted rings, gold necklaces, diamond earrings, bracelets, artisan jewelry, premium accessories'
+import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, DEFAULT_OG, KEYWORDS } from '@/lib/constants'
 
 // Memoized page component wrapper for performance
 const MemoizedComponent = memo(function MemoizedComponent({ Component, pageProps }: { Component: AppProps['Component'], pageProps: AppProps['pageProps'] }) {
@@ -67,7 +63,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta property="og:image" content={`${SITE_URL}${DEFAULT_OG}`} />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
-          <meta property="og:image:alt" content="Atelier Fine Jewellery - Luxury handcrafted jewelry" />
+          <meta property="og:image:alt" content={`${SITE_NAME} - Luxury handcrafted jewelry`} />
           <meta property="og:locale" content="en_US" />
           
           {/* Twitter Cards */}
@@ -77,7 +73,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta name="twitter:title" content={SITE_NAME} />
           <meta name="twitter:description" content={SITE_DESCRIPTION} />
           <meta name="twitter:image" content={`${SITE_URL}${DEFAULT_OG}`} />
-          <meta name="twitter:image:alt" content="Atelier Fine Jewellery" />
+          <meta name="twitter:image:alt" content={SITE_NAME} />
 
           {/* Canonical - pages can override if needed */}
           <meta name="google-site-verification" content="lbE-B7d1GY7dOpPWJGwKeSOE71vpYNkby-KMNJ0IwyE" />

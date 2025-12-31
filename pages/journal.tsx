@@ -3,6 +3,7 @@ import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
+import { SITE_NAME } from '@/lib/constants'
 
 interface BlogPost {
   id: number
@@ -68,10 +69,10 @@ export default function Journal() {
   return (
     <>
       <Head>
-        <title>Journal | Atelier Fine Jewellery</title>
-        <meta name="description" content="Read our journal for insights into jewelry craftsmanship, care tips, gemstone guides, and more." />
-        <meta property="og:title" content="Journal | Atelier Fine Jewellery" />
-        <meta property="og:description" content="Explore our journal with articles about fine jewelry, craftsmanship, and style." />
+        <title>Journal | {SITE_NAME}</title>
+        <meta name="description" content={`Read our journal for insights into jewelry craftsmanship, care tips, gemstone guides, and more.`} />
+        <meta property="og:title" content={`Journal | ${SITE_NAME}`} />
+        <meta property="og:description" content={`Explore our journal with articles about fine jewelry, craftsmanship, and style.`} />
       </Head>
 
       <Header />

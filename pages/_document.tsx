@@ -1,4 +1,5 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document'
+import { SITE_NAME } from '@/lib/constants'
 
 class MyDocument extends Document {
   render() {
@@ -37,8 +38,8 @@ class MyDocument extends Document {
           <link rel="manifest" href="/manifest.json" />
           
           {/* SEO: Author and publisher */}
-          <meta name="author" content="Atelier Fine Jewellery" />
-          <meta name="publisher" content="Atelier" />
+          <meta name="author" content={SITE_NAME} />
+          <meta name="publisher" content={SITE_NAME} />
           <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
           <meta name="googlebot" content="index, follow" />
           
