@@ -134,14 +134,14 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://codedits.github.io/Atelier" />
+        <meta property="og:url" content={process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'} />
         
         {/* Twitter */}
         <meta name="twitter:title" content="Atelier — Luxury Fine Jewellery" />
         <meta name="twitter:description" content="Exquisite handcrafted fine jewellery. Shop luxury rings, necklaces, bracelets & earrings." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop" />
         
-        <link rel="canonical" href="https://codedits.github.io/Atelier" />
+        <link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'} />
 
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

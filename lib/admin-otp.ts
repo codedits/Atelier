@@ -10,16 +10,22 @@ export function generateOtpForUser(username: string): string {
   // In dev no-auth mode always return a predictable code for testing
   if (DEV_NO_AUTH) {
     const code = '000000'
-    console.log(`Admin OTP (dev-no-auth) for ${username}: ${code}`)
+    // Only log in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Admin OTP (dev-no-auth) for ${username}: ${code}`)
+    }
     return code
   }
 
   const code = Math.floor(100000 + Math.random() * 900000).toString()
   const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes
   otpStore.set(username, { code, expiresAt })
-  // For this simple implementation we log the code to the server console.
-  // In a real system you'd email/SMS it instead.
-  console.log(`Admin OTP for ${username}: ${code} (expires in 5 minutes)`)
+  
+  // Only log OTP in development - NEVER in production
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Admin OTP for ${username}: ${code} (expires in 5 minutes)`)
+  }
+  
   return code
 }
 

@@ -23,11 +23,14 @@ interface SendOtpEmailOptions {
 export async function sendOtpEmail({ to, otp, storeName = 'Atelier' }: SendOtpEmailOptions): Promise<boolean> {
   // In development without SMTP configured, just log the OTP
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`\n========================================`)
-    console.log(`📧 OTP Email (DEV MODE - No SMTP configured)`)
-    console.log(`To: ${to}`)
-    console.log(`OTP Code: ${otp}`)
-    console.log(`========================================\n`)
+    // Only log in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n========================================`)
+      console.log(`📧 OTP Email (DEV MODE - No SMTP configured)`)
+      console.log(`To: ${to}`)
+      console.log(`OTP Code: ${otp}`)
+      console.log(`========================================\n`)
+    }
     return true
   }
 
@@ -311,7 +314,7 @@ export async function sendDeliveryNotificationEmail({
                 <p style="color: #6b7280; margin: 0 0 20px; font-size: 14px; line-height: 1.5;">
                   Share your experience and help other customers make informed decisions.
                 </p>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app/account'}/orders/${orderId}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || ''}/orders/${orderId}" 
                    style="display: inline-block; background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
                   Write a Review
                 </a>

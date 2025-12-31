@@ -11,7 +11,9 @@ class MyDocument extends Document {
           {/* DNS prefetch for external resources */}
           <link rel="dns-prefetch" href="https://images.unsplash.com" />
           <link rel="dns-prefetch" href="https://images.pexels.com" />
-          <link rel="dns-prefetch" href="https://ctiwaclyvidudekvvizs.supabase.co" />
+          {process.env.NEXT_PUBLIC_SUPABASE_URL && (
+            <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+          )}
           
           {/* Preconnect to Google Fonts */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />

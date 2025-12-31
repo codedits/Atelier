@@ -295,8 +295,8 @@ export default function ProductsPage({ initialProducts, initialCategories }: Pro
         <meta property="og:title" content="Shop All Jewelry | Atelier Fine Jewellery" />
         <meta property="og:description" content="Browse our complete collection of handcrafted jewelry. Rings, necklaces, bracelets, and earrings." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://codedits.github.io/Atelier/products" />
-        <link rel="canonical" href="https://codedits.github.io/Atelier/products" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'}/products`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'}/products`} />
         
         {/* JSON-LD CollectionPage */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

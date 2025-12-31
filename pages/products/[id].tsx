@@ -220,7 +220,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="1200" />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content={`https://codedits.github.io/Atelier/products/${product.id}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'}/products/${product.id}`} />
         <meta property="product:price:amount" content={product.price?.toString()} />
         <meta property="product:price:currency" content="PKR" />
         
@@ -230,7 +230,7 @@ export default function ProductDetailPage({ product }: ProductDetailPageProps) {
         <meta name="twitter:description" content={product.description || `Shop ${product.name}`} />
         <meta name="twitter:image" content={product.images?.[0] || product.image_url} />
         
-        <link rel="canonical" href={`https://codedits.github.io/Atelier/products/${product.id}`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'}/products/${product.id}`} />
         
         {/* Animations are loaded from globals.css for better caching */}
         

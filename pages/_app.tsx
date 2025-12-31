@@ -9,7 +9,7 @@ import '../styles/globals.css'
 
 const SITE_NAME = 'Atelier Fine Jewellery'
 const SITE_DESCRIPTION = 'Discover exquisite handcrafted fine jewellery at Atelier. Shop luxury rings, necklaces, bracelets, and earrings crafted by master artisans with premium materials.'
-const SITE_URL = 'https://codedits.github.io/Atelier'
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'
 const DEFAULT_OG = '/og-image.jpg'
 const KEYWORDS = 'fine jewellery, luxury jewelry, handcrafted rings, gold necklaces, diamond earrings, bracelets, artisan jewelry, premium accessories'
 
