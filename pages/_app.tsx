@@ -80,6 +80,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta name="twitter:image:alt" content="Atelier Fine Jewellery" />
 
           {/* Canonical - pages can override if needed */}
+          <meta name="google-site-verification" content="lbE-B7d1GY7dOpPWJGwKeSOE71vpYNkby-KMNJ0IwyE" />
           <link rel="canonical" href={SITE_URL} />
           </Head>
           <MemoizedComponent Component={Component} pageProps={pageProps} />
