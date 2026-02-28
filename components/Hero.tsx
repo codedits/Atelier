@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { useState, useCallback, memo, useEffect } from 'react'
+import { useState, useCallback, memo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 export interface HeroImage {
@@ -47,20 +47,61 @@ const defaultHeroImages: HeroImage[] = [
   }
 ]
 
+// Animated counter hook
+function useCountUp(target: number, duration = 2000, start = false) {
+  const [count, setCount] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (!start) return
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.floor(eased * target))
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration, start])
+
+  return count
+}
+
 const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
   const heroImages = initialHeroImages && initialHeroImages.length > 0 ? initialHeroImages : defaultHeroImages
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [progressWidth, setProgressWidth] = useState(0)
+
+  const years = useCountUp(35, 2200, isLoaded)
+  const pieces = useCountUp(5000, 2500, isLoaded)
+  const artisans = useCountUp(12, 1800, isLoaded)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (mediaQuery.matches) return
 
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
-    }, 6000)
+    const SLIDE_DURATION = 6000
+    let start = Date.now()
 
-    return () => clearInterval(interval)
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - start
+      setProgressWidth(Math.min((elapsed / SLIDE_DURATION) * 100, 100))
+    }, 50)
+
+    const slideInterval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
+      start = Date.now()
+      setProgressWidth(0)
+    }, SLIDE_DURATION)
+
+    return () => {
+      clearInterval(slideInterval)
+      clearInterval(progressInterval)
+    }
   }, [heroImages.length])
 
   const handleScrollDown = useCallback(() => {
@@ -104,11 +145,11 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-black/40 z-[1]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[2]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-[2]" />
       </div>
 
-      {/* Content — staggered text reveal */}
-      <div className={`relative z-10 flex flex-col items-center justify-center h-full text-center text-white ${isLoaded ? 'is-visible' : ''}`}>
+      {/* Content */}
+      <div className={`relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-6 ${isLoaded ? 'is-visible' : ''}`}>
         {/* Subtitle */}
         <p className="hero-subtext text-[11px] sm:text-xs tracking-[0.3em] uppercase text-white/70 mb-6">
           {hero.subtitle}
@@ -139,22 +180,51 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
             <span>Our Story</span>
           </Link>
         </div>
+
+        {/* Animated Stats Row */}
+        <div className="hero-cta mt-16 sm:mt-20 flex items-center gap-8 sm:gap-14">
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light tracking-wide text-white font-serif">{years}+</div>
+            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Years</div>
+          </div>
+          <div className="w-px h-8 bg-white/20" />
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light tracking-wide text-white font-serif">{pieces.toLocaleString()}+</div>
+            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Pieces Created</div>
+          </div>
+          <div className="w-px h-8 bg-white/20" />
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light tracking-wide text-white font-serif">{artisans}</div>
+            <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-white/50 mt-1">Master Artisans</div>
+          </div>
+        </div>
       </div>
 
-      {/* Slide indicators */}
+      {/* Progress bar for current slide */}
       {heroImages.length > 1 && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
           {heroImages.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentImageIndex(index)}
-              className={`transition-all duration-500 ${
-                index === currentImageIndex
-                  ? 'w-8 h-[2px] bg-white'
-                  : 'w-4 h-[1px] bg-white/40 hover:bg-white/60'
-              }`}
+              onClick={() => {
+                setCurrentImageIndex(index)
+                setProgressWidth(0)
+              }}
+              className="relative overflow-hidden transition-all duration-500"
               aria-label={`Go to slide ${index + 1}`}
-            />
+            >
+              <div className={`transition-all duration-500 ${
+                index === currentImageIndex
+                  ? 'w-10 h-[2px] bg-white/30'
+                  : 'w-4 h-[1px] bg-white/40 hover:bg-white/60'
+              }`} />
+              {index === currentImageIndex && (
+                <div
+                  className="absolute top-0 left-0 h-full bg-white transition-none"
+                  style={{ width: `${progressWidth}%` }}
+                />
+              )}
+            </button>
           ))}
         </div>
       )}

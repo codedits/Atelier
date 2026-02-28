@@ -11,7 +11,10 @@ import {
   getCachedFeaturedCollections,
   getCachedNewArrivals,
   getCachedTestimonials,
-  getCachedCollectionsHighlight
+  getCachedCollectionsHighlight,
+  getCachedFeaturedProducts,
+  getCachedAnnouncements,
+  getCachedHomepageSections
 } from '@/lib/cache'
 import {
   Header,
@@ -27,7 +30,10 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { SITE_URL, SITE_NAME, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL } from '@/lib/constants'
 
 // Lazy load below-fold components for faster initial render
+const AnnouncementBanner = dynamic(() => import('../components/AnnouncementBanner'), { ssr: true })
 const ValueProposition = dynamic(() => import('../components/ValueProposition'), { ssr: true })
+const TrendingNow = dynamic(() => import('../components/TrendingNow'), { ssr: true })
+const BrandStory = dynamic(() => import('../components/BrandStory'), { ssr: true })
 
 const CollectionsHighlight = dynamic(() => import('../components/CollectionsHighlight'), { ssr: true })
 const ProcessSteps = dynamic(() => import('../components/ProcessSteps'), { ssr: true })
@@ -60,24 +66,30 @@ interface Collection {
 
 interface HomeProps {
   newArrivals: Product[]
+  featuredProducts: Product[]
   featuredCollections: Collection[]
   layout: string[]
   heroImages: HeroImage[]
   testimonials: Testimonial[]
   collectionsHighlight: any[]
   siteConfig: any
+  announcements: any[]
+  homepageSections: any[]
 }
 
 // SSG with ISR - Pre-render at build time, revalidate every 60 seconds
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   // Fetch cached products, collections, layout config, hero images, testimonials, and collections highlight in parallel
-  const [productsData, collectionsData, configData, heroImagesData, testimonialsData, collectionsHighlightData] = await Promise.all([
+  const [productsData, collectionsData, configData, heroImagesData, testimonialsData, collectionsHighlightData, featuredProductsData, announcementsData, homepageSectionsData] = await Promise.all([
     getCachedNewArrivals(),
     getCachedFeaturedCollections(),
     getCachedSiteConfig(),
     getCachedHeroImages(),
     getCachedTestimonials(),
-    getCachedCollectionsHighlight()
+    getCachedCollectionsHighlight(),
+    getCachedFeaturedProducts(),
+    getCachedAnnouncements(),
+    getCachedHomepageSections()
   ])
 
   // Default collections fallback
@@ -114,13 +126,14 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
 
   // Default layout fallback
   const defaultLayout = [
-    'hero', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'trending_now', 'craftsmanship', 'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
   ]
 
   return {
     props: {
       newArrivals: (productsData || []) as Product[],
+      featuredProducts: (featuredProductsData || []) as Product[],
       featuredCollections: (collectionsData && collectionsData.length > 0)
         ? collectionsData as Collection[]
         : defaultCollections,
@@ -129,27 +142,41 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       testimonials: (testimonialsData || []) as Testimonial[],
       collectionsHighlight: collectionsHighlightData || [],
       siteConfig: configData || null,
+      announcements: (announcementsData || []) as any[],
+      homepageSections: (homepageSectionsData || []) as any[],
     },
     revalidate: 3600, // ISR: Regenerate page every 1 hour
   }
 }
 
-export default function Home({ newArrivals, featuredCollections, layout, heroImages, testimonials, collectionsHighlight }: HomeProps) {
+export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, collectionsHighlight, announcements, homepageSections }: HomeProps) {
   // Memoize for stable reference
   const products = useMemo(() => newArrivals, [newArrivals])
+  const featured = useMemo(() => featuredProducts, [featuredProducts])
   const collections = useMemo(() => featuredCollections, [featuredCollections])
+
+  // Build a lookup map by section_key for homepage sections
+  const sectionsByKey = useMemo(() => {
+    const map: Record<string, any> = {}
+    for (const s of homepageSections || []) {
+      if (s.section_key) map[s.section_key] = s
+    }
+    return map
+  }, [homepageSections])
 
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   const activeLayout = layout && layout.length > 0 ? layout : [
-    'hero', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'trending_now', 'craftsmanship', 'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
   ]
 
   const renderSection = (sectionId: string, index: number) => {
     switch (sectionId) {
       case 'hero':
         return <Hero key={sectionId} heroImages={heroImages} />
+      case 'announcement_banner':
+        return <AnnouncementBanner key={sectionId} announcements={announcements?.length ? announcements : undefined} />
       case 'value_proposition':
         return <ValueProposition key={sectionId} />
       case 'featured_collections':
@@ -159,9 +186,13 @@ export default function Home({ newArrivals, featuredCollections, layout, heroIma
       case 'collections_highlight':
         return <CollectionsHighlight key={sectionId} highlights={collectionsHighlight.length > 0 ? collectionsHighlight : undefined} />
       case 'process_steps':
-        return <ProcessSteps key={sectionId} />
+        return <ProcessSteps key={sectionId} data={sectionsByKey['process_steps']} />
+      case 'trending_now':
+        return featured.length > 0 ? <TrendingNow key={sectionId} products={featured} /> : null
       case 'craftsmanship':
-        return <Craftsmanship key={sectionId} />
+        return <Craftsmanship key={sectionId} data={sectionsByKey['craftsmanship']} />
+      case 'brand_story':
+        return <BrandStory key={sectionId} data={sectionsByKey['brand_story']} />
       case 'new_arrivals':
         return (
           <section

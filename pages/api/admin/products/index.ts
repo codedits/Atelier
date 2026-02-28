@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
     }
     // Create new product
-    const { name, description, price, old_price, category, gender, image_url, images, stock, is_hidden } = req.body
+    const { name, description, price, old_price, category, gender, image_url, images, stock, is_hidden, is_featured } = req.body
 
     if (!name || !description || price === undefined || !category || !gender || !image_url) {
       return res.status(400).json({ error: 'Missing required fields' })
@@ -66,6 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Only add is_hidden if it exists in the database (requires admin schema)
     if (is_hidden !== undefined) {
       productData.is_hidden = is_hidden
+    }
+    if (is_featured !== undefined) {
+      productData.is_featured = is_featured
     }
 
     const { data, error } = await supabaseAdmin

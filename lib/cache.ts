@@ -41,7 +41,7 @@ export async function getCachedHeroImages() {
         async () => {
             const { data, error } = await supabase
                 .from('hero_images')
-                .select('id, image_url, mobile_image_url, alt_text, title, subtitle, cta_text, cta_link, display_order, is_active')
+                .select('id, image_url, title, subtitle, cta_text, cta_link, display_order, is_active')
                 .eq('is_active', true)
                 .order('display_order', { ascending: true })
             if (error) return []
@@ -58,7 +58,7 @@ export async function getCachedFeaturedCollections() {
         async () => {
             const { data, error } = await supabase
                 .from('featured_collections')
-                .select('id, title, description, image_url, link, badge, display_order, is_active')
+                .select('id, title, description, image_url, link, display_order, is_active')
                 .eq('is_active', true)
                 .order('display_order', { ascending: true })
             if (error) return []
@@ -75,10 +75,29 @@ export async function getCachedNewArrivals() {
         async () => {
             const { data, error } = await supabase
                 .from('products')
-                .select('id, name, slug, price, old_price, category, image_url, images, is_hidden')
+                .select('id, name, slug, price, old_price, category, image_url, images, is_hidden, is_featured')
                 .eq('is_hidden', false)
                 .order('created_at', { ascending: false })
-                .limit(3)
+                .limit(6)
+            if (error) return []
+            return data || []
+        },
+        { ttl: SSG_TTL, tags: ['products'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+    )
+    return data
+}
+
+export async function getCachedFeaturedProducts() {
+    const { data } = await ssgCache.getOrFetch(
+        'ssg:featured_products',
+        async () => {
+            const { data, error } = await supabase
+                .from('products')
+                .select('id, name, slug, price, old_price, category, image_url, images')
+                .eq('is_hidden', false)
+                .eq('is_featured', true)
+                .order('created_at', { ascending: false })
+                .limit(10)
             if (error) return []
             return data || []
         },
@@ -127,5 +146,38 @@ export function invalidateSSGCache(tag?: string) {
     } else {
         ssgCache.clear()
     }
+}
+
+export async function getCachedAnnouncements() {
+    const { data } = await ssgCache.getOrFetch(
+        'ssg:announcements',
+        async () => {
+            const { data, error } = await supabase
+                .from('announcements')
+                .select('id, text, link, link_text, icon, display_order, is_active')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true })
+            if (error) return []
+            return data || []
+        },
+        { ttl: SSG_TTL, tags: ['announcements'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+    )
+    return data
+}
+
+export async function getCachedHomepageSections() {
+    const { data } = await ssgCache.getOrFetch(
+        'ssg:homepage_sections',
+        async () => {
+            const { data, error } = await supabase
+                .from('homepage_sections')
+                .select('id, section_key, title, subtitle, content, image_url, cta_text, cta_link, metadata, is_active')
+                .eq('is_active', true)
+            if (error) return []
+            return data || []
+        },
+        { ttl: SSG_TTL, tags: ['homepage_sections'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+    )
+    return data
 }
 

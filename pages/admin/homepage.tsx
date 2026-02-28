@@ -36,6 +36,29 @@ interface Testimonial {
   is_active: boolean
 }
 
+interface Announcement {
+  id: string
+  text: string
+  link: string
+  link_text: string
+  icon: string
+  display_order: number
+  is_active: boolean
+}
+
+interface HomepageSection {
+  id: string
+  section_key: string
+  title: string
+  subtitle: string
+  content: string
+  image_url: string
+  cta_text: string
+  cta_link: string
+  metadata: any
+  is_active: boolean
+}
+
 // Icons
 const Icons = {
   plus: (
@@ -79,7 +102,7 @@ const Icons = {
 function HomepageContent() {
   const api = useAdminApi()
   const toast = useToast()
-  const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials'>('hero')
+  const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps'>('hero')
   const [loading, setLoading] = useState(true)
 
   // Hero Images
@@ -127,6 +150,23 @@ function HomepageContent() {
     is_active: true
   })
 
+  // Announcements
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [announcementModal, setAnnouncementModal] = useState(false)
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
+  const [announcementForm, setAnnouncementForm] = useState({
+    text: '',
+    link: '',
+    link_text: '',
+    icon: 'sparkle',
+    display_order: 0,
+    is_active: true
+  })
+
+  // Homepage Sections (brand_story, craftsmanship, process_steps)
+  const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([])
+  const [sectionSaving, setSectionSaving] = useState(false)
+
   useEffect(() => {
     loadData()
   }, [])
@@ -134,14 +174,18 @@ function HomepageContent() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [heroRes, collectionsRes, testimonialsRes] = await Promise.all([
+      const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes] = await Promise.all([
         api.get<HeroImage[]>('/hero-images'),
         api.get<FeaturedCollection[]>('/featured-collections'),
         api.get<Testimonial[]>('/testimonials'),
+        api.get<Announcement[]>('/announcements'),
+        api.get<HomepageSection[]>('/homepage-sections'),
       ])
       setHeroImages(heroRes || [])
       setCollections(collectionsRes || [])
       setTestimonials(testimonialsRes || [])
+      setAnnouncements(announcementsRes || [])
+      setHomepageSections(sectionsRes || [])
     } catch (error) {
       console.error('Failed to load homepage content:', error)
     } finally {
@@ -450,6 +494,78 @@ function HomepageContent() {
     }
   }
 
+  // Announcement Handlers
+  const openAnnouncementAdd = () => {
+    setEditingAnnouncement(null)
+    setAnnouncementForm({
+      text: '',
+      link: '',
+      link_text: '',
+      icon: 'sparkle',
+      display_order: announcements.length,
+      is_active: true
+    })
+    setAnnouncementModal(true)
+  }
+
+  const openAnnouncementEdit = (a: Announcement) => {
+    setEditingAnnouncement(a)
+    setAnnouncementForm({
+      text: a.text,
+      link: a.link || '',
+      link_text: a.link_text || '',
+      icon: a.icon || 'sparkle',
+      display_order: a.display_order,
+      is_active: a.is_active
+    })
+    setAnnouncementModal(true)
+  }
+
+  const handleAnnouncementSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (editingAnnouncement) {
+        await api.put('/announcements', { id: editingAnnouncement.id, ...announcementForm })
+        toast.success('Announcement updated')
+      } else {
+        await api.post('/announcements', announcementForm)
+        toast.success('Announcement created')
+      }
+      setAnnouncementModal(false)
+      loadData()
+    } catch {
+      toast.error('Failed to save announcement')
+    }
+  }
+
+  const handleAnnouncementDelete = async (id: string) => {
+    if (!confirm('Delete this announcement?')) return
+    try {
+      await api.del(`/announcements?id=${id}`)
+      toast.success('Announcement deleted')
+      loadData()
+    } catch {
+      toast.error('Failed to delete announcement')
+    }
+  }
+
+  // Homepage Section Helpers
+  const getSection = (key: string): HomepageSection | undefined =>
+    homepageSections.find(s => s.section_key === key)
+
+  const saveSection = async (sectionData: any) => {
+    setSectionSaving(true)
+    try {
+      await api.put('/homepage-sections', sectionData)
+      toast.success('Section saved')
+      loadData()
+    } catch {
+      toast.error('Failed to save section')
+    } finally {
+      setSectionSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -468,6 +584,10 @@ function HomepageContent() {
     { id: 'hero' as const, label: 'Hero Images', count: heroImages.length },
     { id: 'collections' as const, label: 'Collections', count: collections.length },
     { id: 'testimonials' as const, label: 'Testimonials', count: testimonials.length },
+    { id: 'announcements' as const, label: 'Announcements', count: announcements.length },
+    { id: 'brand_story' as const, label: 'Brand Story' },
+    { id: 'craftsmanship' as const, label: 'Craftsmanship' },
+    { id: 'process_steps' as const, label: 'Process Steps' },
   ]
 
   return (
@@ -484,7 +604,9 @@ function HomepageContent() {
               }`}
           >
             {tab.label}
-            <span className="ml-2 text-[11px] text-[#666]">({tab.count})</span>
+            {'count' in tab && typeof tab.count === 'number' && (
+              <span className="ml-2 text-[11px] text-[#666]">({tab.count})</span>
+            )}
             {activeTab === tab.id && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
             )}
@@ -685,6 +807,73 @@ function HomepageContent() {
           </div>
         </div>
       )}
+
+      {/* Announcements Tab */}
+      {activeTab === 'announcements' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-[#888] text-sm">Manage the announcement ticker at the top of the homepage</p>
+            <button onClick={openAnnouncementAdd} className="admin-btn admin-btn-primary">
+              {Icons.plus}
+              <span>Add Announcement</span>
+            </button>
+          </div>
+
+          <div className="grid gap-4">
+            {announcements.map(a => (
+              <div key={a.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 flex items-center gap-4 hover:border-[#333] transition-colors">
+                <div className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-[#C9A96E] text-sm flex-shrink-0">
+                  {a.icon === 'gift' ? '🎁' : a.icon === 'clock' ? '⏰' : a.icon === 'star' ? '⭐' : '✨'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">{a.text}</p>
+                  {a.link && <p className="text-[#666] text-xs mt-1">{a.link_text || 'Link'} → {a.link}</p>}
+                  <div className="flex gap-3 mt-1">
+                    <span className="text-[11px] text-[#666]">Order: {a.display_order}</span>
+                    <span className={`admin-badge text-[11px] ${a.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>
+                      {a.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => openAnnouncementEdit(a)} className="p-2 text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-md transition-colors">
+                    {Icons.edit}
+                  </button>
+                  <button onClick={() => handleAnnouncementDelete(a.id)} className="p-2 text-[#666] hover:text-[#ff6166] hover:bg-[#ff616610] rounded-md transition-colors">
+                    {Icons.trash}
+                  </button>
+                </div>
+              </div>
+            ))}
+            {announcements.length === 0 && (
+              <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-12 text-center text-[#666]">
+                No announcements yet. Add one to get started.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Brand Story Tab */}
+      {activeTab === 'brand_story' && (() => {
+        const section = getSection('brand_story')
+        const meta = section?.metadata || {}
+        return <BrandStoryEditor section={section} meta={meta} onSave={saveSection} saving={sectionSaving} />
+      })()}
+
+      {/* Craftsmanship Tab */}
+      {activeTab === 'craftsmanship' && (() => {
+        const section = getSection('craftsmanship')
+        const meta = section?.metadata || {}
+        return <CraftsmanshipEditor section={section} meta={meta} onSave={saveSection} saving={sectionSaving} />
+      })()}
+
+      {/* Process Steps Tab */}
+      {activeTab === 'process_steps' && (() => {
+        const section = getSection('process_steps')
+        const meta = section?.metadata || {}
+        return <ProcessStepsEditor section={section} meta={meta} onSave={saveSection} saving={sectionSaving} />
+      })()}
 
       {/* Hero Modal */}
       {heroModal && (
@@ -1018,6 +1207,417 @@ function HomepageContent() {
           </div>
         </div>
       )}
+      {/* Announcement Modal */}
+      {announcementModal && (
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
+              <h2 className="text-white text-base font-semibold">
+                {editingAnnouncement ? 'Edit Announcement' : 'Add Announcement'}
+              </h2>
+              <button onClick={() => setAnnouncementModal(false)} className="w-9 h-9 flex items-center justify-center text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                {Icons.close}
+              </button>
+            </div>
+
+            <form onSubmit={handleAnnouncementSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Text</label>
+                <input
+                  type="text"
+                  value={announcementForm.text}
+                  onChange={e => setAnnouncementForm(f => ({ ...f, text: e.target.value }))}
+                  className="admin-input w-full"
+                  placeholder="New Spring Collection Just Dropped"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Link</label>
+                  <input
+                    type="text"
+                    value={announcementForm.link}
+                    onChange={e => setAnnouncementForm(f => ({ ...f, link: e.target.value }))}
+                    className="admin-input w-full"
+                    placeholder="/products"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Link Text</label>
+                  <input
+                    type="text"
+                    value={announcementForm.link_text}
+                    onChange={e => setAnnouncementForm(f => ({ ...f, link_text: e.target.value }))}
+                    className="admin-input w-full"
+                    placeholder="Shop Now"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Icon</label>
+                <div className="flex gap-2">
+                  {['sparkle', 'gift', 'clock', 'star'].map(icon => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => setAnnouncementForm(f => ({ ...f, icon }))}
+                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${announcementForm.icon === icon ? 'bg-[#C9A96E] text-black' : 'bg-[#1a1a1a] text-[#888] hover:text-white'}`}
+                    >
+                      {icon === 'gift' ? '🎁' : icon === 'clock' ? '⏰' : icon === 'star' ? '⭐' : '✨'} {icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Display Order</label>
+                  <input
+                    type="number"
+                    value={announcementForm.display_order}
+                    onChange={e => setAnnouncementForm(f => ({ ...f, display_order: Number(e.target.value) }))}
+                    className="admin-input w-full"
+                  />
+                </div>
+                <div className="flex items-end pb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={announcementForm.is_active}
+                      onChange={e => setAnnouncementForm(f => ({ ...f, is_active: e.target.checked }))}
+                      className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a]"
+                    />
+                    <span className="text-[#888] text-sm">Active</span>
+                  </label>
+                </div>
+              </div>
+            </form>
+
+            <div className="px-6 py-4 border-t border-[#1a1a1a] flex justify-end gap-3">
+              <button type="button" onClick={() => setAnnouncementModal(false)} className="admin-btn admin-btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" onClick={handleAnnouncementSubmit} className="admin-btn admin-btn-primary">
+                {editingAnnouncement ? 'Save Changes' : 'Add Announcement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Section Editor Components ---
+
+function BrandStoryEditor({ section, meta, onSave, saving }: { section: any; meta: any; onSave: (d: any) => Promise<void>; saving: boolean }) {
+  const [title, setTitle] = useState(section?.title || 'Where tradition meets modern artistry')
+  const [subtitle, setSubtitle] = useState(section?.subtitle || 'Our Story')
+  const [content, setContent] = useState(section?.content || '')
+  const [imageUrl, setImageUrl] = useState(section?.image_url || '')
+  const [highlightWord, setHighlightWord] = useState(meta.highlight_word || 'modern artistry')
+  const [ctaText, setCtaText] = useState(meta.cta_text || 'Discover Our Full Story')
+  const [ctaLink, setCtaLink] = useState(meta.cta_link || '/about')
+  const [milestones, setMilestones] = useState<{ year: string; text: string }[]>(meta.milestones || [])
+  const [images, setImages] = useState<{ url: string; alt: string; caption: string }[]>(meta.images || [])
+
+  const handleSave = () => {
+    onSave({
+      section_key: 'brand_story',
+      title,
+      subtitle,
+      content,
+      image_url: imageUrl,
+      metadata: { highlight_word: highlightWord, cta_text: ctaText, cta_link: ctaLink, milestones, images }
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Content</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="admin-input w-full" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Subtitle</label>
+            <input type="text" value={subtitle} onChange={e => setSubtitle(e.target.value)} className="admin-input w-full" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Description</label>
+          <textarea value={content} onChange={e => setContent(e.target.value)} className="admin-input w-full h-20 resize-none" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Highlight Word (italic gold text)</label>
+            <input type="text" value={highlightWord} onChange={e => setHighlightWord(e.target.value)} className="admin-input w-full" placeholder="modern artistry" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Background Image URL</label>
+            <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="admin-input w-full" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">CTA Text</label>
+            <input type="text" value={ctaText} onChange={e => setCtaText(e.target.value)} className="admin-input w-full" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">CTA Link</label>
+            <input type="text" value={ctaLink} onChange={e => setCtaLink(e.target.value)} className="admin-input w-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Milestones */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white text-sm font-semibold">Milestones</h3>
+          <button type="button" onClick={() => setMilestones([...milestones, { year: '', text: '' }])} className="admin-btn admin-btn-primary text-xs">
+            + Add Milestone
+          </button>
+        </div>
+        {milestones.map((m, i) => (
+          <div key={i} className="flex gap-3 items-start">
+            <input
+              type="text"
+              value={m.year}
+              onChange={e => { const arr = [...milestones]; arr[i] = { ...arr[i], year: e.target.value }; setMilestones(arr) }}
+              className="admin-input w-24"
+              placeholder="2024"
+            />
+            <input
+              type="text"
+              value={m.text}
+              onChange={e => { const arr = [...milestones]; arr[i] = { ...arr[i], text: e.target.value }; setMilestones(arr) }}
+              className="admin-input flex-1"
+              placeholder="Description..."
+            />
+            <button type="button" onClick={() => setMilestones(milestones.filter((_, j) => j !== i))} className="p-2 text-[#666] hover:text-[#ff6166] transition-colors">
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Gallery Images */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white text-sm font-semibold">Gallery Images</h3>
+          <button type="button" onClick={() => setImages([...images, { url: '', alt: '', caption: '' }])} className="admin-btn admin-btn-primary text-xs">
+            + Add Image
+          </button>
+        </div>
+        {images.map((img, i) => (
+          <div key={i} className="flex gap-3 items-start">
+            <input
+              type="url"
+              value={img.url}
+              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], url: e.target.value }; setImages(arr) }}
+              className="admin-input flex-1"
+              placeholder="Image URL..."
+            />
+            <input
+              type="text"
+              value={img.alt}
+              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], alt: e.target.value }; setImages(arr) }}
+              className="admin-input w-36"
+              placeholder="Alt text"
+            />
+            <input
+              type="text"
+              value={img.caption}
+              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], caption: e.target.value }; setImages(arr) }}
+              className="admin-input w-36"
+              placeholder="Caption"
+            />
+            <button type="button" onClick={() => setImages(images.filter((_, j) => j !== i))} className="p-2 text-[#666] hover:text-[#ff6166] transition-colors">
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save Brand Story'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function CraftsmanshipEditor({ section, meta, onSave, saving }: { section: any; meta: any; onSave: (d: any) => Promise<void>; saving: boolean }) {
+  const [title, setTitle] = useState(section?.title || 'Handcrafted Excellence')
+  const [subtitle, setSubtitle] = useState(section?.subtitle || 'Our Heritage')
+  const [content, setContent] = useState(section?.content || '')
+  const [imageUrl, setImageUrl] = useState(section?.image_url || '')
+  const [stats, setStats] = useState<{ value: string; label: string }[]>(meta.stats || [])
+
+  const handleSave = () => {
+    onSave({
+      section_key: 'craftsmanship',
+      title,
+      subtitle,
+      content,
+      image_url: imageUrl,
+      metadata: { stats }
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Content</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="admin-input w-full" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Subtitle</label>
+            <input type="text" value={subtitle} onChange={e => setSubtitle(e.target.value)} className="admin-input w-full" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Content (use blank lines to split paragraphs)</label>
+          <textarea value={content} onChange={e => setContent(e.target.value)} className="admin-input w-full h-28 resize-none" />
+        </div>
+        <div>
+          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Image URL</label>
+          <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="admin-input w-full" />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white text-sm font-semibold">Stats</h3>
+          <button type="button" onClick={() => setStats([...stats, { value: '', label: '' }])} className="admin-btn admin-btn-primary text-xs">
+            + Add Stat
+          </button>
+        </div>
+        {stats.map((s, i) => (
+          <div key={i} className="flex gap-3 items-start">
+            <input
+              type="text"
+              value={s.value}
+              onChange={e => { const arr = [...stats]; arr[i] = { ...arr[i], value: e.target.value }; setStats(arr) }}
+              className="admin-input w-24"
+              placeholder="35+"
+            />
+            <input
+              type="text"
+              value={s.label}
+              onChange={e => { const arr = [...stats]; arr[i] = { ...arr[i], label: e.target.value }; setStats(arr) }}
+              className="admin-input flex-1"
+              placeholder="Years of Artistry"
+            />
+            <button type="button" onClick={() => setStats(stats.filter((_, j) => j !== i))} className="p-2 text-[#666] hover:text-[#ff6166] transition-colors">
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save Craftsmanship'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ProcessStepsEditor({ section, meta, onSave, saving }: { section: any; meta: any; onSave: (d: any) => Promise<void>; saving: boolean }) {
+  const [title, setTitle] = useState(section?.title || 'From Vision to Reality')
+  const [subtitle, setSubtitle] = useState(section?.subtitle || 'Our Process')
+  const [steps, setSteps] = useState<{ number: string; title: string; description: string }[]>(meta.steps || [])
+
+  const handleSave = () => {
+    onSave({
+      section_key: 'process_steps',
+      title,
+      subtitle,
+      metadata: { steps }
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Section Header</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="admin-input w-full" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Subtitle</label>
+            <input type="text" value={subtitle} onChange={e => setSubtitle(e.target.value)} className="admin-input w-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white text-sm font-semibold">Steps</h3>
+          <button type="button" onClick={() => setSteps([...steps, { number: String(steps.length + 1).padStart(2, '0'), title: '', description: '' }])} className="admin-btn admin-btn-primary text-xs">
+            + Add Step
+          </button>
+        </div>
+        {steps.map((s, i) => (
+          <div key={i} className="bg-[#111] border border-[#222] rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[#C9A96E] font-mono text-sm">Step {s.number}</span>
+              <button type="button" onClick={() => setSteps(steps.filter((_, j) => j !== i))} className="p-1 text-[#666] hover:text-[#ff6166] transition-colors text-xs">
+                Remove
+              </button>
+            </div>
+            <div className="grid grid-cols-[80px,1fr] gap-3">
+              <div>
+                <label className="block text-[#a1a1a1] text-[11px] mb-1">Number</label>
+                <input
+                  type="text"
+                  value={s.number}
+                  onChange={e => { const arr = [...steps]; arr[i] = { ...arr[i], number: e.target.value }; setSteps(arr) }}
+                  className="admin-input w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-[#a1a1a1] text-[11px] mb-1">Title</label>
+                <input
+                  type="text"
+                  value={s.title}
+                  onChange={e => { const arr = [...steps]; arr[i] = { ...arr[i], title: e.target.value }; setSteps(arr) }}
+                  className="admin-input w-full"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[#a1a1a1] text-[11px] mb-1">Description</label>
+              <textarea
+                value={s.description}
+                onChange={e => { const arr = [...steps]; arr[i] = { ...arr[i], description: e.target.value }; setSteps(arr) }}
+                className="admin-input w-full h-16 resize-none"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save Process Steps'}
+        </button>
+      </div>
     </div>
   )
 }

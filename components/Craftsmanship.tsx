@@ -2,7 +2,43 @@ import { cn } from '@/lib/utils'
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Image from 'next/image'
 
-export default function Craftsmanship() {
+interface CraftsmanshipStat {
+  value: string
+  label: string
+}
+
+interface CraftsmanshipData {
+  title?: string
+  subtitle?: string
+  content?: string
+  image_url?: string
+  metadata?: {
+    stats?: CraftsmanshipStat[]
+  }
+}
+
+interface CraftsmanshipProps {
+  data?: CraftsmanshipData
+}
+
+const defaultData: CraftsmanshipData = {
+  title: 'Handcrafted Excellence',
+  subtitle: 'Our Heritage',
+  content: 'Every piece is meticulously crafted by our master artisans, blending traditional techniques with contemporary design.\n\nFrom the initial sketch to the final polish, we ensure each creation meets our exacting standards of quality and beauty.',
+  image_url: '/pexels-peter-ohis-322737401-13726059.jpg',
+  metadata: {
+    stats: [
+      { value: '35+', label: 'Years of Artistry' },
+      { value: '12', label: 'Master Artisans' },
+      { value: '5000+', label: 'Unique Pieces' }
+    ]
+  }
+}
+
+export default function Craftsmanship({ data: propData }: CraftsmanshipProps) {
+  const d = { ...defaultData, ...propData, metadata: { ...defaultData.metadata, ...propData?.metadata } }
+  const stats = d.metadata?.stats || defaultData.metadata!.stats!
+  const paragraphs = (d.content || '').split('\n').filter(Boolean)
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.2 })
 
   return (
@@ -19,10 +55,10 @@ export default function Craftsmanship() {
           >
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
-                Our Heritage
+                {d.subtitle}
               </p>
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] leading-[1.1] tracking-wide font-serif">
-                Handcrafted<br />Excellence
+                {d.title}
               </h2>
             </div>
 
@@ -30,40 +66,23 @@ export default function Craftsmanship() {
             <div className="w-16 h-px bg-gradient-to-r from-[#1A1A1A] to-transparent" />
 
             <div className="space-y-5 text-base text-[#6B6B6B] leading-relaxed">
-              <p>
-                Every piece is meticulously crafted by our master artisans, blending traditional techniques with contemporary design.
-              </p>
-              <p>
-                From the initial sketch to the final polish, we ensure each creation meets our exacting standards of quality and beauty.
-              </p>
+              {paragraphs.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8 pt-10 border-t border-[#E8E4DF]">
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
-                  35+
+              {stats.map((stat, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
+                    {stat.value}
+                  </div>
+                  <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
-                  Years of Artistry
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
-                  12
-                </div>
-                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
-                  Master Artisans
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
-                  5000+
-                </div>
-                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
-                  Unique Pieces
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -77,7 +96,7 @@ export default function Craftsmanship() {
           >
             <div className="aspect-[3/4] overflow-hidden relative">
               <Image
-                src="/pexels-peter-ohis-322737401-13726059.jpg"
+                src={d.image_url || defaultData.image_url!}
                 alt="Master artisan crafting jewelry"
                 fill
                 className="object-cover"

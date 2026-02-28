@@ -11,5 +11,8 @@ export { default as Testimonials } from './Testimonials'
 export { default as Newsletter } from './Newsletter'
 export { default as BentoGrid } from './BentoGrid'
 export { default as OrderReviewForm } from './OrderReviewForm'
+export { default as AnnouncementBanner } from './AnnouncementBanner'
+export { default as TrendingNow } from './TrendingNow'
+export { default as BrandStory } from './BrandStory'
 
 // Barrel file to simplify imports and improve editor/module resolution.

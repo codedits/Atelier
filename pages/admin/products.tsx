@@ -97,7 +97,8 @@ function ProductsContent() {
     image_url: '',
     images: [] as string[],
     stock: '0',
-    is_hidden: false
+    is_hidden: false,
+    is_featured: false
   })
 
   // Direct upload hook (bypasses API body limit — uploads straight to Supabase)
@@ -152,7 +153,8 @@ function ProductsContent() {
       image_url: '',
       images: [],
       stock: '0',
-      is_hidden: false
+      is_hidden: false,
+      is_featured: false
     })
     resetUploads()
     setView('form')
@@ -171,7 +173,8 @@ function ProductsContent() {
       image_url: product.image_url,
       images: existingImages,
       stock: String(product.stock),
-      is_hidden: (product as Product & { is_hidden?: boolean }).is_hidden || false
+      is_hidden: (product as Product & { is_hidden?: boolean }).is_hidden || false,
+      is_featured: (product as any).is_featured || false
     })
     resetUploads()
     setView('form')
@@ -233,7 +236,8 @@ function ProductsContent() {
       image_url: form.images[0] || form.image_url,
       images: form.images,
       stock: Number(form.stock),
-      is_hidden: form.is_hidden
+      is_hidden: form.is_hidden,
+      is_featured: form.is_featured
     }
 
     try {
@@ -781,6 +785,16 @@ function ProductsContent() {
                   </label>
                 )}
               </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.is_featured}
+                  onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
+                  className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a] text-[#C9A96E] focus:ring-0 focus:ring-offset-0"
+                />
+                <span className="text-[#888] text-sm">⭐ Feature this product (Most Loved section)</span>
+              </label>
 
               {editingProduct && (
                 <label className="flex items-center gap-2 cursor-pointer">

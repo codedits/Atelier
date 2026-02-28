@@ -1062,6 +1062,88 @@ h6 {
   display: none;
 }
 
+/* ============================================ */
+/* ANNOUNCEMENT BANNER                         */
+/* ============================================ */
+
+@keyframes announcementSlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.announcement-slide-in {
+  animation: announcementSlideIn 0.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+@keyframes announcementShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0;  }
+}
+
+.announcement-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.06) 40%,
+    rgba(255,255,255,0.12) 50%,
+    rgba(255,255,255,0.06) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: announcementShimmer 3s ease-in-out infinite;
+}
+
+/* ============================================ */
+/* VALUE PROPOSITION TICKER                    */
+/* ============================================ */
+
+.value-ticker {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: marquee 30s linear infinite;
+  min-width: 200%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value-ticker {
+    animation: none;
+  }
+}
+
+/* ============================================ */
+/* TESTIMONIAL TICKER                          */
+/* ============================================ */
+
+.testimonial-ticker {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  animation: marquee 40s linear infinite;
+  min-width: 200%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-ticker {
+    animation: none;
+  }
+}
+
+/* ============================================ */
+/* SCROLLBAR HIDE UTILITY                      */
+/* ============================================ */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Vignette overlay for hero images */
 .vignette-overlay {
   background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%);

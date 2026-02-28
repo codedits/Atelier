@@ -45,28 +45,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'PUT') {
     try {
-      const { section_key, title, subtitle, content, image_url, cta_text, cta_link, is_active } = req.body
+      const { section_key, title, subtitle, content, image_url, cta_text, cta_link, metadata, is_active } = req.body
 
       if (!section_key) {
         return res.status(400).json({ error: 'section_key is required' })
       }
 
+      const upsertData: any = {
+        section_key,
+        title,
+        subtitle,
+        content,
+        image_url,
+        cta_text,
+        cta_link,
+        is_active: is_active !== undefined ? is_active : true
+      }
+      if (metadata !== undefined) {
+        upsertData.metadata = metadata
+      }
+
       const { data, error } = await supabaseAdmin
         .from('homepage_sections')
-        .upsert({
-          section_key,
-          title,
-          subtitle,
-          content,
-          image_url,
-          cta_text,
-          cta_link,
-          is_active: is_active !== undefined ? is_active : true
-        } as any)
+        .upsert(upsertData)
         .select()
         .single()
 
       if (error) throw error
+
+      // Bust caches
+      const { invalidateSSGCache } = await import('@/lib/cache')
+      invalidateSSGCache('homepage_sections')
+      try { await res.revalidate('/') } catch {}
+
       return res.status(200).json(data)
     } catch (err: any) {
       return res.status(500).json({ error: err.message })
