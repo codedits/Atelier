@@ -1,81 +1,51 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase, Product } from '@/lib/supabase'
+import { apiCache, makeCacheKey } from '@/lib/server-cache'
 
-// Simple in-memory cache for API responses
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 30 * 1000 // 30 seconds
-
-function getCacheKey(query: Record<string, any>): string {
-  return JSON.stringify(query)
-}
+const PRODUCTS_TTL = 300_000 // 5 minutes (matches s-maxage)
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === 'GET') {
-    // Query params for filtering
     const { category, gender, minPrice, maxPrice, limit, offset, search } = req.query
-    const cacheKey = getCacheKey(req.query)
+    const cacheKey = makeCacheKey('api:products', req.query)
 
-    // Check cache first
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      res.setHeader('X-Cache', 'HIT')
-      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
-      return res.status(200).json(cached.data)
-    }
+    const { data, hit } = await apiCache.getOrFetch<Product[]>(
+      cacheKey,
+      async () => {
+        let query = supabase
+          .from('products')
+          .select('id, name, slug, price, old_price, category, gender, image_url, images, stock, is_hidden, created_at')
+          .order('created_at', { ascending: false })
 
-    let query = supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false })
+        // Only show visible products (not hidden)
+        query = query.or('is_hidden.is.null,is_hidden.eq.false')
 
-    // Only show visible products (not hidden) - check if column exists first
-    // If is_hidden column doesn't exist, this will be ignored by Supabase
-    try {
-      query = query.or('is_hidden.is.null,is_hidden.eq.false')
-    } catch (e) {
-      // Column doesn't exist yet, continue without filter
-    }
+        // Apply filters
+        if (search) {
+          const searchTerm = String(search).trim()
+          const tsQuery = searchTerm.split(/\s+/).filter(Boolean).join(' & ')
+          query = query.or(`search_vector.fts.${tsQuery},name.ilike.%${searchTerm}%`)
+        }
+        if (category) query = query.eq('category', category)
+        if (gender) query = query.eq('gender', gender)
+        if (minPrice) query = query.gte('price', Number(minPrice))
+        if (maxPrice) query = query.lte('price', Number(maxPrice))
+        if (limit) query = query.limit(Number(limit))
+        if (offset) query = query.range(Number(offset), Number(offset) + Number(limit || 10) - 1)
 
-    // Apply filters
-    if (search) {
-      query = query.ilike('name', `%${search}%`)
-    }
-    if (category) {
-      query = query.eq('category', category)
-    }
-    if (gender) {
-      query = query.eq('gender', gender)
-    }
-    if (minPrice) {
-      query = query.gte('price', Number(minPrice))
-    }
-    if (maxPrice) {
-      query = query.lte('price', Number(maxPrice))
-    }
-    if (limit) {
-      query = query.limit(Number(limit))
-    }
-    if (offset) {
-      query = query.range(Number(offset), Number(offset) + Number(limit || 10) - 1)
-    }
+        const { data, error } = await query
+        if (error) throw error
+        return (data || []) as Product[]
+      },
+      { ttl: PRODUCTS_TTL, tags: ['products'], staleWhileRevalidate: true }
+    )
 
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Products fetch error:', error)
-      return res.status(500).json({ error: error.message })
-    }
-
-    // Store in cache
-    cache.set(cacheKey, { data: data as Product[], timestamp: Date.now() })
-
-    // Set cache headers for CDN/browser
-    res.setHeader('X-Cache', 'MISS')
-    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
-    return res.status(200).json(data as Product[])
+    res.setHeader('X-Cache', hit ? 'HIT' : 'MISS')
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+    return res.status(200).json(data)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

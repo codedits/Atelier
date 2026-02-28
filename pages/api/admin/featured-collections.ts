@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { supabase as supabaseAnon } from '@/lib/supabase'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -10,9 +12,7 @@ if (supabaseUrl && supabaseServiceKey) {
   supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 }
 
-// Simple in-memory cache for public GET requests
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 60 * 1000 // 60 seconds
+const COLLECTIONS_TTL = 60_000
 
 function getAdminFromRequest(req: NextApiRequest) {
   const authHeader = req.headers.authorization
@@ -43,46 +43,39 @@ async function deleteStorageFile(imageUrl: string, folder: string = 'collections
 
 // Invalidate cache when data changes
 function invalidateCache() {
-  cache.delete('featured-collections')
+  apiCache.invalidateByTag('featured_collections')
+  invalidateSSGCache('featured_collections')
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
-      // Check cache first
-      const cached = cache.get('featured-collections')
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        res.setHeader('X-Cache', 'HIT')
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-        return res.status(200).json(cached.data)
-      }
-
       const client = supabaseAdmin ?? supabaseAnon
-      const { data, error } = await client
-        .from('featured_collections')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
+      const { data, hit } = await apiCache.getOrFetch(
+        'api:admin:featured-collections',
+        async () => {
+          const { data, error } = await client
+            .from('featured_collections')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+          if (error) {
+            const msg = error?.message || String(error)
+            if (/find the table|does not exist|relation .* does not exist/i.test(msg)) {
+              console.warn('Featured collections table missing in DB; returning empty array')
+              return []
+            }
+            throw error
+          }
+          return data || []
+        },
+        { ttl: COLLECTIONS_TTL, tags: ['featured_collections'], staleWhileRevalidate: true }
+      )
 
-      if (error) {
-        const msg = error?.message || String(error)
-        console.error('Featured collections fetch error:', error)
-        // If the table doesn't exist yet in the Supabase project, return an empty list
-        // so the frontend doesn't crash. Recommend running the SQL setup to create tables.
-        if (/find the table|does not exist|relation .* does not exist/i.test(msg)) {
-          console.warn('Featured collections table missing in DB; returning empty array')
-          return res.status(200).json([])
-        }
-        return res.status(500).json({ error: msg })
-      }
-      
-      // Store in cache
-      cache.set('featured-collections', { data: data || [], timestamp: Date.now() })
-      
-      res.setHeader('X-Cache', 'MISS')
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-      return res.status(200).json(data || [])
+      res.setHeader('X-Cache', hit ? 'HIT' : 'MISS')
+      res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200')
+      return res.status(200).json(data)
     } catch (err: any) {
         const msg = err?.message || String(err)
         console.error('Featured collections fetch error:', err)

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { apiCache } from '@/lib/server-cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -69,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (error) throw error
 
+      apiCache.invalidateByTag('reviews')
       return res.status(200).json(review)
     } catch (error) {
       console.error('Error updating review:', error)
@@ -85,6 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (error) throw error
 
+      apiCache.invalidateByTag('reviews')
       return res.status(200).json({ message: 'Review deleted successfully' })
     } catch (error) {
       console.error('Error deleting review:', error)

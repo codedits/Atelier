@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -74,6 +77,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (error) {
       console.error('Product creation error:', error)
       return res.status(500).json({ error: error.message })
+    }
+    // Bust the frontend cache so the homepage new arrivals section regenerates
+    apiCache.invalidateByTag('products')
+    invalidateSSGCache('products')
+    try {
+      await res.revalidate('/')
+      await res.revalidate('/products')
+    } catch (e) {
+      console.warn('Failed to revalidate', e)
     }
     return res.status(201).json(data)
   }

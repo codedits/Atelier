@@ -3,11 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
   // Enable gzip/brotli compression
   compress: true,
-  // Reduce bundle size by removing console in prod
+  // Reduce bundle size by removing console in prod (keep error/warn for debugging)
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] }
+      : false,
   },
-  // Security headers for production
+  // All headers merged into a single function
   async headers() {
     return [
       {
@@ -42,7 +44,25 @@ const nextConfig = {
             value: 'camera=(), microphone=(), geolocation=()'
           }
         ]
-      }
+      },
+      {
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ]
   },
   // Reduce unused JavaScript
@@ -90,38 +110,6 @@ const nextConfig = {
     qualities: [75, 85],
     // Cache images for 30 days
     minimumCacheTTL: 60 * 60 * 24 * 30,
-  },
-  // Production caching headers for static assets
-  async headers() {
-    return [
-      {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300',
-          },
-        ],
-      },
-    ]
   },
 }
 

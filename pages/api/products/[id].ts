@@ -1,9 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase, Product } from '@/lib/supabase'
+import { apiCache } from '@/lib/server-cache'
 
-// Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 60 * 1000 // 60 seconds
+const PRODUCT_TTL = 600_000 // 10 minutes (matches s-maxage)
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,32 +11,29 @@ export default async function handler(
   const { id } = req.query
 
   if (req.method === 'GET') {
-    const cacheKey = `product-${id}`
-    
-    // Check cache first
-    const cached = cache.get(cacheKey)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      res.setHeader('X-Cache', 'HIT')
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-      return res.status(200).json(cached.data)
-    }
+    const cacheKey = `api:product:${id}`
 
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, hit } = await apiCache.getOrFetch<Product | null>(
+      cacheKey,
+      async () => {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single()
+        if (error) return null
+        return data as Product
+      },
+      { ttl: PRODUCT_TTL, tags: ['products'], staleWhileRevalidate: true }
+    )
 
-    if (error) {
+    if (!data) {
       return res.status(404).json({ error: 'Product not found' })
     }
 
-    // Store in cache
-    cache.set(cacheKey, { data: data as Product, timestamp: Date.now() })
-
-    res.setHeader('X-Cache', 'MISS')
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-    return res.status(200).json(data as Product)
+    res.setHeader('X-Cache', hit ? 'HIT' : 'MISS')
+    res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200')
+    return res.status(200).json(data)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

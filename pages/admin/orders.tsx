@@ -240,46 +240,46 @@ function OrdersContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]">{Icons.search}</span>
+        <div className="relative flex-1 min-w-0">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666]">{Icons.search}</span>
           <input
             type="text"
             placeholder="Search by name, phone, or order ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="admin-input w-full pl-9"
+            className="admin-input w-full pl-11 py-3"
           />
         </div>
-        <div className="flex gap-3">
-          <div className="relative">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative min-w-[140px]">
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 py-3 appearance-none cursor-pointer w-full"
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
               <option value="shipped">Shipped</option>
               <option value="delivered">Delivered</option>
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
-          <div className="relative">
+          <div className="relative min-w-[140px]">
             <select
               value={filterPayment}
               onChange={e => setFilterPayment(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 py-3 appearance-none cursor-pointer w-full"
             >
               <option value="">All Payments</option>
               <option value="pending">Unpaid</option>
               <option value="paid">Paid</option>
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
@@ -289,69 +289,68 @@ function OrdersContent() {
                 setShowDeleteAllModal(true)
                 setDeleteAllConfirmText('')
               }}
-              className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg border border-red-600/30 text-sm font-medium transition-colors"
+              className="px-5 py-3 bg-red-600/15 hover:bg-red-600/25 text-red-400 rounded-xl border border-red-600/25 text-sm font-medium transition-colors"
             >
-              Delete All Orders
+              Delete All
             </button>
           )}
         </div>
       </div>
 
       {/* Stats Bar */}
-      <div className="flex flex-wrap gap-4 text-sm">
-        <span className="text-[#666]">
-          Total: <span className="text-white">{orders.length}</span>
-        </span>
-        <span className="text-[#f5a623]">
-          Pending: {orders.filter(o => o.status === 'pending').length}
-        </span>
-        <span className="text-[#60a5fa]">
-          Shipped: {orders.filter(o => o.status === 'shipped').length}
-        </span>
-        <span className="text-[#50e3c2]">
-          Delivered: {orders.filter(o => o.status === 'delivered').length}
-        </span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-white">{orders.length}</p>
+          <p className="text-[#666] text-xs mt-1">Total Orders</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-[#f5a623]">{orders.filter(o => o.status === 'pending').length}</p>
+          <p className="text-[#666] text-xs mt-1">Pending</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-[#60a5fa]">{orders.filter(o => o.status === 'shipped').length}</p>
+          <p className="text-[#666] text-xs mt-1">Shipped</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-[#50e3c2]">{orders.filter(o => o.status === 'delivered').length}</p>
+          <p className="text-[#666] text-xs mt-1">Delivered</p>
+        </div>
       </div>
 
       {/* Orders Table */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Order ID</th>
                 <th>Customer</th>
-                <th>Total</th>
+                <th className="hidden sm:table-cell">Total</th>
                 <th>Payment</th>
                 <th>Status</th>
-                <th>Date</th>
+                <th className="hidden md:table-cell">Date</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredOrders.map(order => (
-                <tr key={order.id}>
+                <tr key={order.id} className="hover:bg-[#111]">
                   <td>
-                    <span className="text-[#666] font-mono text-xs">
-                      {order.id.slice(0, 8)}...
-                    </span>
-                  </td>
-                  <td>
-                    <div>
-                      <p className="text-white text-sm">{order.user_name}</p>
-                      <p className="text-[#666] text-xs">{order.phone}</p>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{order.user_name}</p>
+                      <p className="text-[#555] text-xs truncate">{order.phone}</p>
+                      <p className="text-[#444] font-mono text-[10px] mt-0.5 sm:hidden">₨{order.total_price}</p>
                     </div>
                   </td>
-                  <td>
+                  <td className="hidden sm:table-cell">
                     <span className="text-white text-sm font-medium">₨{order.total_price}</span>
-                    <span className="text-[#666] text-xs ml-1">({order.payment_method})</span>
+                    <span className="text-[#555] text-xs ml-1">({order.payment_method})</span>
                   </td>
                   <td>
                     <div className="relative inline-block">
                       <select
                         value={order.payment_status}
                         onChange={e => updatePaymentStatus(order.id, e.target.value)}
-                        className={`${getPaymentBadge(order.payment_status)} cursor-pointer appearance-none pr-6 border-0`}
+                        className={`${getPaymentBadge(order.payment_status)} cursor-pointer appearance-none pr-6 border-0 text-xs`}
                       >
                         <option value="pending">Unpaid</option>
                         <option value="paid">Paid</option>
@@ -368,7 +367,7 @@ function OrdersContent() {
                       <select
                         value={order.status}
                         onChange={e => updateOrderStatus(order.id, e.target.value)}
-                        className={`${getStatusBadge(order.status)} cursor-pointer appearance-none pr-6 border-0 capitalize`}
+                        className={`${getStatusBadge(order.status)} cursor-pointer appearance-none pr-6 border-0 capitalize text-xs`}
                       >
                         <option value="pending">Pending</option>
                         <option value="shipped">Shipped</option>
@@ -381,17 +380,17 @@ function OrdersContent() {
                       </span>
                     </div>
                   </td>
-                  <td>
-                    <span className="text-[#666] text-xs">{formatDate(order.created_at)}</span>
+                  <td className="hidden md:table-cell">
+                    <span className="text-[#555] text-xs">{formatDate(order.created_at)}</span>
                   </td>
                   <td className="text-right">
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center gap-1 justify-end">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1 text-[#888] hover:text-white text-sm transition-colors"
+                        className="px-3 py-2 text-[#888] hover:text-white hover:bg-[#1a1a1a] rounded-lg text-sm transition-colors inline-flex items-center gap-1.5"
                       >
                         {Icons.eye}
-                        <span>View</span>
+                        <span className="hidden sm:inline">View</span>
                       </button>
                       
                       <button
@@ -399,12 +398,12 @@ function OrdersContent() {
                           setOrderToDelete(order)
                           setShowDeleteModal(true)
                         }}
-                        className="inline-flex items-center gap-1 text-[#f87171] hover:text-[#ef4444] text-sm transition-colors"
+                        className="px-3 py-2 text-[#666] hover:text-[#ff6166] hover:bg-[#ff6166]/10 rounded-lg text-sm transition-colors inline-flex items-center gap-1.5"
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        <span>Remove</span>
+                        <span className="hidden sm:inline">Remove</span>
                         </button>
                     </div>
                   </td>
@@ -415,66 +414,72 @@ function OrdersContent() {
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="p-12 text-center text-[#666]">
-            <p>No orders found</p>
+          <div className="p-16 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">No orders found</p>
+            <p className="text-[#555] text-sm">Try adjusting your search or filters.</p>
           </div>
         )}
       </div>
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#262626] flex justify-between items-start">
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-hidden shadow-2xl">
+            <div className="px-6 py-5 border-b border-[#1a1a1a] flex justify-between items-start">
               <div>
-                <h2 className="text-white text-[15px] font-medium">Order Details</h2>
-                <p className="text-[#666] text-xs font-mono mt-1">{selectedOrder.id}</p>
+                <h2 className="text-white text-base font-semibold">Order Details</h2>
+                <p className="text-[#555] text-xs font-mono mt-1">{selectedOrder.id}</p>
               </div>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="text-[#666] hover:text-white transition-colors"
+                className="w-9 h-9 flex items-center justify-center text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
               >
                 {Icons.close}
               </button>
             </div>
 
-            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-80px)] admin-scrollbar">
               {/* Customer Info */}
               <div>
-                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Customer</h3>
-                <div className="bg-[#111] border border-[#262626] rounded-lg p-4">
-                  <p className="text-white text-sm">{selectedOrder.user_name}</p>
-                  <p className="text-[#888] text-sm mt-1">{selectedOrder.phone}</p>
-                  <p className="text-[#666] text-sm mt-2">{selectedOrder.address}</p>
+                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Customer</h3>
+                <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
+                  <p className="text-white text-sm font-medium">{selectedOrder.user_name}</p>
+                  <p className="text-[#888] text-sm mt-1.5">{selectedOrder.phone}</p>
+                  <p className="text-[#666] text-sm mt-2.5 leading-relaxed">{selectedOrder.address}</p>
                 </div>
               </div>
 
               {/* Items */}
               <div>
-                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Items</h3>
-                <div className="bg-[#111] border border-[#262626] rounded-lg divide-y divide-[#262626]">
+                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Items</h3>
+                <div className="bg-[#111] border border-[#1a1a1a] rounded-xl divide-y divide-[#1a1a1a] overflow-hidden">
                   {(selectedOrder.items as OrderItem[]).map((item, i) => (
-                    <div key={i} className="flex justify-between p-4">
+                    <div key={i} className="flex justify-between p-4 sm:p-5">
                       <div>
-                        <p className="text-white text-sm">{item.name}</p>
-                        <p className="text-[#666] text-xs mt-1">Qty: {item.quantity}</p>
+                        <p className="text-white text-sm font-medium">{item.name}</p>
+                        <p className="text-[#555] text-xs mt-1">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-white text-sm">₨{item.price * item.quantity}</p>
+                      <p className="text-white text-sm font-medium">₨{item.price * item.quantity}</p>
                     </div>
                   ))}
-                  <div className="p-4 flex justify-between bg-[#0a0a0a]">
-                    <span className="text-[#888] text-sm">Total</span>
-                    <span className="text-white font-semibold">₨{selectedOrder.total_price}</span>
+                  <div className="p-4 sm:p-5 flex justify-between bg-[#0d0d0d]">
+                    <span className="text-[#888] text-sm font-medium">Total</span>
+                    <span className="text-white font-bold text-base">₨{selectedOrder.total_price}</span>
                   </div>
                 </div>
               </div>
 
               {/* Payment & Status */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Payment</h3>
-                  <div className="bg-[#111] border border-[#262626] rounded-lg p-4">
-                    <p className="text-white text-sm mb-2">{selectedOrder.payment_method}</p>
+                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Payment</h3>
+                  <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
+                    <p className="text-white text-sm mb-3">{selectedOrder.payment_method}</p>
                     <div className="relative inline-block">
                       <select
                         value={selectedOrder.payment_status}
@@ -497,8 +502,8 @@ function OrdersContent() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Status</h3>
-                  <div className="bg-[#111] border border-[#262626] rounded-lg p-4">
+                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Status</h3>
+                  <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5">
                     <div className="relative inline-block">
                       <select
                         value={selectedOrder.status}
@@ -522,40 +527,40 @@ function OrdersContent() {
               {/* Payment Proof (for COD orders) */}
               {selectedOrder.payment_method === 'COD' && selectedOrder.payment_proof && (
                 <div>
-                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Payment Proof</h3>
-                  <div className="bg-[#111] border border-[#262626] rounded-lg p-4 space-y-4">
+                  <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Payment Proof</h3>
+                  <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-5 space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-[#888]">Method:</span>
-                        <p className="text-white capitalize">{selectedOrder.payment_proof.payment_method}</p>
+                        <span className="text-[#666] text-xs">Method</span>
+                        <p className="text-white capitalize mt-0.5">{selectedOrder.payment_proof.payment_method}</p>
                       </div>
                       <div>
-                        <span className="text-[#888]">Transaction ID:</span>
-                        <p className="text-white font-mono text-xs">{selectedOrder.payment_proof.transaction_id}</p>
+                        <span className="text-[#666] text-xs">Transaction ID</span>
+                        <p className="text-white font-mono text-xs mt-0.5">{selectedOrder.payment_proof.transaction_id}</p>
                       </div>
                       <div>
-                        <span className="text-[#888]">Amount:</span>
-                        <p className="text-white">₨{selectedOrder.payment_proof.delivery_fee_paid}</p>
+                        <span className="text-[#666] text-xs">Amount</span>
+                        <p className="text-white mt-0.5">₨{selectedOrder.payment_proof.delivery_fee_paid}</p>
                       </div>
                       <div>
-                        <span className="text-[#888]">Uploaded:</span>
-                        <p className="text-white text-xs">{new Date(selectedOrder.payment_proof.uploaded_at).toLocaleDateString()}</p>
+                        <span className="text-[#666] text-xs">Uploaded</span>
+                        <p className="text-white text-xs mt-0.5">{new Date(selectedOrder.payment_proof.uploaded_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                     
                     {selectedOrder.payment_proof.screenshot_url && (
                       <div>
-                        <span className="text-[#888] text-sm mb-2 block">Payment Screenshot:</span>
-                        <div className="relative">
+                        <span className="text-[#666] text-xs mb-2 block">Payment Screenshot</span>
+                        <div className="relative rounded-xl overflow-hidden border border-[#1a1a1a]">
                           <img
                             src={selectedOrder.payment_proof?.screenshot_url}
                             alt="Payment proof"
-                            className="max-w-full max-h-48 rounded border border-[#262626] cursor-pointer"
+                            className="max-w-full max-h-48 rounded-xl cursor-pointer"
                             onClick={() => window.open(selectedOrder.payment_proof?.screenshot_url, '_blank')}
                           />
                           <button
                             onClick={() => window.open(selectedOrder.payment_proof?.screenshot_url, '_blank')}
-                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded text-xs hover:bg-black/70 transition-colors"
+                            className="absolute top-2 right-2 bg-black/60 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-black/80 transition-colors"
                           >
                             View Full Size
                           </button>
@@ -568,7 +573,7 @@ function OrdersContent() {
 
               {/* Date */}
               <div>
-                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wide mb-3">Order Date</h3>
+                <h3 className="text-[#888] text-xs font-medium uppercase tracking-wider mb-3">Order Date</h3>
                 <p className="text-white text-sm">{formatDate(selectedOrder.created_at)}</p>
               </div>
             </div>
@@ -578,37 +583,33 @@ function OrdersContent() {
 
       {/* Delete Order Modal */}
       {showDeleteModal && orderToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-md w-full p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-white font-medium mb-2">Remove Order</h3>
-                <p className="text-[#888] text-sm mb-4">
-                  Are you sure you want to permanently remove order <span className="text-white font-mono">#{orderToDelete.id.slice(0, 8)}</span>? This action cannot be undone.
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => {
-                      setShowDeleteModal(false)
-                      setOrderToDelete(null)
-                    }}
-                    className="px-4 py-2 text-[#888] hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteOrder}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                  >
-                    Remove Order
-                  </button>
-                </div>
-              </div>
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl w-full max-w-sm p-6 sm:p-8 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-[#ff4444]/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-5 h-5 text-[#ff6166]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </div>
+            <h3 className="text-white text-base font-semibold mb-2 text-center">Remove Order</h3>
+            <p className="text-[#777] text-sm mb-6 text-center">
+              Permanently remove order <span className="text-white font-mono">#{orderToDelete.id.slice(0, 8)}</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setOrderToDelete(null)
+                }}
+                className="flex-1 admin-btn admin-btn-secondary py-2.5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteOrder}
+                className="flex-1 admin-btn admin-btn-danger py-2.5"
+              >
+                Remove
+              </button>
             </div>
           </div>
         </div>
@@ -616,53 +617,49 @@ function OrdersContent() {
 
       {/* Delete All Orders Modal */}
       {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-md w-full p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-white font-medium mb-2">⚠️ Delete All Orders</h3>
-                <p className="text-[#888] text-sm mb-2">
-                  This will permanently delete <span className="text-white font-bold">{orders.length} order{orders.length !== 1 ? 's' : ''}</span> and restore inventory for all items.
-                </p>
-                <p className="text-[#888] text-sm mb-4">
-                  <span className="text-red-400">This action cannot be undone.</span>
-                </p>
-                <div className="mb-4">
-                  <label className="text-[#888] text-xs font-medium mb-2 block">
-                    Type the number of orders ({orders.length}) to confirm:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={String(orders.length)}
-                    value={deleteAllConfirmText}
-                    onChange={e => setDeleteAllConfirmText(e.target.value)}
-                    className="w-full bg-[#111] border border-[#262626] rounded-lg px-3 py-2 text-white placeholder-[#444] text-sm focus:outline-none focus:border-[#444]"
-                  />
-                </div>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => {
-                      setShowDeleteAllModal(false)
-                      setDeleteAllConfirmText('')
-                    }}
-                    className="px-4 py-2 text-[#888] hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteAllOrders}
-                    disabled={isDeleteAllLoading || deleteAllConfirmText !== String(orders.length)}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                  >
-                    {isDeleteAllLoading ? 'Deleting...' : 'Delete All Orders'}
-                  </button>
-                </div>
-              </div>
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl w-full max-w-sm p-6 sm:p-8 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-[#ff4444]/10 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-5 h-5 text-[#ff6166]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </div>
+            <h3 className="text-white text-base font-semibold mb-2 text-center">Delete All Orders</h3>
+            <p className="text-[#777] text-sm mb-1 text-center">
+              This will permanently delete <span className="text-white font-bold">{orders.length} order{orders.length !== 1 ? 's' : ''}</span> and restore inventory.
+            </p>
+            <p className="text-red-400 text-sm mb-5 text-center">
+              This action cannot be undone.
+            </p>
+            <div className="mb-5">
+              <label className="text-[#888] text-xs font-medium mb-2 block">
+                Type the number of orders ({orders.length}) to confirm:
+              </label>
+              <input
+                type="text"
+                placeholder={String(orders.length)}
+                value={deleteAllConfirmText}
+                onChange={e => setDeleteAllConfirmText(e.target.value)}
+                className="admin-input w-full py-3 px-4 text-sm"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteAllModal(false)
+                  setDeleteAllConfirmText('')
+                }}
+                className="flex-1 admin-btn admin-btn-secondary py-2.5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAllOrders}
+                disabled={isDeleteAllLoading || deleteAllConfirmText !== String(orders.length)}
+                className="flex-1 admin-btn admin-btn-danger py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleteAllLoading ? 'Deleting...' : 'Delete All'}
+              </button>
             </div>
           </div>
         </div>
@@ -678,7 +675,7 @@ export default function AdminOrders() {
         <Head>
           <title>Orders — Atelier Admin</title>
         </Head>
-        <AdminLayout title="Orders">
+        <AdminLayout title="Orders" subtitle="Track and manage customer orders">
           <OrdersContent />
         </AdminLayout>
       </ToastProvider>

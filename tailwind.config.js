@@ -22,6 +22,7 @@ module.exports = {
       },
       fontFamily: {
         display: ['Cinzel', 'serif'],
+        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
         sans: ['Poppins', 'system-ui', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],
       },

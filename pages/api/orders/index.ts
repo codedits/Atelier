@@ -23,7 +23,7 @@ export default async function handler(
     try {
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('id, user_name, phone, address, email, items, total_price, payment_method, payment_status, status, created_at, updated_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -31,6 +31,7 @@ export default async function handler(
         return res.status(500).json({ error: error.message })
       }
 
+      res.setHeader('Cache-Control', 'private, s-maxage=0, max-age=30')
       return res.status(200).json(orders)
     } catch (error) {
       console.error('Orders fetch error:', error)
@@ -140,21 +141,39 @@ export default async function handler(
 
     console.log('Order created successfully:', data.id)
 
-    // Reduce stock for ordered products
-    for (const item of items) {
-      if (item.product_id && item.quantity > 0) {
-        // Try RPC first, fall back to direct update
-        const { error: rpcError } = await supabase.rpc('decrement_stock', {
-          p_id: item.product_id,
-          qty: item.quantity,
-        })
-        
-        if (rpcError) {
-          // If RPC doesn't exist, do manual update with raw SQL
-          await supabase
-            .from('products')
-            .update({ stock: Math.max(0, (item.stock || 0) - item.quantity) })
-            .eq('id', item.product_id)
+    // Reduce stock for ordered products in batch
+    const stockUpdates = items
+      .filter((item: any) => item.product_id && item.quantity > 0)
+      .map((item: any) => ({ id: item.product_id, qty: item.quantity }))
+
+    if (stockUpdates.length > 0) {
+      // Try batch RPC first (handles all items in one transaction)
+      const { error: rpcError } = await supabase.rpc('decrement_stock_batch', {
+        updates: stockUpdates,
+      })
+
+      if (rpcError) {
+        // Fallback: try individual RPC calls
+        for (const update of stockUpdates) {
+          const { error: singleRpcError } = await supabase.rpc('decrement_stock', {
+            p_id: update.id,
+            qty: update.qty,
+          })
+
+          if (singleRpcError) {
+            // Last resort: fetch current stock and update directly
+            const { data: currentProduct } = await supabase
+              .from('products')
+              .select('stock')
+              .eq('id', update.id)
+              .single()
+            if (currentProduct) {
+              await supabase
+                .from('products')
+                .update({ stock: Math.max(0, (currentProduct.stock || 0) - update.qty) })
+                .eq('id', update.id)
+            }
+          }
         }
       }
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useEffect, useCallback, useRef, memo } from 'react'
 import Image from 'next/image'
 
 interface ProductCarouselProps {
@@ -10,6 +10,8 @@ interface ProductCarouselProps {
 // Memoized to prevent re-renders
 const ProductCarousel = memo(function ProductCarousel({ images, productName, saleBadge }: ProductCarouselProps) {
   const [selected, setSelected] = useState(0)
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
 
   // Reset to first image when images change
   useEffect(() => {
@@ -31,12 +33,34 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
     setSelected(idx)
   }, [])
 
+  // Touch/swipe handlers for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchEndX.current = e.touches[0].clientX
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }, [])
+
+  const handleTouchEnd = useCallback(() => {
+    const diff = touchStartX.current - touchEndX.current
+    const threshold = 50 // minimum swipe distance in px
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) goNext()   // swipe left → next
+      else goPrev()            // swipe right → prev
+    }
+  }, [goNext, goPrev])
+
   return (
     <div className="space-y-4 contain-layout">
       {/* Main Image - 4:5 aspect ratio */}
       <div
-        className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden contain-paint"
+        className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden contain-paint touch-pan-y"
         style={{ aspectRatio: '4 / 5' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {images[selected] ? (
           <Image
@@ -58,7 +82,7 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
 
         {/* Sale Badge */}
         {saleBadge && (
-          <div className="absolute top-4 left-4 bg-[#B91C1C] text-white text-sm font-medium px-3 py-1.5 rounded z-10">
+          <div className="absolute top-4 left-4 bg-[#1A1A1A] text-white text-[10px] font-medium uppercase tracking-[0.15em] px-3 py-1.5 z-10">
             {saleBadge}
           </div>
         )}
@@ -115,8 +139,8 @@ const ProductCarousel = memo(function ProductCarousel({ images, productName, sal
               onClick={() => selectImage(idx)}
               className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-all duration-150 ${
                 idx === selected
-                  ? 'border-[#B91C1C] ring-2 ring-[#B91C1C]/30'
-                  : 'border-transparent hover:border-[#B91C1C]/50'
+                  ? 'border-[#1A1A1A] ring-2 ring-[#1A1A1A]/30'
+                  : 'border-transparent hover:border-[#1A1A1A]/50'
               }`}
             >
               <div className="relative w-full h-full bg-[#F8F7F5]">

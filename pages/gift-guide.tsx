@@ -1,4 +1,4 @@
-import { Header } from '@/components'
+﻿import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Image from 'next/image'
@@ -16,42 +16,42 @@ const giftGuideCategories: GiftGuideCategory[] = [
   {
     title: 'For the Romantic',
     description: 'Express your deepest affection with timeless pieces that celebrate love and devotion.',
-    priceRange: '₨15,000 - ₨100,000+',
+    priceRange: 'â‚¨15,000 - â‚¨100,000+',
     items: ['Diamond Pendants', 'Engagement Rings', 'Couple Bracelets', 'Romantic Earrings', 'Love Bracelets'],
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop'
   },
   {
     title: 'For the Modern Woman',
     description: 'Contemporary designs that blend elegance with bold, statement-making style.',
-    priceRange: '₨8,000 - ₨50,000',
+    priceRange: 'â‚¨8,000 - â‚¨50,000',
     items: ['Geometric Rings', 'Minimalist Necklaces', 'Statement Earrings', 'Modern Bracelets', 'Sleek Pendants'],
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop'
   },
   {
     title: 'For the Sophisticated Man',
     description: 'Refined pieces crafted for the discerning gentleman who appreciates quality.',
-    priceRange: '₨10,000 - ₨75,000',
+    priceRange: 'â‚¨10,000 - â‚¨75,000',
     items: ['Cufflinks', 'Rings', 'Chains', 'Bracelets', 'Signet Rings'],
     image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop'
   },
   {
     title: 'For the Trendsetter',
     description: 'Bold, innovative designs that push boundaries and make a fashion statement.',
-    priceRange: '₨7,000 - ₨40,000',
+    priceRange: 'â‚¨7,000 - â‚¨40,000',
     items: ['Colored Gemstones', 'Avant-Garde Designs', 'Mixed Metals', 'Statement Pieces', 'Unique Cuts'],
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop'
   },
   {
     title: 'For the Minimalist',
     description: 'Clean, understated elegance that speaks volumes through simplicity.',
-    priceRange: '₨5,000 - ₨35,000',
+    priceRange: 'â‚¨5,000 - â‚¨35,000',
     items: ['Simple Bands', 'Delicate Chains', 'Studs', 'Thin Bracelets', 'Essential Pieces'],
     image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600&h=600&fit=crop'
   },
   {
     title: 'For Milestone Moments',
     description: 'Celebrate life\'s most important moments with jewelry that becomes heirloom-worthy.',
-    priceRange: '₨20,000 - ₨150,000+',
+    priceRange: 'â‚¨20,000 - â‚¨150,000+',
     items: ['Birthstone Rings', 'Anniversary Pieces', 'Graduation Gifts', 'Birthday Specials', 'Custom Creations'],
     image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop'
   }
@@ -110,14 +110,14 @@ export default function GiftGuide() {
                     </p>
                     <div className="mb-6">
                       <p className="text-sm font-semibold text-[#1A1A1A] mb-2">PRICE RANGE</p>
-                      <p className="text-[#B91C1C] font-medium text-lg">{category.priceRange}</p>
+                      <p className="text-[#1A1A1A] font-medium text-lg">{category.priceRange}</p>
                     </div>
                     <div className="mb-6">
                       <p className="text-sm font-semibold text-[#1A1A1A] mb-3">COLLECTION INCLUDES</p>
                       <ul className="space-y-2">
                         {category.items.map((item, i) => (
                           <li key={i} className="flex items-center gap-2 text-[#6B6B6B]">
-                            <span className="w-1.5 h-1.5 bg-[#B91C1C] rounded-full"></span>
+                            <span className="w-1.5 h-1.5 bg-[#1A1A1A] rounded-full"></span>
                             {item}
                           </li>
                         ))}
@@ -185,7 +185,7 @@ export default function GiftGuide() {
               Our expert team is ready to help you find the perfect piece. Schedule a personal consultation or call us for styling advice tailored to your recipient.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-[#1A1A1A] text-white rounded hover:bg-[#B91C1C] transition-colors font-medium">
+              <button className="px-8 py-3 bg-[#1A1A1A] text-white rounded hover:bg-[#333] transition-colors font-medium">
                 Schedule Consultation
               </button>
               <a 

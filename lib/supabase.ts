@@ -9,6 +9,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface Product {
   id: string
   name: string
+  slug?: string
+  sku?: string
   description: string
   price: number
   old_price?: number
@@ -45,6 +47,7 @@ export interface PaymentProof {
 export interface Order {
   id: string
   user_name: string
+  email?: string
   phone: string
   address: string
   items: OrderItem[]
@@ -53,8 +56,25 @@ export interface Order {
   payment_status: 'pending' | 'paid' | 'proof_pending' | 'proof_submitted' | 'verified' | 'rejected'
   status: 'pending' | 'shipped' | 'delivered' | 'cancelled'
   payment_proof?: PaymentProof
+  tracking_number?: string
+  shipping_method?: string
+  coupon_code?: string
+  discount_amount?: number
   created_at: string
-  user_email?: string
+  updated_at?: string
+  user_id?: string
+}
+
+export interface OrderStatusHistory {
+  id: string
+  order_id: string
+  old_status?: string
+  new_status: string
+  old_payment_status?: string
+  new_payment_status?: string
+  changed_by?: string
+  note?: string
+  created_at: string
 }
 
 export interface Favorite {
@@ -87,4 +107,21 @@ export interface ProductReviewStats {
   three_star: number
   two_star: number
   one_star: number
+}
+
+export interface Coupon {
+  id: string
+  code: string
+  description?: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  min_order_amount?: number
+  max_discount_amount?: number
+  usage_limit?: number
+  used_count: number
+  is_active: boolean
+  starts_at: string
+  expires_at?: string
+  created_at: string
+  updated_at: string
 }

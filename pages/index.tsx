@@ -1,16 +1,28 @@
 import Head from 'next/head'
-import { motion } from 'framer-motion'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
+import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { GetStaticProps } from 'next'
 import { supabase } from '@/lib/supabase'
-import { 
-  Header, 
-  Hero, 
+import {
+  getCachedSiteConfig,
+  getCachedHeroImages,
+  getCachedFeaturedCollections,
+  getCachedNewArrivals,
+  getCachedTestimonials,
+  getCachedCollectionsHighlight
+} from '@/lib/cache'
+import {
+  Header,
+  Hero,
   ProductCard,
   FeaturedCollections,
   LogoMarquee,
 } from '../components'
+import { HeroImage } from '../components/Hero'
+import { Testimonial } from '../components/Testimonials'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 import { SITE_URL, SITE_NAME, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL } from '@/lib/constants'
 
@@ -28,6 +40,7 @@ const Footer = dynamic(() => import('../components/Footer'), { ssr: true })
 interface Product {
   id: string
   name: string
+  slug?: string
   price: number
   old_price?: number
   category: string
@@ -48,32 +61,24 @@ interface Collection {
 interface HomeProps {
   newArrivals: Product[]
   featuredCollections: Collection[]
+  layout: string[]
+  heroImages: HeroImage[]
+  testimonials: Testimonial[]
+  collectionsHighlight: any[]
+  siteConfig: any
 }
 
 // SSG with ISR - Pre-render at build time, revalidate every 60 seconds
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-  // Fetch products and collections in parallel
-  const [productsResult, collectionsResult] = await Promise.all([
-    supabase
-      .from('products')
-      .select('id, name, price, old_price, category, image_url, images, is_hidden')
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .limit(3),
-    supabase
-      .from('featured_collections')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
+  // Fetch cached products, collections, layout config, hero images, testimonials, and collections highlight in parallel
+  const [productsData, collectionsData, configData, heroImagesData, testimonialsData, collectionsHighlightData] = await Promise.all([
+    getCachedNewArrivals(),
+    getCachedFeaturedCollections(),
+    getCachedSiteConfig(),
+    getCachedHeroImages(),
+    getCachedTestimonials(),
+    getCachedCollectionsHighlight()
   ])
-
-  if (productsResult.error) {
-    console.error('Error fetching new arrivals:', productsResult.error)
-  }
-  
-  if (collectionsResult.error) {
-    console.error('Error fetching featured collections:', collectionsResult.error)
-  }
 
   // Default collections fallback
   const defaultCollections = [
@@ -85,7 +90,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       display_order: 0
     },
     {
-      id: '2', 
+      id: '2',
       title: "Necklaces",
       image_url: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=800&auto=format&fit=crop",
       link: "/products?category=necklaces",
@@ -107,28 +112,156 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     }
   ]
 
+  // Default layout fallback
+  const defaultLayout = [
+    'hero', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+  ]
+
   return {
     props: {
-      newArrivals: (productsResult.data || []) as Product[],
-      featuredCollections: (collectionsResult.data && collectionsResult.data.length > 0) 
-        ? collectionsResult.data as Collection[]
+      newArrivals: (productsData || []) as Product[],
+      featuredCollections: (collectionsData && collectionsData.length > 0)
+        ? collectionsData as Collection[]
         : defaultCollections,
+      layout: configData?.homepage_layout || defaultLayout,
+      heroImages: (heroImagesData || []) as HeroImage[],
+      testimonials: (testimonialsData || []) as Testimonial[],
+      collectionsHighlight: collectionsHighlightData || [],
+      siteConfig: configData || null,
     },
-    revalidate: 60, // ISR: Regenerate page every 60 seconds
+    revalidate: 3600, // ISR: Regenerate page every 1 hour
   }
 }
 
-export default function Home({ newArrivals, featuredCollections }: HomeProps) {
+export default function Home({ newArrivals, featuredCollections, layout, heroImages, testimonials, collectionsHighlight }: HomeProps) {
   // Memoize for stable reference
   const products = useMemo(() => newArrivals, [newArrivals])
   const collections = useMemo(() => featuredCollections, [featuredCollections])
+
+  const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
+
+  const activeLayout = layout && layout.length > 0 ? layout : [
+    'hero', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+  ]
+
+  const renderSection = (sectionId: string, index: number) => {
+    switch (sectionId) {
+      case 'hero':
+        return <Hero key={sectionId} heroImages={heroImages} />
+      case 'value_proposition':
+        return <ValueProposition key={sectionId} />
+      case 'featured_collections':
+        return <FeaturedCollections key={sectionId} collections={collections} />
+      case 'logo_marquee':
+        return <LogoMarquee key={sectionId} />
+      case 'collections_highlight':
+        return <CollectionsHighlight key={sectionId} highlights={collectionsHighlight.length > 0 ? collectionsHighlight : undefined} />
+      case 'process_steps':
+        return <ProcessSteps key={sectionId} />
+      case 'craftsmanship':
+        return <Craftsmanship key={sectionId} />
+      case 'new_arrivals':
+        return (
+          <section
+            key={sectionId}
+            id="new-arrivals"
+            className="luxury-section bg-[#FAF9F6] will-change-transform"
+          >
+            <div className="max-w-7xl mx-auto px-6 lg:px-8" ref={sectionRef}>
+              <div
+                className={cn(
+                  "text-center mb-16 md:mb-20 transition-all duration-700 invisible-before-reveal",
+                  isIntersecting && "reveal-slide-up"
+                )}
+              >
+                <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
+                  Latest Creations
+                </p>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium mb-6 text-[#1A1A1A]">New Arrivals</h2>
+                <div className="luxury-divider mt-6">
+                  <div className="luxury-divider-diamond" />
+                </div>
+              </div>
+
+              {products.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {products.map((product, pIndex) => (
+                    <div
+                      key={product.id}
+                      className={cn(
+                        "will-change-transform invisible-before-reveal min-h-[400px]",
+                        isIntersecting && "reveal-slide-up"
+                      )}
+                      style={{ animationDelay: isIntersecting ? `${pIndex * 120}ms` : '0ms' }}
+                    >
+                      <ProductCard
+                        id={product.id}
+                        slug={product.slug}
+                        name={product.name}
+                        price={product.price}
+                        oldPrice={product.old_price}
+                        img={product.image_url}
+                        images={product.images}
+                        category={product.category}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex flex-col space-y-4">
+                      <Skeleton className="h-[400px] w-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div
+                className={cn(
+                  "text-center mt-16 invisible-before-reveal",
+                  isIntersecting && "reveal-slide-up"
+                )}
+                style={{ animationDelay: isIntersecting ? '300ms' : '0ms' }}
+              >
+                <a
+                  href="/products"
+                  className="btn-luxury group inline-flex"
+                  style={{ borderColor: '#1A1A1A', color: '#1A1A1A' }}
+                >
+                  <span>View All Products</span>
+                  <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ position: 'relative', zIndex: 1 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </section>
+        )
+      case 'testimonials':
+        return <Testimonials key={sectionId} testimonials={testimonials} />
+      case 'instagram_gallery':
+        return <InstagramGallery key={sectionId} />
+      case 'newsletter':
+        return <Newsletter key={sectionId} />
+      default:
+        return null
+    }
+  }
+
   return (
     <>
       <Head>
         <title>Atelier — Luxury Fine Jewellery | Handcrafted Rings, Necklaces & More</title>
         <meta name="description" content="Discover exquisite handcrafted fine jewellery at Atelier. Shop luxury rings, necklaces, bracelets, and earrings crafted by master artisans with premium 18k gold and diamonds." />
         <meta name="keywords" content="fine jewellery, luxury jewelry, handcrafted rings, gold necklaces, diamond earrings, bracelets, artisan jewelry, 18k gold, premium accessories" />
-        
+
         {/* Open Graph */}
         <meta property="og:title" content="Atelier — Luxury Fine Jewellery | Timeless Elegance" />
         <meta property="og:description" content="Fine jewellery handcrafted by master artisans. Shop rings, necklaces, bracelets and more with worldwide shipping." />
@@ -137,214 +270,121 @@ export default function Home({ newArrivals, featuredCollections }: HomeProps) {
         <meta property="og:image:height" content="630" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'} />
-        
+
         {/* Twitter */}
         <meta name="twitter:title" content="Atelier — Luxury Fine Jewellery" />
         <meta name="twitter:description" content="Exquisite handcrafted fine jewellery. Shop luxury rings, necklaces, bracelets & earrings." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1200&auto=format&fit=crop" />
-        
+
         <link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://atelier-amber.vercel.app'} />
 
         {/* JSON-LD Structured Data */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "WebSite",
-              "@id": `${SITE_URL}/#website`,
-              "url": SITE_URL,
-              "name": SITE_NAME,
-              "description": "Exquisite handcrafted fine jewellery",
-              "publisher": { "@id": `${SITE_URL}/#organization` },
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": {
-                  "@type": "EntryPoint",
-                  "urlTemplate": `${SITE_URL}/products?q={search_term_string}`
-                },
-                "query-input": "required name=search_term_string"
-              }
-            },
-            {
-              "@type": "Organization",
-              "@id": `${SITE_URL}/#organization`,
-              "name": SITE_NAME,
-              "url": SITE_URL,
-              "logo": {
-                "@type": "ImageObject",
-                "url": `${SITE_URL}/atelier%20s.svg`,
-                "width": 512,
-                "height": 512
-              },
-              "description": "Luxury fine jewellery handcrafted by master artisans",
-              "sameAs": [
-                INSTAGRAM_URL,
-                FACEBOOK_URL,
-                PINTEREST_URL
-              ],
-              "contactPoint": {
-                "@type": "ContactPoint",
-                "contactType": "customer service",
-                "availableLanguage": "English"
-              }
-            },
-            {
-              "@type": "WebPage",
-              "@id": `${SITE_URL}/#webpage`,
-              "url": SITE_URL,
-              "name": "Atelier — Luxury Fine Jewellery",
-              "isPartOf": { "@id": `${SITE_URL}/#website` },
-              "about": { "@id": `${SITE_URL}/#organization` },
-              "description": "Shop luxury handcrafted fine jewellery including rings, necklaces, bracelets, and earrings"
-            },
-            {
-              "@type": "ItemList",
-              "name": "Featured Products",
-              "itemListElement": [
-                {
-                  "@type": "ListItem",
-                  "position": 1,
-                  "item": {
-                    "@type": "Product",
-                    "name": "Rings",
-                    "url": `${SITE_URL}/products?category=rings`
-                  }
-                },
-                {
-                  "@type": "ListItem",
-                  "position": 2,
-                  "item": {
-                    "@type": "Product",
-                    "name": "Necklaces",
-                    "url": `${SITE_URL}/products?category=necklaces`
-                  }
-                },
-                {
-                  "@type": "ListItem",
-                  "position": 3,
-                  "item": {
-                    "@type": "Product",
-                    "name": "Bracelets",
-                    "url": `${SITE_URL}/products?category=bracelets`
-                  }
-                },
-                {
-                  "@type": "ListItem",
-                  "position": 4,
-                  "item": {
-                    "@type": "Product",
-                    "name": "Earrings",
-                    "url": `${SITE_URL}/products?category=earrings`
-                  }
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": `${SITE_URL}/#website`,
+                "url": SITE_URL,
+                "name": SITE_NAME,
+                "description": "Exquisite handcrafted fine jewellery",
+                "publisher": { "@id": `${SITE_URL}/#organization` },
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": `${SITE_URL}/products?q={search_term_string}`
+                  },
+                  "query-input": "required name=search_term_string"
                 }
-              ]
-            }
-          ]
-        }) }} />
+              },
+              {
+                "@type": "Organization",
+                "@id": `${SITE_URL}/#organization`,
+                "name": SITE_NAME,
+                "url": SITE_URL,
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": `${SITE_URL}/atelier%20s.svg`,
+                  "width": 512,
+                  "height": 512
+                },
+                "description": "Luxury fine jewellery handcrafted by master artisans",
+                "sameAs": [
+                  INSTAGRAM_URL,
+                  FACEBOOK_URL,
+                  PINTEREST_URL
+                ],
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "customer service",
+                  "availableLanguage": "English"
+                }
+              },
+              {
+                "@type": "WebPage",
+                "@id": `${SITE_URL}/#webpage`,
+                "url": SITE_URL,
+                "name": "Atelier — Luxury Fine Jewellery",
+                "isPartOf": { "@id": `${SITE_URL}/#website` },
+                "about": { "@id": `${SITE_URL}/#organization` },
+                "description": "Shop luxury handcrafted fine jewellery including rings, necklaces, bracelets, and earrings"
+              },
+              {
+                "@type": "ItemList",
+                "name": "Featured Products",
+                "itemListElement": [
+                  {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "item": {
+                      "@type": "Product",
+                      "name": "Rings",
+                      "url": `${SITE_URL}/products?category=rings`
+                    }
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "item": {
+                      "@type": "Product",
+                      "name": "Necklaces",
+                      "url": `${SITE_URL}/products?category=necklaces`
+                    }
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "item": {
+                      "@type": "Product",
+                      "name": "Bracelets",
+                      "url": `${SITE_URL}/products?category=bracelets`
+                    }
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 4,
+                    "item": {
+                      "@type": "Product",
+                      "name": "Earrings",
+                      "url": `${SITE_URL}/products?category=earrings`
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+        }} />
       </Head>
-      
-      <div className="min-h-screen bg-[#FAFAF8]">
+
+      <div className="min-h-screen bg-[#FAF9F6]">
         <Header />
-        
+
         <main>
-          {/* 1. Hero Section - Ultra Premium */}
-          <Hero />
-
-          {/* 2. Value Proposition - Trust Indicators */}
-          <ValueProposition />
-
-          {/* 3. Featured Collections - 4 Card Layout */}
-          <FeaturedCollections collections={collections} />
-
-          {/* Logo marquee between Featured Collections and Curated Collections */}
-          {/* Lazy small component - dynamic import isn't necessary for this small asset-driven UI */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {/** logo marquee component **/}
-          <LogoMarquee />
-
-          {/* 5. Collections Highlight - Curated Showcase */}
-          <CollectionsHighlight />
-
-          {/* 6. Process Steps - How We Create */}
-          <ProcessSteps />
-
-          {/* 7. Craftsmanship / Brand Story */}
-          <Craftsmanship />
-
-          {/* 8. New Arrivals / Best Sellers - Grid */}
-          <section 
-            id="new-arrivals" 
-            className="py-12 md:py-20 bg-[#FAFAF8] will-change-transform"
-          >
-            <div className="max-w-7xl mx-auto px-6 lg:px-8">
-              <motion.div 
-                className="text-center mb-8 md:mb-12" 
-                initial={{ opacity: 0, y: 20 }} 
-                whileInView={{ opacity: 1, y: 0 }} 
-                viewport={{ once: true }} 
-                transition={{ duration: 0.6 }}
-              >
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium mb-4 text-[#1A1A1A]">New Arrivals</h2>
-                <p className="text-[#6B6B6B] max-w-xl mx-auto text-base">
-                  Discover our newest creations
-                </p>
-              </motion.div>
-              
-              {products.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {products.map((product, index) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.18 }}
-                      transition={{ duration: 0.5, delay: index * 0.08 }}
-                      className="will-change-transform"
-                    >
-                      <ProductCard 
-                        id={product.id}
-                        name={product.name} 
-                        price={product.price}
-                        oldPrice={product.old_price}
-                        img={product.image_url}
-                        images={product.images}
-                        category={product.category}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-[#6B6B6B]">No products available yet.</p>
-              )}
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-center mt-12"
-              >
-                <a 
-                  href="/products" 
-                  className="inline-block px-8 py-3 border border-[#1A1A1A] text-[#1A1A1A] font-medium hover:bg-[#1A1A1A] hover:text-white transition-colors"
-                >
-                  View All Products
-                </a>
-              </motion.div>
-            </div>
-          </section>
-
-          {/* 9. Testimonials - High-End Style */}
-          <Testimonials />
-
-          {/* 10. Instagram Gallery - Social Proof */}
-          <InstagramGallery />
-
-          {/* 11. Newsletter - Inner Circle */}
-          <Newsletter />
-
+          {activeLayout.map((sectionId, index) => renderSection(sectionId, index))}
         </main>
-        
+
         {/* 8. Footer - Minimal Luxury */}
         <Footer />
       </div>

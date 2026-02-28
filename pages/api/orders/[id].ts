@@ -42,7 +42,14 @@ export default async function handler(
       }
     }
 
-    return res.status(200).json(order as Order)
+    // Fetch status history for the order
+    const { data: history } = await supabase
+      .from('order_status_history')
+      .select('*')
+      .eq('order_id', id)
+      .order('created_at', { ascending: true })
+
+    return res.status(200).json({ ...order, status_history: history || [] } as Order & { status_history: any[] })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

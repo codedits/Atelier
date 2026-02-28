@@ -3,6 +3,7 @@ import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { sendDeliveryNotificationEmail } from '@/lib/email'
+import { apiCache } from '@/lib/server-cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -74,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send delivery notification email if status changed to 'delivered'
     if (status === 'delivered' && currentOrder.status !== 'delivered') {
-      const customerEmail = currentOrder.email || currentOrder.user_email
+      const customerEmail = currentOrder.email
       console.log(`Order ${orderId} marked as delivered. Sending delivery notification...`)
       console.log(`Customer email: ${customerEmail || 'NOT PROVIDED'}`)
       
@@ -147,6 +148,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ error: 'Failed to delete order' })
       }
 
+      // Stock was restored — invalidate products cache too
+      apiCache.invalidateByTag('products')
       return res.status(200).json({ 
         message: 'Order removed successfully',
         order_id: orderId

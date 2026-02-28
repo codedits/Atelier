@@ -1,6 +1,8 @@
 import { memo } from 'react'
-import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Image from 'next/image'
+import Link from 'next/link'
 
 // Static data moved outside component to prevent recreation on each render
 const bentoItems = [
@@ -38,58 +40,40 @@ const bentoItems = [
   }
 ] as const
 
-// Animation variants moved outside to prevent recreation
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    }
-  }
-} as const
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 }
-  }
-} as const
+// CSS handles staggered entrance animations natively now via tailwind classes
 
 const BentoGrid = memo(function BentoGrid() {
+  const { ref: gridRef, isIntersecting } = useIntersectionObserver()
+
   return (
-    <section className="py-16 md:py-24 bg-[#1B211A]">
+    <section className="py-16 md:py-24 bg-[#1B211A]" ref={gridRef}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+        <div
+          className={cn(
+            "text-center mb-16 invisible-before-reveal",
+            isIntersecting && "reveal-slide-up"
+          )}
         >
           <p className="text-sm uppercase tracking-widest !text-white mix-blend-normal mb-3">Our Collections</p>
           <h2 className="text-3xl md:text-5xl font-medium !text-white mix-blend-normal leading-tight max-w-2xl mx-auto">
             Explore Our Curated Selection
           </h2>
-        </motion.div>
+        </div>
 
         {/* Bento Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
+        <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-[280px] md:auto-rows-[320px]"
         >
           {bentoItems.map((item, index) => (
-            <motion.div
+            <div
               key={item.id}
-              variants={itemVariants}
-              className={`${item.span} group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer`}
+              className={cn(
+                item.span,
+                "group relative overflow-hidden rounded-2xl bg-white shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer invisible-before-reveal",
+                isIntersecting && "reveal-scale-up"
+              )}
+              style={{ animationDelay: isIntersecting ? `${index * 150}ms` : '0ms' }}
             >
               {/* Background Image */}
               <Image
@@ -105,11 +89,8 @@ const BentoGrid = memo(function BentoGrid() {
 
               {/* Content */}
               <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-6 text-white">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  whileHover={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-2"
+                <div
+                  className="space-y-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 ease-out"
                 >
                   <h3 className="text-lg md:text-xl font-semibold leading-tight">
                     {item.title}
@@ -117,30 +98,30 @@ const BentoGrid = memo(function BentoGrid() {
                   <p className="text-sm md:text-base text-white/90 line-clamp-2">
                     {item.description}
                   </p>
-                </motion.div>
+                </div>
               </div>
 
               {/* Bottom accent bar */}
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-16"
+        <div
+          className={cn(
+            "text-center mt-16 invisible-before-reveal",
+            isIntersecting && "reveal-fade-in"
+          )}
+          style={{ animationDelay: isIntersecting ? '400ms' : '0ms' }}
         >
-          <a href="/products" className="inline-flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white rounded-lg font-medium hover:bg-[#333333] transition-colors duration-300">
+          <Link href="/products" className="inline-flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white rounded-lg font-medium hover:bg-[#333333] transition-colors duration-300">
             View All Collections
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
-          </a>
-        </motion.div>
+          </Link>
+        </div>
       </div>
     </section>
   )

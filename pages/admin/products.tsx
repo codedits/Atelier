@@ -1,12 +1,14 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
+import SortableImageGrid from '@/components/admin/SortableImageGrid'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useDirectUpload, UploadItem } from '@/hooks/useDirectUpload'
 import { Product, Category } from '@/lib/supabase'
 
 // Icons
@@ -40,6 +42,32 @@ const Icons = {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polyline points="6 9 12 15 18 9"/>
     </svg>
+  ),
+  grip: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/>
+      <circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/>
+      <circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
+    </svg>
+  ),
+  image: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+    </svg>
+  ),
+  check: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  ),
+  alertCircle: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
   )
 }
 
@@ -53,7 +81,7 @@ function ProductsContent() {
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [filterGender, setFilterGender] = useState('')
-  const [showModal, setShowModal] = useState(false)
+  const [view, setView] = useState<'list' | 'form'>('list')
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const pendingUpdatesRef = useRef<Map<string, number>>(new Map())
@@ -71,9 +99,22 @@ function ProductsContent() {
     stock: '0',
     is_hidden: false
   })
-  const [uploading, setUploading] = useState(false)
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+  // Direct upload hook (bypasses API body limit — uploads straight to Supabase)
+  const {
+    uploads,
+    addFiles,
+    uploadAll,
+    removeUpload,
+    reset: resetUploads,
+    isUploading,
+    pendingCount,
+    totalProgress,
+    MAX_FILE_SIZE
+  } = useDirectUpload()
+
+  // Drag-and-drop reorder state
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadData()
@@ -113,9 +154,8 @@ function ProductsContent() {
       stock: '0',
       is_hidden: false
     })
-    setPreviewUrls([])
-    setSelectedFiles([])
-    setShowModal(true)
+    resetUploads()
+    setView('form')
   }
 
   const openEditModal = (product: Product) => {
@@ -133,110 +173,46 @@ function ProductsContent() {
       stock: String(product.stock),
       is_hidden: (product as Product & { is_hidden?: boolean }).is_hidden || false
     })
-    setPreviewUrls(existingImages)
-    setSelectedFiles([])
-    setShowModal(true)
+    resetUploads()
+    setView('form')
   }
 
+  /** Handle file input change — validate and queue */
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
+    const maxTotal = 10 - form.images.length
+    const errors = addFiles(files, maxTotal)
+    errors.forEach(err => toast.error(err))
+    // Reset the input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
-    const currentCount = previewUrls.length
-    const remainingSlots = 10 - currentCount
-    
-    if (files.length > remainingSlots) {
-      toast.error(`You can only add ${remainingSlots} more image(s). Maximum 10 images allowed.`)
-      return
+  /** Upload all pending files directly to Supabase, then merge URLs into form */
+  const handleUploadAll = async () => {
+    const urls = await uploadAll()
+    if (urls.length > 0) {
+      const allImages = [...form.images, ...urls]
+      setForm(f => ({
+        ...f,
+        images: allImages,
+        image_url: allImages[0] || ''
+      }))
+      toast.success(`${urls.length} image(s) uploaded`)
     }
+  }
 
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select only image files')
-        return
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Each file must be less than 10MB')
-        return
-      }
-    }
-
-    setSelectedFiles(prev => [...prev, ...files])
-    
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewUrls(prev => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
+  /** Remove an already-uploaded image from the form */
+  const removeExistingImage = (index: number) => {
+    setForm(f => {
+      const images = f.images.filter((_, i) => i !== index)
+      return { ...f, images, image_url: images[0] || '' }
     })
   }
 
-  const removeImage = (index: number) => {
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index))
-    setForm(f => ({
-      ...f,
-      images: f.images.filter((_, i) => i !== index),
-      image_url: index === 0 ? (f.images[1] || '') : f.image_url
-    }))
-    const uploadedCount = form.images.length
-    if (index >= uploadedCount) {
-      const fileIndex = index - uploadedCount
-      setSelectedFiles(prev => prev.filter((_, i) => i !== fileIndex))
-    }
-  }
-
-  const handleUploadImages = async () => {
-    if (!selectedFiles.length) return
-
-    setUploading(true)
-    try {
-      const uploadedUrls: string[] = []
-
-      for (const file of selectedFiles) {
-        const reader = new FileReader()
-        reader.readAsDataURL(file)
-        
-        await new Promise<void>((resolve, reject) => {
-          reader.onload = async () => {
-            try {
-              const base64 = (reader.result as string).split(',')[1]
-              
-              const response = await api.post<{ publicUrl: string }>('/upload', {
-                filename: file.name,
-                fileData: base64,
-                contentType: file.type,
-                folder: 'products'
-              })
-
-              if (response.publicUrl) {
-                uploadedUrls.push(response.publicUrl)
-              }
-              resolve()
-            } catch (error) {
-              reject(error)
-            }
-          }
-          reader.onerror = reject
-        })
-      }
-
-      if (uploadedUrls.length > 0) {
-        const allImages = [...form.images, ...uploadedUrls]
-        setForm(f => ({
-          ...f,
-          images: allImages,
-          image_url: allImages[0] || ''
-        }))
-        setSelectedFiles([])
-        toast.success(`${uploadedUrls.length} image(s) uploaded successfully!`)
-      }
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error('Failed to upload images. Make sure SUPABASE_SERVICE_ROLE_KEY is set in .env.local')
-    } finally {
-      setUploading(false)
-    }
+  /** DnD Kit reorder handler — replaces native HTML drag-and-drop */
+  const handleImageReorder = (newImages: string[]) => {
+    setForm(f => ({ ...f, images: newImages, image_url: newImages[0] || '' }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -268,7 +244,7 @@ function ProductsContent() {
         await api.post('/products', data)
         toast.success('Product created successfully')
       }
-      setShowModal(false)
+      setView('list')
       loadData()
     } catch (err: any) {
       console.error('Save product error:', err)
@@ -356,32 +332,48 @@ function ProductsContent() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      {view === 'list' ? (
+      <>
+      {/* Page header + Toolbar */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div>
+            <p className="text-[#666] text-sm">{filteredProducts.length} of {products.length} products</p>
+          </div>
+          <button
+            onClick={openAddModal}
+            className="admin-btn admin-btn-primary text-sm"
+          >
+            {Icons.plus}
+            <span>Add Product</span>
+          </button>
+        </div>
+
+        {/* Filters */}
         <div className="flex flex-wrap gap-3">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]">{Icons.search}</span>
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]">{Icons.search}</span>
             <input
               type="text"
               placeholder="Search products..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="admin-input pl-9 w-full sm:w-[240px]"
+              className="admin-input pl-10 w-full"
             />
           </div>
           <div className="relative">
             <select
               value={filterCategory}
               onChange={e => setFilterCategory(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 appearance-none cursor-pointer min-w-[140px]"
             >
               <option value="">All Categories</option>
               {categories.map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))}
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#555] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
@@ -389,38 +381,31 @@ function ProductsContent() {
             <select
               value={filterGender}
               onChange={e => setFilterGender(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 appearance-none cursor-pointer min-w-[120px]"
             >
               <option value="">All Genders</option>
               <option value="men">Men</option>
               <option value="women">Women</option>
               <option value="unisex">Unisex</option>
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#555] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
         </div>
-        <button
-          onClick={openAddModal}
-          className="admin-btn admin-btn-primary"
-        >
-          {Icons.plus}
-          <span>Add Product</span>
-        </button>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
+      {/* Products — Card Grid for mobile, Table for desktop */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-table">
             <thead>
               <tr>
                 <th>Product</th>
-                <th>Category</th>
+                <th className="hidden sm:table-cell">Category</th>
                 <th>Price</th>
-                <th>Stock</th>
-                <th>Status</th>
+                <th className="hidden md:table-cell">Stock</th>
+                <th className="hidden sm:table-cell">Status</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
@@ -428,10 +413,10 @@ function ProductsContent() {
               {filteredProducts.map(product => {
                 const isHidden = (product as Product & { is_hidden?: boolean }).is_hidden
                 return (
-                  <tr key={product.id} className={isHidden ? 'opacity-50' : ''}>
+                  <tr key={product.id} className={`${isHidden ? 'opacity-50' : ''} group`}>
                     <td>
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#262626]">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[#111] border border-[#222] flex-shrink-0">
                           <Image
                             src={product.image_url}
                             alt={product.name}
@@ -439,32 +424,33 @@ function ProductsContent() {
                             className="object-cover"
                           />
                         </div>
-                        <div>
-                          <p className="text-white font-medium text-sm">{product.name}</p>
-                          <p className="text-[#666] text-xs capitalize">{product.gender}</p>
+                        <div className="min-w-0">
+                          <p className="text-white font-medium text-sm truncate">{product.name}</p>
+                          <p className="text-[#555] text-xs capitalize mt-0.5">{product.gender}</p>
+                          <p className="text-[#555] text-xs capitalize sm:hidden mt-0.5">{product.category}</p>
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="hidden sm:table-cell">
                       <span className="text-[#888] text-sm capitalize">{product.category}</span>
                     </td>
                     <td>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white text-sm">₨{product.price}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+                        <span className="text-white text-sm font-medium">₨{product.price.toLocaleString()}</span>
                         {product.old_price && (
-                          <span className="text-[#666] line-through text-xs">₨{product.old_price}</span>
+                          <span className="text-[#555] line-through text-xs">₨{product.old_price.toLocaleString()}</span>
                         )}
                       </div>
                     </td>
-                    <td>
-                      <div className="flex items-center gap-2">
+                    <td className="hidden md:table-cell">
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => updateStock(product.id, -1)}
-                          className="w-6 h-6 rounded bg-[#1a1a1a] hover:bg-[#262626] text-[#888] hover:text-white text-sm transition-colors"
+                          className="w-8 h-8 rounded-lg bg-[#111] hover:bg-[#1a1a1a] text-[#888] hover:text-white text-sm transition-all active:scale-90 border border-[#222]"
                         >
-                          -
+                          −
                         </button>
-                        <span className={`w-6 text-center text-sm ${
+                        <span className={`w-8 text-center text-sm font-medium ${
                           product.stock === 0 ? 'text-[#ff6166]' :
                           product.stock <= 5 ? 'text-[#f5a623]' : 'text-white'
                         }`}>
@@ -472,38 +458,37 @@ function ProductsContent() {
                         </span>
                         <button
                           onClick={() => updateStock(product.id, 1)}
-                          className="w-6 h-6 rounded bg-[#1a1a1a] hover:bg-[#262626] text-[#888] hover:text-white text-sm transition-colors"
+                          className="w-8 h-8 rounded-lg bg-[#111] hover:bg-[#1a1a1a] text-[#888] hover:text-white text-sm transition-all active:scale-90 border border-[#222]"
                         >
                           +
                         </button>
                         <button
                           onClick={() => updateStock(product.id, 10)}
-                          className="ml-1 px-2 py-0.5 rounded bg-[#1a1a1a] hover:bg-[#262626] text-[#666] hover:text-white text-xs transition-colors"
+                          className="ml-1 px-2.5 py-1 rounded-lg bg-[#111] hover:bg-[#1a1a1a] text-[#555] hover:text-white text-xs transition-all active:scale-90 border border-[#222]"
                         >
                           +10
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td className="hidden sm:table-cell">
                       <button
                         onClick={() => toggleHidden(product.id, isHidden || false)}
-                        className={`admin-badge ${isHidden ? 'admin-badge-error' : 'admin-badge-success'}`}
+                        className={`admin-badge cursor-pointer transition-all active:scale-95 ${isHidden ? 'admin-badge-error' : 'admin-badge-success'}`}
                       >
                         {isHidden ? 'Hidden' : 'Visible'}
                       </button>
                     </td>
                     <td>
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => openEditModal(product)}
-                          className="text-[#888] hover:text-white text-sm transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-[#888] hover:text-white hover:bg-[#1a1a1a] text-sm transition-all active:scale-95"
                         >
                           Edit
                         </button>
-                        <span className="text-[#333]">·</span>
                         <button
                           onClick={() => setDeleteConfirm(product.id)}
-                          className="text-[#888] hover:text-[#ff6166] text-sm transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-[#666] hover:text-[#ff6166] hover:bg-[#ff6166]/10 text-sm transition-all active:scale-95"
                         >
                           Delete
                         </button>
@@ -517,38 +502,64 @@ function ProductsContent() {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="p-12 text-center text-[#666]">
-            <p>No products found</p>
+          <div className="p-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#111] flex items-center justify-center mx-auto mb-4 text-[#333]">
+              {Icons.search}
+            </div>
+            <p className="text-[#666] mb-1">No products found</p>
+            <p className="text-[#444] text-xs">Try adjusting your search or filters</p>
           </div>
         )}
       </div>
+      </>
+      ) : (
+      <>
+      {/* ===== Inline Add/Edit Form ===== */}
+      <div className="space-y-6">
+        {/* Back button + heading */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setView('list')}
+            className="w-10 h-10 rounded-xl bg-[#111] border border-[#1a1a1a] flex items-center justify-center text-[#888] hover:text-white hover:bg-[#1a1a1a] transition-all active:scale-95"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div>
+            <h2 className="text-white text-lg sm:text-xl font-semibold">
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </h2>
+            <p className="text-[#555] text-sm mt-0.5">
+              {editingProduct ? 'Update product details and images' : 'Fill in the details for your new product'}
+            </p>
+          </div>
+        </div>
 
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#262626] flex items-center justify-between">
-              <h2 className="text-white text-[15px] font-medium">
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
-              </h2>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="text-[#666] hover:text-white transition-colors"
-              >
-                {Icons.close}
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="admin-input w-full"
-                  required
-                />
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6">
+            {/* Name + Stock row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div className="sm:col-span-2">
+                  <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className="admin-input w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Stock</label>
+                  <input
+                    type="number"
+                    value={form.stock}
+                    onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
+                    className="admin-input w-full"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -561,6 +572,7 @@ function ProductsContent() {
                 />
               </div>
 
+              {/* Price row */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Price</label>
@@ -586,6 +598,7 @@ function ProductsContent() {
                 </div>
               </div>
 
+              {/* Category + Gender row */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Category</label>
@@ -626,74 +639,147 @@ function ProductsContent() {
                 </div>
               </div>
 
+              {/* ===== IMAGE SECTION — DnD Kit Powered ===== */}
               <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">
-                  Product Images <span className="text-[#666]">({previewUrls.length}/10)</span>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-3">
+                  Product Images
+                  <span className="text-[#555] ml-2">
+                    ({form.images.length + uploads.length}/10 · max 8 MB each)
+                  </span>
                 </label>
-                
-                {previewUrls.length > 0 && (
-                  <div className="mb-3 grid grid-cols-5 gap-2">
-                    {previewUrls.map((url, index) => (
-                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#262626] group">
-                        <Image src={url} alt={`Preview ${index + 1}`} fill className="object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-[#ff6166] hover:bg-[#ff7a7e] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        {index === 0 && (
-                          <span className="absolute bottom-1 left-1 bg-white text-black text-[10px] px-1.5 py-0.5 rounded font-medium">
-                            Main
-                          </span>
-                        )}
-                      </div>
-                    ))}
+
+                {/* DnD Kit Sortable Image Grid */}
+                {form.images.length > 0 && (
+                  <div className="mb-4">
+                    <SortableImageGrid
+                      images={form.images}
+                      onReorder={handleImageReorder}
+                      onRemove={removeExistingImage}
+                    />
                   </div>
                 )}
 
-                {previewUrls.length < 10 && (
-                  <div className="flex gap-2">
-                    <label className="flex-1 flex items-center justify-center gap-2 admin-input cursor-pointer hover:border-[#333] py-3">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileSelect}
-                        className="hidden"
-                      />
-                      {Icons.upload}
-                      <span className="text-[#888] text-sm">Choose files</span>
-                    </label>
-                    {selectedFiles.length > 0 && (
+                {/* Pending uploads with progress bars */}
+                {uploads.length > 0 && (
+                  <div className="mb-4 space-y-3">
+                    <p className="text-[11px] uppercase tracking-wider text-[#555] font-medium">
+                      {isUploading ? `Uploading… ${totalProgress}%` : `${pendingCount} file(s) ready to upload`}
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {uploads.map((item) => (
+                        <div key={item.id} className="relative aspect-square rounded-2xl overflow-hidden bg-[#111] border-2 border-[#1a1a1a] group">
+                          {/* Preview */}
+                          <img src={item.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+
+                          {/* Progress overlay */}
+                          {item.status === 'uploading' && (
+                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                              <span className="text-white text-xs font-medium mb-1">{item.progress}%</span>
+                              <div className="w-3/4 h-1 bg-[#333] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-[#0070f3] rounded-full transition-all duration-200"
+                                  style={{ width: `${item.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Done overlay */}
+                          {item.status === 'done' && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-[#50e3c2] flex items-center justify-center text-black">
+                                {Icons.check}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Error overlay */}
+                          {item.status === 'error' && (
+                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-1">
+                              <div className="text-[#ff6166] mb-1">{Icons.alertCircle}</div>
+                              <span className="text-[#ff6166] text-[9px] text-center leading-tight">{item.error || 'Failed'}</span>
+                            </div>
+                          )}
+
+                          {/* Remove button */}
+                          {item.status !== 'uploading' && (
+                            <button
+                              type="button"
+                              onClick={() => removeUpload(item.id)}
+                              className="absolute top-1 right-1 w-5 h-5 bg-[#ff6166] hover:bg-[#ff7a7e] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Upload button */}
+                    {pendingCount > 0 && (
                       <button
                         type="button"
-                        onClick={handleUploadImages}
-                        disabled={uploading}
-                        className="admin-btn admin-btn-primary disabled:opacity-50"
+                        onClick={handleUploadAll}
+                        disabled={isUploading}
+                        className="admin-btn admin-btn-primary w-full disabled:opacity-50 mt-2"
                       >
-                        {uploading ? 'Uploading...' : `Upload (${selectedFiles.length})`}
+                        {isUploading ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            </svg>
+                            Uploading {totalProgress}%
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            {Icons.upload}
+                            Upload {pendingCount} Image{pendingCount > 1 ? 's' : ''}
+                          </span>
+                        )}
                       </button>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-[#666] mt-2">
-                  Upload up to 10 images. First image will be the main product image.
-                </p>
-              </div>
 
-              <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Stock</label>
-                <input
-                  type="number"
-                  value={form.stock}
-                  onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
-                  className="admin-input w-full"
-                  required
-                />
+                {/* File picker — drop zone */}
+                {(form.images.length + uploads.length) < 10 && (
+                  <label
+                    className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-[#2a2a2a] hover:border-[#444] rounded-2xl py-10 sm:py-12 cursor-pointer transition-all group hover:bg-[#0a0a0a]"
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-[#0070f3]') }}
+                    onDragLeave={(e) => { e.currentTarget.classList.remove('border-[#0070f3]') }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      e.currentTarget.classList.remove('border-[#0070f3]')
+                      const files = Array.from(e.dataTransfer.files)
+                      const maxTotal = 10 - form.images.length
+                      const errors = addFiles(files, maxTotal)
+                      errors.forEach(err => toast.error(err))
+                    }}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <div className="text-[#555] group-hover:text-[#888] transition-colors">
+                      {Icons.image}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[#888] text-sm">
+                        Drop images here or <span className="text-[#0070f3]">browse</span>
+                      </p>
+                      <p className="text-[#555] text-xs mt-1">
+                        JPEG, PNG, WebP, AVIF · Max 8 MB each
+                      </p>
+                    </div>
+                  </label>
+                )}
               </div>
 
               {editingProduct && (
@@ -707,46 +793,54 @@ function ProductsContent() {
                   <span className="text-[#888] text-sm">Hide product from store</span>
                 </label>
               )}
-            </form>
 
-            <div className="px-6 py-4 border-t border-[#262626] flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="admin-btn admin-btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                className="admin-btn admin-btn-primary"
-              >
-                {editingProduct ? 'Save Changes' : 'Add Product'}
-              </button>
-            </div>
+              {/* Form actions */}
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-[#1a1a1a]">
+                <button
+                  type="button"
+                  onClick={() => setView('list')}
+                  className="admin-btn admin-btn-secondary py-3 px-6"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="admin-btn admin-btn-primary py-3 px-6 disabled:opacity-50"
+                >
+                  {editingProduct ? 'Save Changes' : 'Add Product'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
+      </>
       )}
 
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-white text-[15px] font-medium mb-2">Delete Product</h3>
-            <p className="text-[#888] text-sm mb-6">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-[#ff4444]/10 flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6166" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </div>
+            <h3 className="text-white text-base font-semibold mb-2 text-center">Delete Product</h3>
+            <p className="text-[#777] text-sm mb-6 text-center">
               This action cannot be undone. The product will be permanently removed.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 admin-btn admin-btn-secondary"
+                className="flex-1 admin-btn admin-btn-secondary py-2.5"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="flex-1 admin-btn admin-btn-danger"
+                className="flex-1 admin-btn admin-btn-danger py-2.5"
               >
                 Delete
               </button>

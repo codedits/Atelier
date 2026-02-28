@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
 
 function getAdminFromRequest(req: NextApiRequest) {
   const authHeader = req.headers.authorization
@@ -20,11 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
 
     if (error) return res.status(500).json({ error: error.message })
-    
+
     // Convert array to object for easier use
     const settings: Record<string, string> = {}
     data?.forEach(s => { settings[s.key] = s.value })
-    
+
     return res.status(200).json(settings)
   }
 
@@ -38,6 +40,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     }
 
+    // Bust caches
+    apiCache.invalidateByTag('store_settings')
+    invalidateSSGCache('site_config')
+    // Bust any ISR pages depending on site_config
+    try {
+      await res.revalidate('/')
+    } catch (e) {
+      console.warn('Failed to revalidate', e)
+    }
     return res.status(200).json({ message: 'Settings updated' })
   }
 

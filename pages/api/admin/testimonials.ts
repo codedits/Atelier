@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { supabase as supabaseAnon } from '@/lib/supabase'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -10,12 +12,11 @@ if (supabaseUrl && supabaseServiceKey) {
   supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 }
 
-// Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 60 * 1000 // 60 seconds
+const TESTIMONIALS_TTL = 60_000
 
 function invalidateCache() {
-  cache.delete('testimonials')
+  apiCache.invalidateByTag('testimonials')
+  invalidateSSGCache('testimonials')
 }
 
 function getAdminFromRequest(req: NextApiRequest) {
@@ -28,32 +29,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
-      // Check cache first
-      const cached = cache.get('testimonials')
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        res.setHeader('X-Cache', 'HIT')
-        res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-        return res.status(200).json(cached.data)
-      }
-
       const client = supabaseAdmin ?? supabaseAnon
-      const { data, error } = await client
-        .from('testimonials')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
+      const { data, hit } = await apiCache.getOrFetch(
+        'api:admin:testimonials',
+        async () => {
+          const { data, error } = await client
+            .from('testimonials')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+          if (error) throw error
+          return data || []
+        },
+        { ttl: TESTIMONIALS_TTL, tags: ['testimonials'], staleWhileRevalidate: true }
+      )
 
-      if (error) {
-        console.error('Testimonials fetch error:', error)
-        return res.status(500).json({ error: error.message })
-      }
-      
-      // Store in cache
-      cache.set('testimonials', { data: data || [], timestamp: Date.now() })
-      
-      res.setHeader('X-Cache', 'MISS')
-      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
-      return res.status(200).json(data || [])
+      res.setHeader('X-Cache', hit ? 'HIT' : 'MISS')
+      res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200')
+      return res.status(200).json(data)
     } catch (err: any) {
       console.error('Testimonials fetch error:', err)
       return res.status(500).json({ error: err.message })

@@ -1,9 +1,8 @@
-import { useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import { useState, useCallback, memo, useEffect } from 'react'
 import Link from 'next/link'
 
-interface HeroImage {
+export interface HeroImage {
   id: string
   title: string
   subtitle: string
@@ -14,129 +13,165 @@ interface HeroImage {
   display_order: number
 }
 
-// Use hero images from `public/` - first image is prioritized for LCP
-const heroImageUrls = [
-  '/hero1.jpg',
-  '/pexels-iamluisao-20422966.jpg',
-  '/hero3.jpg'
-]
-
-const defaultHero: HeroImage = {
-  id: 'default',
-  title: 'Atelier',
-  subtitle: 'Timeless elegance, crafted for you',
-  image_url: heroImageUrls[0],
-  video_url: '',
-  cta_text: 'Explore Collection',
-  cta_link: '/products',
-  display_order: 0
+interface HeroProps {
+  heroImages?: HeroImage[]
 }
 
-const Hero = memo(function Hero() {
-  const prefersReducedMotion = useReducedMotion()
-  const [heroImage] = useState<HeroImage>(defaultHero)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+const defaultHeroImages: HeroImage[] = [
+  {
+    id: 'default-1',
+    title: 'Atelier',
+    subtitle: 'Discover our collection of handcrafted jewelry',
+    image_url: '/hero1.jpg',
+    cta_text: 'Shop Now',
+    cta_link: '/products',
+    display_order: 0
+  },
+  {
+    id: 'default-2',
+    title: 'Atelier',
+    subtitle: 'Discover our collection of handcrafted jewelry',
+    image_url: '/pexels-iamluisao-20422966.jpg',
+    cta_text: 'Shop Now',
+    cta_link: '/products',
+    display_order: 1
+  },
+  {
+    id: 'default-3',
+    title: 'Atelier',
+    subtitle: 'Discover our collection of handcrafted jewelry',
+    image_url: '/hero3.jpg',
+    cta_text: 'Shop Now',
+    cta_link: '/products',
+    display_order: 2
+  }
+]
 
-  // Rotate images every 5 seconds (skip if user prefers reduced motion)
+const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
+  const heroImages = initialHeroImages && initialHeroImages.length > 0 ? initialHeroImages : defaultHeroImages
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+
   useEffect(() => {
-    if (prefersReducedMotion) return
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (mediaQuery.matches) return
 
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % heroImageUrls.length)
-    }, 5000)
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 6000)
 
     return () => clearInterval(interval)
-  }, [prefersReducedMotion])
-
-  // Optimized scroll handler
+  }, [heroImages.length])
 
   const handleScrollDown = useCallback(() => {
+    const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({
       top: window.innerHeight,
-      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+      behavior: isReduced ? 'auto' : 'smooth'
     })
-  }, [prefersReducedMotion])
+  }, [])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleScrollDown()
   }, [handleScrollDown])
 
+  const hero = heroImages[currentImageIndex]
+
   return (
-    <section className="relative h-screen md:min-h-[600px] overflow-hidden bg-[#0A0A0A]">
-      {/* Dynamic hero carousel: render all images but only active is visible */}
-      <div className="absolute inset-0">
-        {heroImageUrls.map((imageUrl, index) => (
+    <section className="relative w-full h-screen min-h-[700px] overflow-hidden bg-black">
+      {/* Background Image — zoom-out entrance */}
+      <div className={`absolute inset-0 w-full h-full ${isLoaded ? 'animate-image-entrance' : 'opacity-0'}`}>
+        {heroImages.map((img, index) => (
           <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
+            key={img.id || index}
+            className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
               index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >
             <Image
-              src={imageUrl}
-              alt={index === 0 ? heroImage.title : `${heroImage.title} background ${index + 1}`}
+              src={img.image_url}
+              alt={index === 0 ? img.title : `${img.title} background ${index + 1}`}
               fill
-              className={`object-cover ${index === currentImageIndex && !prefersReducedMotion ? 'hero-zoom' : ''}`}
+              className="object-cover"
               priority={index === 0}
               loading={index === 0 ? 'eager' : 'lazy'}
               sizes="100vw"
-              quality={85}
+              quality={75}
+              onLoad={index === 0 ? () => setIsLoaded(true) : undefined}
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-black/30" />
+
+        {/* Overlays */}
+        <div className="absolute inset-0 bg-black/40 z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[2]" />
       </div>
 
-      {/* Overlay content - Centered Heading Only */}
-      <div className="relative h-screen flex flex-col items-center justify-center md:justify-start md:pt-20 px-4">
-        <div className="w-full text-center px-4">
-          <div className="mx-auto">
-            <h1 className="hero-title">
-              {heroImage.title}
-            </h1>
-          </div>
+      {/* Content — staggered text reveal */}
+      <div className={`relative z-10 flex flex-col items-center justify-center h-full text-center text-white ${isLoaded ? 'is-visible' : ''}`}>
+        {/* Subtitle */}
+        <p className="hero-subtext text-[11px] sm:text-xs tracking-[0.3em] uppercase text-white/70 mb-6">
+          {hero.subtitle}
+        </p>
 
-          {heroImage.subtitle && (
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-light tracking-wide">
-              {heroImage.subtitle}
-            </p>
-          )}
+        {/* Title */}
+        <h1 className="hero-text hero-title">
+          {hero.title}
+        </h1>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6 sm:mt-8">
+        {/* CTAs */}
+        <div className="hero-cta flex flex-col sm:flex-row items-center gap-4 mt-12">
+          {hero.cta_text && (
             <Link
-              href={heroImage.cta_link}
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-[#1A1A1A] font-medium  hover:bg-[#F5F5F5] hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
+              href={hero.cta_link || '/products'}
+              className="group inline-flex items-center gap-3 px-10 py-4 bg-white text-black text-[11px] font-semibold uppercase tracking-[0.2em] hover:bg-white/90 transition-all duration-300"
             >
-              {heroImage.cta_text}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 4l6 6-6 6" />
+              <span>{hero.cta_text}</span>
+              <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-            <Link
-              href="/about"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/30 text-white font-medium  hover:bg-white/10 hover:-translate-y-0.5 active:scale-[0.985] transition-all duration-150"
-            >
-              Our Story
-            </Link>
-          </div>
-
-          {/* Subtle accent */}
-          <div className={`mt-8 sm:mt-10 mx-auto w-16 h-[2px] bg-white/15 rounded ${prefersReducedMotion ? '' : 'hero-fade-delay'}`} />
+          )}
+          <Link
+            href="/about"
+            className="inline-flex items-center gap-3 px-10 py-4 border border-white/40 text-white text-[11px] font-medium uppercase tracking-[0.2em] hover:bg-white/10 hover:border-white/60 transition-all duration-300"
+          >
+            <span>Our Story</span>
+          </Link>
         </div>
       </div>
 
-      {/* Scroll Down Arrow */}
-      <div 
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 text-white/80 cursor-pointer ${prefersReducedMotion ? '' : 'hero-fade hero-bounce'}`}
+      {/* Slide indicators */}
+      {heroImages.length > 1 && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentImageIndex(index)}
+              className={`transition-all duration-500 ${
+                index === currentImageIndex
+                  ? 'w-8 h-[2px] bg-white'
+                  : 'w-4 h-[1px] bg-white/40 hover:bg-white/60'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Scroll indicator */}
+      <div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer z-20 hero-scroll-indicator"
         onClick={handleScrollDown}
         role="button"
         tabIndex={0}
         aria-label="Scroll down"
         onKeyDown={handleKeyDown}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 sm:w-10 sm:h-10">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        <span className="text-[10px] text-white/50 uppercase tracking-[0.3em]">
+          Scroll
+        </span>
+        <div className="w-px h-8 bg-gradient-to-b from-white/70 to-transparent hero-bounce" />
       </div>
     </section>
   )

@@ -1,35 +1,44 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import { ProductReview, ProductReviewStats } from '@/lib/supabase'
 
 interface ProductReviewsProps {
   productId: string
+  initialReviews?: ProductReview[]
+  initialStats?: ProductReviewStats | null
 }
 
 const StarIcon = ({ filled, size = 20 }: { filled: boolean; size?: number }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill={filled ? 'currentColor' : 'none'} 
-    stroke="currentColor" 
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill={filled ? 'currentColor' : 'none'}
+    stroke="currentColor"
     strokeWidth="1.5"
   >
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
   </svg>
 )
 
-export default function ProductReviews({ productId }: ProductReviewsProps) {
-  const [reviews, setReviews] = useState<ProductReview[]>([])
-  const [stats, setStats] = useState<ProductReviewStats | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function ProductReviews({ productId, initialReviews, initialStats }: ProductReviewsProps) {
+  const hasInitialData = initialReviews !== undefined
+  const [reviews, setReviews] = useState<ProductReview[]>(initialReviews || [])
+  const [stats, setStats] = useState<ProductReviewStats | null>(initialStats ?? null)
+  const [loading, setLoading] = useState(!hasInitialData)
   const [showAll, setShowAll] = useState(false)
 
+  // Hook must be called before any conditional returns (Rules of Hooks)
+  const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 })
+
+  // Only fetch from API if no initial data was provided (saves serverless invocations)
   useEffect(() => {
+    if (hasInitialData) return
     if (productId) {
       fetchReviews()
     }
-  }, [productId])
+  }, [productId, hasInitialData])
 
   const fetchReviews = async () => {
     try {
@@ -58,9 +67,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map(star => (
-          <span 
-            key={star} 
-              className={star <= rating ? 'text-[#FDB022]' : 'text-[#E5E7EB]'}
+          <span
+            key={star}
+            className={star <= rating ? 'text-[#FDB022]' : 'text-[#E5E7EB]'}
           >
             <StarIcon filled={star <= rating} size={size} />
           </span>
@@ -84,11 +93,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
   if (reviews.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+      <div
         className="border-t border-[#E5E7EB] mt-16 pt-12"
       >
         <h2 className="text-2xl md:text-3xl font-medium font-display text-[#1A1A1A] mb-6">Customer Reviews</h2>
@@ -98,19 +103,19 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             Be the first to review this product after your purchase
           </p>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 3)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="border-t border-[#E5E7EB] mt-16 pt-12"
+    <div
+      ref={sectionRef}
+      className={cn(
+        "border-t border-[#E5E7EB] mt-16 pt-12 invisible-before-reveal",
+        isIntersecting && "reveal-slide-up"
+      )}
     >
       <h2 className="text-2xl md:text-3xl font-medium font-display text-[#1A1A1A] mb-8">Customer Reviews</h2>
 
@@ -137,7 +142,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                 <div key={rating} className="flex items-center gap-3">
                   <span className="text-sm text-[#4B5563] w-12 font-normal">{rating} star</span>
                   <div className="flex-1 h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-[#FDB022] rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     />
@@ -153,13 +158,13 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
       {/* Reviews List */}
       <div className="space-y-6 font-poppins">
         {displayedReviews.map((review, index) => (
-          <motion.div
+          <div
             key={review.id}
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-            className="pb-6 border-b border-[#F3F4F6] last:border-0"
+            className={cn(
+              "pb-6 border-b border-[#F3F4F6] last:border-0 invisible-before-reveal",
+              isIntersecting && "reveal-slide-up"
+            )}
+            style={{ animationDelay: isIntersecting ? `${index * 100 + 200}ms` : '0ms' }}
           >
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -185,7 +190,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
             <p className="text-xs text-[#1A1A1A] font-semibold">
               — {review.user_name}
             </p>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -194,12 +199,12 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         <div className="text-center mt-8">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="px-8 py-3 border border-[#E5E7EB] text-[#111827] hover:border-[#7A4A2B] hover:text-[#7A4A2B] transition-all duration-300 text-xs uppercase tracking-widest font-bold font-poppins rounded-full"
+            className="px-8 py-3 border border-[#E8E4DF] text-[#1A1A1A] hover:border-[#1A1A1A] hover:text-[#888] transition-all duration-300 text-[11px] uppercase tracking-[0.2em] font-medium"
           >
             {showAll ? 'Show Less' : `Show All ${reviews.length} Reviews`}
           </button>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }

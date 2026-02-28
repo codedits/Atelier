@@ -5,25 +5,26 @@ interface LogoMarqueeProps {
   speed?: number
 }
 
-// Text-based marquee used for social proof / features (no fake partner logos)
 const LogoMarquee = memo(function LogoMarquee({
   items = [
-    'FREE SHIPPING ACROSS PAKISTAN',
-    '100% METAL PURITY',
-    'HANDMADE DESIGNS',
-    'ECO-FRIENDLY PACKAGING'
+    'COMPLIMENTARY SHIPPING',
+    'CERTIFIED PURITY',
+    'HANDCRAFTED DESIGNS',
+    'ETHICALLY SOURCED',
+    'LIFETIME GUARANTEE'
   ],
-  speed = 18
+  speed = 22
 }: LogoMarqueeProps) {
   const looped = [...items, ...items]
 
   return (
-    <section aria-label="Feature marquee" className="py-4 bg-[#FAFAF8] w-full">
+    <section aria-label="Feature marquee" className="py-5 bg-[#FAF9F6] border-t border-b border-[#E8E4DF] w-full">
       <div className="w-full overflow-hidden">
         <div className="logo-marquee" style={{ animationDuration: `${speed}s` }}>
           {looped.map((text, i) => (
             <div key={`${text}-${i}`} className="marquee-item">
               <span className="marquee-text">{text}</span>
+              <span className="marquee-separator" />
             </div>
           ))}
         </div>

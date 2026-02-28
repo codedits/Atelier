@@ -1,4 +1,4 @@
-import { Header } from '@/components'
+﻿import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import { useState } from 'react'
@@ -84,17 +84,23 @@ export default function FAQ() {
                     <h3 className="text-lg font-semibold text-[#1A1A1A] text-left">
                       {faq.question}
                     </h3>
-                    <span className={`text-[#B91C1C] text-xl transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
+                    <span className={`text-[#1A1A1A] text-xl transition-transform duration-300 ${openIndex === index ? 'rotate-45' : ''}`}>
                       +
                     </span>
                   </button>
-                  {openIndex === index && (
-                    <div className="px-6 py-4 border-t border-[#E5E5E5] bg-[#F8F7F5]">
-                      <p className="text-[#6B6B6B] leading-relaxed">
-                        {faq.answer}
-                      </p>
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="px-6 py-4 border-t border-[#E5E5E5] bg-[#F8F7F5]">
+                        <p className="text-[#6B6B6B] leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -109,7 +115,7 @@ export default function FAQ() {
               </p>
               <a 
                 href={`mailto:${CONTACT_EMAIL}`} 
-                className="inline-block px-8 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-medium"
+                className="inline-block px-8 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#333] transition-colors font-medium"
               >
                 Contact Us
               </a>

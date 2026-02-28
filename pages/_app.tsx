@@ -5,6 +5,7 @@ import { useEffect, memo } from 'react'
 import { CartProvider } from '@/context/CartContext'
 import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
+import { SiteConfigProvider } from '@/context/SiteConfigContext'
 import '../styles/globals.css'
 
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, DEFAULT_OG, KEYWORDS } from '@/lib/constants'
@@ -20,7 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
   // Prefetch critical routes on mount for faster navigation (only on idle)
   useEffect(() => {
     const criticalRoutes = ['/products', '/cart', '/favorites']
-    
+
     // Use requestIdleCallback for non-blocking prefetch
     if ('requestIdleCallback' in window) {
       (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(() => {
@@ -35,53 +36,47 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [router])
 
   return (
-    <UserAuthProvider>
-      <CartProvider>
-        <FavoritesProvider>
-          <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-          <meta name="description" content={SITE_DESCRIPTION} />
-          <meta name="keywords" content={KEYWORDS} />
-          <meta name="theme-color" content="#030303" />
-          
-          {/* DNS Prefetch for external resources */}
-          <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-          <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-          <link rel="dns-prefetch" href="https://images.pexels.com" />
-          <link rel="dns-prefetch" href="https://images.unsplash.com" />
-          
-          {/* Preconnect to critical origins */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+    <SiteConfigProvider initialConfig={pageProps.siteConfig}>
+      <UserAuthProvider>
+        <CartProvider>
+          <FavoritesProvider>
+            <Head>
+              <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+              <meta name="description" content={SITE_DESCRIPTION} />
+              <meta name="keywords" content={KEYWORDS} />
+              <meta name="theme-color" content="#030303" />
 
-          {/* Open Graph */}
-          <meta property="og:site_name" content={SITE_NAME} />
-          <meta property="og:type" content="website" />
-          <meta property="og:url" content={SITE_URL} />
-          <meta property="og:title" content={SITE_NAME} />
-          <meta property="og:description" content={SITE_DESCRIPTION} />
-          <meta property="og:image" content={`${SITE_URL}${DEFAULT_OG}`} />
-          <meta property="og:image:width" content="1200" />
-          <meta property="og:image:height" content="630" />
-          <meta property="og:image:alt" content={`${SITE_NAME} - Luxury handcrafted jewelry`} />
-          <meta property="og:locale" content="en_US" />
-          
-          {/* Twitter Cards */}
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:site" content="@atelier" />
-          <meta name="twitter:creator" content="@atelier" />
-          <meta name="twitter:title" content={SITE_NAME} />
-          <meta name="twitter:description" content={SITE_DESCRIPTION} />
-          <meta name="twitter:image" content={`${SITE_URL}${DEFAULT_OG}`} />
-          <meta name="twitter:image:alt" content={SITE_NAME} />
+              {/* DNS prefetch & preconnect declarations are in _document.tsx */}
 
-          {/* Canonical - pages can override if needed */}
-          <meta name="google-site-verification" content="lbE-B7d1GY7dOpPWJGwKeSOE71vpYNkby-KMNJ0IwyE" />
-          <link rel="canonical" href={SITE_URL} />
-          </Head>
-          <MemoizedComponent Component={Component} pageProps={pageProps} />
-        </FavoritesProvider>
-      </CartProvider>
-    </UserAuthProvider>
+              {/* Open Graph */}
+              <meta property="og:site_name" content={SITE_NAME} />
+              <meta property="og:type" content="website" />
+              <meta property="og:url" content={SITE_URL} />
+              <meta property="og:title" content={SITE_NAME} />
+              <meta property="og:description" content={SITE_DESCRIPTION} />
+              <meta property="og:image" content={`${SITE_URL}${DEFAULT_OG}`} />
+              <meta property="og:image:width" content="1200" />
+              <meta property="og:image:height" content="630" />
+              <meta property="og:image:alt" content={`${SITE_NAME} - Luxury handcrafted jewelry`} />
+              <meta property="og:locale" content="en_US" />
+
+              {/* Twitter Cards */}
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:site" content="@atelier" />
+              <meta name="twitter:creator" content="@atelier" />
+              <meta name="twitter:title" content={SITE_NAME} />
+              <meta name="twitter:description" content={SITE_DESCRIPTION} />
+              <meta name="twitter:image" content={`${SITE_URL}${DEFAULT_OG}`} />
+              <meta name="twitter:image:alt" content={SITE_NAME} />
+
+              {/* Canonical - pages can override if needed */}
+              <meta name="google-site-verification" content="lbE-B7d1GY7dOpPWJGwKeSOE71vpYNkby-KMNJ0IwyE" />
+              <link rel="canonical" href={SITE_URL} />
+            </Head>
+            <MemoizedComponent Component={Component} pageProps={pageProps} />
+          </FavoritesProvider>
+        </CartProvider>
+      </UserAuthProvider>
+    </SiteConfigProvider>
   )
 }

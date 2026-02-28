@@ -1,5 +1,5 @@
 import { useState, memo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 interface AccordionItemProps {
   title: string
@@ -16,8 +16,8 @@ const AccordionItem = ({ title, children, isOpen, onClick, icon }: AccordionItem
         className="w-full py-6 flex items-center justify-between text-left group"
       >
         <div className="flex items-center gap-4">
-          {icon && <span className="text-[#7A4A2B]">{icon}</span>}
-          <span className="text-sm font-medium uppercase tracking-[0.2em] text-[#1A1A1A] group-hover:text-[#7A4A2B] transition-colors font-poppins">
+          {icon && <span className="text-[#1A1A1A]">{icon}</span>}
+          <span className="text-sm font-medium uppercase tracking-[0.2em] text-[#1A1A1A] group-hover:text-[#888] transition-colors font-poppins">
             {title}
           </span>
         </div>
@@ -29,20 +29,18 @@ const AccordionItem = ({ title, children, isOpen, onClick, icon }: AccordionItem
           </div>
         </div>
       </button>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-          >
-            <div className="pb-8 pl-9 text-base text-[#374151] leading-relaxed space-y-4 font-poppins font-normal max-w-2xl">
-              {children}
-            </div>
-          </motion.div>
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          isOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0 mt-0"
         )}
-      </AnimatePresence>
+      >
+        <div className="overflow-hidden">
+          <div className="pb-8 pl-9 text-base text-[#374151] leading-relaxed space-y-4 font-poppins font-normal max-w-2xl">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

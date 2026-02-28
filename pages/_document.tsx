@@ -22,7 +22,7 @@ class MyDocument extends Document {
           
           {/* Load only essential font weights with display=swap for faster rendering */}
           <link 
-            href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" 
+            href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" 
             rel="stylesheet" 
           />
           

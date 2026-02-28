@@ -2,7 +2,6 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import { Header, Footer } from '@/components'
 
 interface Order {
@@ -30,7 +29,7 @@ export default function OrderConfirmationPage() {
 
   useEffect(() => {
     if (id && typeof id === 'string') {
-      fetch(`/api/orders/${id}`)
+      fetch(`/api/orders/${id}`, { credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           if (data && !data.error) {
@@ -71,30 +70,22 @@ export default function OrderConfirmationPage() {
 
         <main className="pt-24 pb-20">
           <div className="max-w-2xl mx-auto px-6 lg:px-8 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
+            <div
+              className="animate-in zoom-in-95 duration-500"
             >
               {/* Success Icon with animation */}
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center"
+              <div
+                className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500 delay-200 fill-mode-both"
               >
-                <motion.svg 
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
-                  className="w-12 h-12 text-green-600" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="w-12 h-12 text-green-600 animate-in fade-in fill-mode-both duration-500 delay-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </motion.svg>
-              </motion.div>
+                </svg>
+              </div>
 
               <h1 className="text-3xl md:text-4xl font-medium text-[#111827] mb-4">
                 Thank You for Your Order!
@@ -107,11 +98,8 @@ export default function OrderConfirmationPage() {
               </p>
 
               {order && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-[#f0e3ce] rounded-lg p-6 text-left mb-8"
+                <div
+                  className="bg-[#f0e3ce] rounded-lg p-6 text-left mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both"
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div>
@@ -164,21 +152,18 @@ export default function OrderConfirmationPage() {
                       <p className="text-sm text-[#6B7280] capitalize">Status: {order.payment_status}</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {order?.payment_method === 'Bank Transfer' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 text-left"
+                <div
+                  className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 text-left animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both"
                 >
                   <p className="font-medium text-yellow-800 mb-2">Bank Transfer Instructions</p>
                   <p className="text-sm text-yellow-700">
                     Please transfer the total amount to our bank account. Your order will be processed once payment is confirmed.
                   </p>
-                </motion.div>
+                </div>
               )}
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -195,7 +180,7 @@ export default function OrderConfirmationPage() {
                   Continue Shopping
                 </Link>
               </div>
-            </motion.div>
+            </div>
           </div>
         </main>
 

@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -68,6 +71,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Product update error:', error)
       return res.status(500).json({ error: error.message })
     }
+    apiCache.invalidateByTag('products')
+    invalidateSSGCache('products')
+    try {
+      await res.revalidate('/')
+      await res.revalidate('/products')
+    } catch (e) {
+      console.warn('Failed to revalidate', e)
+    }
     return res.status(200).json(data)
   }
 
@@ -78,6 +89,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('id', productId)
 
     if (error) return res.status(500).json({ error: error.message })
+    apiCache.invalidateByTag('products')
+    invalidateSSGCache('products')
+    try {
+      await res.revalidate('/')
+      await res.revalidate('/products')
+    } catch (e) {
+      console.warn('Failed to revalidate', e)
+    }
     return res.status(200).json({ message: 'Product deleted' })
   }
 

@@ -135,35 +135,36 @@ function CategoriesContent() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-8">
       {/* Info Note */}
-      <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-4">
-        <p className="text-blue-400 text-sm">
+      <div className="bg-blue-900/15 border border-blue-700/30 rounded-2xl p-5 sm:p-6">
+        <p className="text-blue-400 text-sm leading-relaxed">
           <strong>What are Categories?</strong> Categories are used to tag and organize your <strong>products</strong> (e.g., Rings, Necklaces, Bracelets). 
           When adding or editing a product, you&apos;ll assign it to one of these categories.
         </p>
-        <p className="text-blue-400/70 text-xs mt-2">
+        <p className="text-blue-400/70 text-xs mt-3 leading-relaxed">
           💡 To display categories on the homepage, go to <a href="/admin/homepage" className="underline hover:text-blue-300">Homepage → Collections</a> and add a collection card for each category you want to feature.
         </p>
       </div>
 
       {/* Add New Category */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626]">
-          <h3 className="text-[15px] font-medium text-white">Add New Category</h3>
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a]">
+          <h3 className="text-base font-semibold text-white">Add New Category</h3>
+          <p className="text-[#666] text-sm mt-1">Create a new category to organize your products</p>
         </div>
-        <div className="p-5">
+        <div className="p-6">
           <form onSubmit={addCategory} className="flex gap-3">
             <input
               type="text"
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Category name..."
-              className="admin-input flex-1"
+              className="admin-input flex-1 py-3 px-4 text-sm"
             />
             <button
               type="submit"
-              className="admin-btn admin-btn-primary"
+              className="admin-btn admin-btn-primary py-3 px-5"
             >
               {Icons.plus}
               <span>Add</span>
@@ -173,22 +174,25 @@ function CategoriesContent() {
       </div>
 
       {/* Categories List */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626] flex items-center justify-between">
-          <h3 className="text-[15px] font-medium text-white">All Categories</h3>
-          <span className="admin-badge admin-badge-neutral">{categories.length} total</span>
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-white">All Categories</h3>
+            <p className="text-[#666] text-sm mt-1">Manage your product categories</p>
+          </div>
+          <span className="admin-badge admin-badge-neutral text-xs px-3 py-1.5">{categories.length} total</span>
         </div>
         
-        <div className="divide-y divide-[#262626]">
+        <div className="divide-y divide-[#1a1a1a]">
           {categories.map(category => (
-            <div key={category.id} className="px-5 py-4 flex items-center justify-between hover:bg-[#111] transition-colors">
+            <div key={category.id} className="px-6 py-5 flex items-center justify-between hover:bg-[#111] transition-colors">
               {editingId === category.id ? (
-                <div className="flex gap-2 flex-1 mr-4">
+                <div className="flex gap-3 flex-1 mr-4">
                   <input
                     type="text"
                     value={editName}
                     onChange={e => setEditName(e.target.value)}
-                    className="admin-input flex-1"
+                    className="admin-input flex-1 py-3 px-4 text-sm"
                     autoFocus
                     onKeyDown={e => {
                       if (e.key === 'Enter') updateCategory(category.id, editName)
@@ -197,14 +201,14 @@ function CategoriesContent() {
                   />
                   <button
                     onClick={() => updateCategory(category.id, editName)}
-                    className="admin-btn admin-btn-primary px-3"
+                    className="admin-btn admin-btn-primary px-4 py-3"
                     title="Save"
                   >
                     {Icons.check}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="admin-btn admin-btn-secondary px-3"
+                    className="admin-btn admin-btn-secondary px-4 py-3"
                     title="Cancel"
                   >
                     {Icons.x}
@@ -212,21 +216,28 @@ function CategoriesContent() {
                 </div>
               ) : (
                 <>
-                  <span className="text-white text-sm">{category.name}</span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#222] flex items-center justify-center text-[#555]">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                      </svg>
+                    </div>
+                    <span className="text-white text-sm font-medium">{category.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
                         setEditingId(category.id)
                         setEditName(category.name)
                       }}
-                      className="p-2 text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-md transition-colors"
+                      className="p-2.5 text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
                       title="Edit"
                     >
                       {Icons.edit}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(category.id)}
-                      className="p-2 text-[#666] hover:text-[#ff6166] hover:bg-[#ff616610] rounded-md transition-colors"
+                      className="p-2.5 text-[#666] hover:text-[#ff6166] hover:bg-[#ff6166]/10 rounded-lg transition-colors"
                       title="Delete"
                     >
                       {Icons.trash}
@@ -239,8 +250,14 @@ function CategoriesContent() {
         </div>
 
         {categories.length === 0 && (
-          <div className="p-12 text-center text-[#666]">
-            <p>No categories yet. Add your first category above.</p>
+          <div className="p-16 text-center">
+            <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <p className="text-white text-sm font-medium mb-1">No categories yet</p>
+            <p className="text-[#555] text-sm">Add your first category above to get started.</p>
           </div>
         )}
       </div>
@@ -248,21 +265,24 @@ function CategoriesContent() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-white text-[15px] font-medium mb-2">Delete Category</h3>
-            <p className="text-[#888] text-sm mb-6">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-[#ff4444]/10 flex items-center justify-center mx-auto mb-4">
+              {Icons.trash}
+            </div>
+            <h3 className="text-white text-base font-semibold mb-2 text-center">Delete Category</h3>
+            <p className="text-[#777] text-sm mb-6 text-center">
               Make sure no products are using this category before deleting.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 admin-btn admin-btn-secondary"
+                className="flex-1 admin-btn admin-btn-secondary py-2.5"
               >
                 Cancel
               </button>
               <button
                 onClick={() => deleteCategory(deleteConfirm)}
-                className="flex-1 admin-btn admin-btn-danger"
+                className="flex-1 admin-btn admin-btn-danger py-2.5"
               >
                 Delete
               </button>
@@ -281,7 +301,7 @@ export default function AdminCategories() {
         <Head>
           <title>Categories — Atelier Admin</title>
         </Head>
-        <AdminLayout title="Categories">
+        <AdminLayout title="Categories" subtitle="Organize your products into collections">
           <CategoriesContent />
         </AdminLayout>
       </ToastProvider>

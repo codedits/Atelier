@@ -1,28 +1,35 @@
-import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Image from 'next/image'
 
 export default function Craftsmanship() {
+  const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.2 })
+
   return (
-    <section className="py-24 md:py-32 bg-[#F8F7F5] w-full overflow-hidden">
-      <div className="w-full mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Content First */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6 order-2 lg:order-1 will-change-transform"
+    <section className="luxury-section bg-[#FAF9F6] w-full overflow-hidden" ref={sectionRef}>
+      <div className="w-full mx-auto px-6 lg:px-8 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+          {/* Content */}
+          <div
+            className={cn(
+              "space-y-8 order-2 lg:order-1 will-change-transform invisible-before-reveal",
+              isIntersecting && "reveal-slide-up"
+            )}
           >
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-[#7A4A2B] font-bold font-poppins mb-3">Our Heritage</p>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium font-display text-[#1A1A1A] leading-tight">
-                Handcrafted Excellence
+              <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
+                Our Heritage
+              </p>
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] leading-[1.1] tracking-wide font-serif">
+                Handcrafted<br />Excellence
               </h2>
             </div>
-            
-            <div className="space-y-6 text-lg text-[#374151] leading-relaxed font-poppins font-normal">
+
+            {/* Gold divider */}
+            <div className="w-16 h-px bg-gradient-to-r from-[#1A1A1A] to-transparent" />
+
+            <div className="space-y-5 text-base text-[#6B6B6B] leading-relaxed">
               <p>
                 Every piece is meticulously crafted by our master artisans, blending traditional techniques with contemporary design.
               </p>
@@ -31,31 +38,44 @@ export default function Craftsmanship() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-[#1A1A1A]/10">
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 pt-10 border-t border-[#E8E4DF]">
               <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">35+</div>
-                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Years of Artistry</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
+                  35+
+                </div>
+                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
+                  Years of Artistry
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">12</div>
-                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Master Artisans</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
+                  12
+                </div>
+                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
+                  Master Artisans
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-display font-medium mb-2">5000+</div>
-                <div className="text-[10px] text-[#7A4A2B] uppercase tracking-[0.2em] font-bold font-poppins">Unique Pieces</div>
+                <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
+                  5000+
+                </div>
+                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
+                  Unique Pieces
+                </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Image */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="relative order-1 lg:order-2 will-change-transform"
+          <div
+            className={cn(
+              "relative order-1 lg:order-2 will-change-transform invisible-before-reveal",
+              isIntersecting && "reveal-fade-in"
+            )}
+            style={{ animationDelay: isIntersecting ? '200ms' : '0ms' }}
           >
-            <div className="aspect-[4/5] overflow-hidden bg-[#f0e3ce] relative">
+            <div className="aspect-[3/4] overflow-hidden relative">
               <Image
                 src="/pexels-peter-ohis-322737401-13726059.jpg"
                 alt="Master artisan crafting jewelry"
@@ -63,8 +83,10 @@ export default function Craftsmanship() {
                 className="object-cover"
                 sizes="(min-width:1024px)50vw,100vw"
               />
+              {/* Subtle gold frame overlay */}
+              <div className="absolute inset-4 border border-[#1A1A1A]/20 pointer-events-none" />
             </div>
-          </motion.div>
+          </div>
 
         </div>
       </div>

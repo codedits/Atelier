@@ -1,4 +1,4 @@
-import { Header } from '@/components'
+﻿import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
@@ -48,7 +48,7 @@ export default function ReturnsPolicy() {
                     'Return must be initiated within 30 days of delivery'
                   ].map((item, index) => (
                     <li key={index} className="flex items-start gap-3">
-                      <span className="text-[#B91C1C] font-bold mt-0.5">✓</span>
+                      <span className="text-[#1A1A1A] font-bold mt-0.5">âœ“</span>
                       <span className="text-[#6B6B6B]">{item}</span>
                     </li>
                   ))}
@@ -83,7 +83,7 @@ export default function ReturnsPolicy() {
                   }
                 ].map((item, index) => (
                   <div key={index} className="flex gap-4 pb-6 border-b border-[#E5E5E5] last:border-b-0">
-                    <div className="flex-shrink-0 w-10 h-10 bg-[#B91C1C] rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#1A1A1A] rounded-full flex items-center justify-center text-white font-bold">
                       {item.step}
                     </div>
                     <div>
@@ -140,7 +140,7 @@ export default function ReturnsPolicy() {
             </div>
 
             {/* Contact */}
-            <div className="bg-[#F8F7F5] rounded-lg p-8 text-center border-l-4 border-[#B91C1C]">
+            <div className="bg-[#F8F7F5] rounded-lg p-8 text-center border-l-4 border-[#1A1A1A]">
               <h3 className="font-display text-2xl text-[#1A1A1A] mb-4">Need Help with a Return?</h3>
               <p className="text-[#6B6B6B] mb-6">
                 Our customer service team is here to help. Contact us anytime.
@@ -148,13 +148,13 @@ export default function ReturnsPolicy() {
               <div className="space-y-3">
                 <a 
                   href={`mailto:${CONTACT_EMAIL}`} 
-                  className="block text-[#B91C1C] hover:text-[#1A1A1A] transition-colors font-medium"
+                  className="block text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors font-medium"
                 >
                   Email: {CONTACT_EMAIL}
                 </a>
                 <a 
                   href="tel:+923001234567" 
-                  className="block text-[#B91C1C] hover:text-[#1A1A1A] transition-colors font-medium"
+                  className="block text-[#1A1A1A] hover:text-[#1A1A1A] transition-colors font-medium"
                 >
                   Phone: +92 (300) 123-4567
                 </a>

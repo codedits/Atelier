@@ -1,5 +1,6 @@
 import { memo } from 'react'
-import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -17,76 +18,77 @@ interface FeaturedCollectionsProps {
 }
 
 const FeaturedCollections = memo(function FeaturedCollections({ collections }: FeaturedCollectionsProps) {
+  const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
+
   return (
-    <section className="pt-12 pb-0 md:pt-20 md:pb-0 bg-gradient-to-b from-white to-[#F5F3F0] overflow-hidden">
-      <div className="w-full mx-auto px-0">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          whileInView={{ opacity: 1, y: 0 }} 
-          viewport={{ once: true }} 
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-12"
+    <section className="luxury-section bg-[#FAF9F6] overflow-hidden" ref={sectionRef}>
+      <div className="w-full mx-auto px-6 lg:px-8 max-w-7xl">
+        {/* Section header */}
+        <div
+          className={cn(
+            "text-center mb-16 md:mb-20 invisible-before-reveal",
+            isIntersecting && "reveal-slide-up"
+          )}
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#1A1A1A] mb-4">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
+            Collections
+          </p>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] mb-6">
             Shop by Category
           </h2>
-          <p className="text-[#6B6B6B] text-base max-w-xl mx-auto">
-            Discover our curated collections
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-          {collections.map((collection, index) => (
-            <motion.div
-              key={collection.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.25 }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="will-change-transform"
-            >
-              <Link
-                href={collection.link}
-                className="group relative overflow-hidden  block h-[60vh] md:h-[80vh] min-h-[320px] w-full cursor-pointer"
-              >
-                {/* Background Image */}
-                <Image
-                  src={collection.image_url}
-                  alt={collection.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                />
-
-                {/* Gradient Overlay - Dark to Transparent */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 group-hover:opacity-80 transition-opacity duration-500"></div>
-
-                {/* Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-end p-6 md:p-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 + 0.2 }}
-                    className="text-center w-full"
-                  >
-                    <h3 className="text-2xl md:text-3xl font-semibold !text-white mb-3">
-                      {collection.title}
-                    </h3>
-                    <div className="flex items-center justify-center gap-2 text-white text-sm font-medium group-hover:gap-3 transition-all duration-300">
-                      <span>Explore</span>
-                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Accent Border on Hover */}
-                <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#7A4A2B] via-[#E8C0C0] to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-              </Link>
-            </motion.div>
-          ))}
+          <div className="luxury-divider mt-6">
+            <div className="luxury-divider-diamond" />
+          </div>
         </div>
+      </div>
+
+      {/* Full-bleed editorial grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#E8E4DF]">
+        {collections.map((collection, index) => (
+          <div
+            key={collection.id}
+            className={cn(
+              "will-change-transform invisible-before-reveal",
+              isIntersecting && "reveal-fade-in"
+            )}
+            style={{ animationDelay: isIntersecting ? `${index * 100}ms` : '0ms' }}
+          >
+            <Link
+              href={collection.link}
+              className="group relative overflow-hidden block h-screen w-full cursor-pointer bg-[#FAF9F6]"
+            >
+              <Image
+                src={collection.image_url}
+                alt={collection.title}
+                fill
+                className="object-cover transition-all duration-[1200ms] ease-out group-hover:scale-105"
+                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+              />
+
+              {/* Refined gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
+
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-10">
+                <div className="text-center w-full">
+                  {/* Gold accent line */}
+                  <div className="w-8 h-px bg-white mx-auto mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-center" />
+
+                  <h3 className="text-2xl md:text-3xl font-medium !text-white mb-4 tracking-wide font-serif">
+                    {collection.title}
+                  </h3>
+
+                  <div className="flex items-center justify-center gap-2 text-white/80 text-xs font-medium uppercase tracking-[0.2em] group-hover:gap-3 transition-all duration-500">
+                    <span>Discover</span>
+                    <svg className="w-3 h-3 group-hover:translate-x-1.5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        ))}
       </div>
     </section>
   )

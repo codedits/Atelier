@@ -171,39 +171,39 @@ function ReviewsContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]">{Icons.search}</span>
+        <div className="relative flex-1 min-w-0">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666]">{Icons.search}</span>
           <input
             type="text"
             placeholder="Search by customer, product, or comment..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="admin-input w-full pl-9"
+            className="admin-input w-full pl-11 py-3"
           />
         </div>
-        <div className="flex gap-3">
-          <div className="relative">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative min-w-[130px]">
             <select
               value={filterApproved}
               onChange={e => setFilterApproved(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 py-3 appearance-none cursor-pointer w-full"
             >
               <option value="">All Status</option>
               <option value="approved">Approved</option>
               <option value="pending">Pending</option>
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
-          <div className="relative">
+          <div className="relative min-w-[130px]">
             <select
               value={filterRating}
               onChange={e => setFilterRating(e.target.value)}
-              className="admin-input pr-8 appearance-none cursor-pointer"
+              className="admin-input pr-8 py-3 appearance-none cursor-pointer w-full"
             >
               <option value="">All Ratings</option>
               <option value="5">5 Stars</option>
@@ -212,7 +212,7 @@ function ReviewsContent() {
               <option value="2">2 Stars</option>
               <option value="1">1 Star</option>
             </select>
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666] pointer-events-none">
               {Icons.chevronDown}
             </span>
           </div>
@@ -220,41 +220,53 @@ function ReviewsContent() {
       </div>
 
       {/* Stats Bar */}
-      <div className="flex flex-wrap gap-4 text-sm">
-        <span className="text-[#666]">
-          Total: <span className="text-white">{reviews.length}</span>
-        </span>
-        <span className="text-[#50e3c2]">
-          Approved: {reviews.filter(r => r.is_approved).length}
-        </span>
-        <span className="text-[#f5a623]">
-          Pending: {reviews.filter(r => !r.is_approved).length}
-        </span>
-        <span className="text-[#666]">
-          Avg Rating: <span className="text-white">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-white">{reviews.length}</p>
+          <p className="text-[#666] text-xs mt-1">Total Reviews</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-[#50e3c2]">{reviews.filter(r => r.is_approved).length}</p>
+          <p className="text-[#666] text-xs mt-1">Approved</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-[#f5a623]">{reviews.filter(r => !r.is_approved).length}</p>
+          <p className="text-[#666] text-xs mt-1">Pending</p>
+        </div>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-white">
             {reviews.length > 0 
               ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
               : '0.0'
             }
-          </span>
-        </span>
+          </p>
+          <p className="text-[#666] text-xs mt-1">Avg Rating</p>
+        </div>
       </div>
 
       {/* Reviews List */}
       <div className="space-y-4">
         {filteredReviews.length === 0 ? (
-          <div className="text-center py-12 text-[#666]">
-            {search || filterApproved || filterRating
-              ? 'No reviews match your filters'
-              : 'No reviews yet'
-            }
+          <div className="text-center py-16">
+            <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center mx-auto mb-4">
+              {Icons.star}
+            </div>
+            <p className="text-white text-sm font-medium mb-1">
+              {search || filterApproved || filterRating ? 'No matching reviews' : 'No reviews yet'}
+            </p>
+            <p className="text-[#555] text-sm">
+              {search || filterApproved || filterRating
+                ? 'Try adjusting your search or filters.'
+                : 'Reviews will appear here when customers submit them.'
+              }
+            </p>
           </div>
         ) : (
           filteredReviews.map(review => (
             <div
               key={review.id}
-              className={`bg-[#0a0a0a] border rounded-xl p-4 transition-colors ${
-                review.is_approved ? 'border-[#262626]' : 'border-[#f5a623]/30'
+              className={`bg-[#0a0a0a] border rounded-2xl p-5 transition-colors ${
+                review.is_approved ? 'border-[#1a1a1a]' : 'border-[#f5a623]/30'
               }`}
             >
               <div className="flex gap-4">
@@ -340,22 +352,25 @@ function ReviewsContent() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-md w-full p-6">
-            <h3 className="text-white font-medium mb-2">Delete Review</h3>
-            <p className="text-[#888] text-sm mb-4">
-              Are you sure you want to delete this review? This action cannot be undone.
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl w-full max-w-sm p-6 sm:p-8 shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-[#ff4444]/10 flex items-center justify-center mx-auto mb-4">
+              {Icons.trash}
+            </div>
+            <h3 className="text-white text-base font-semibold mb-2 text-center">Delete Review</h3>
+            <p className="text-[#777] text-sm mb-6 text-center">
+              This review will be permanently removed. This action cannot be undone.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-[#888] hover:text-white transition-colors"
+                className="flex-1 admin-btn admin-btn-secondary py-2.5"
               >
                 Cancel
               </button>
               <button
                 onClick={() => deleteReview(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                className="flex-1 admin-btn admin-btn-danger py-2.5"
               >
                 Delete
               </button>
@@ -366,18 +381,18 @@ function ReviewsContent() {
 
       {/* Review Detail Modal */}
       {selectedReview && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-[#0a0a0a] border-b border-[#262626] p-4 flex items-center justify-between">
-              <h3 className="text-white font-medium">Review Details</h3>
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl admin-scrollbar">
+            <div className="sticky top-0 bg-[#0a0a0a] border-b border-[#1a1a1a] px-6 py-5 flex items-center justify-between">
+              <h3 className="text-white text-base font-semibold">Review Details</h3>
               <button
                 onClick={() => setSelectedReview(null)}
-                className="p-2 text-[#666] hover:text-white transition-colors"
+                className="w-9 h-9 flex items-center justify-center text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
               >
                 {Icons.x}
               </button>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-6 space-y-5">
               {/* Product */}
               {selectedReview.products && (
                 <div className="flex items-center gap-3">
@@ -489,7 +504,7 @@ export default function AdminReviews() {
         <Head>
           <title>Reviews — Atelier Admin</title>
         </Head>
-        <AdminLayout title="Reviews">
+        <AdminLayout title="Reviews" subtitle="Manage customer feedback and ratings">
           <ReviewsContent />
         </AdminLayout>
       </ToastProvider>

@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+import { useEffect, useState } from 'react'
 
 interface ToastProps {
   message: string
@@ -10,6 +11,12 @@ interface ToastProps {
 }
 
 export default function Toast({ message, type = 'success', isVisible, onClose, duration = 5000 }: ToastProps) {
+  const [render, setRender] = useState(isVisible)
+
+  useEffect(() => {
+    if (isVisible) setRender(true)
+  }, [isVisible])
+
   useEffect(() => {
     if (isVisible && duration > 0) {
       const timer = setTimeout(() => {
@@ -53,36 +60,36 @@ export default function Toast({ message, type = 'success', isVisible, onClose, d
     }
   }
 
+  if (!render) return null
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -50, scale: 0.95 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className={`fixed top-6 right-6 z-[10000] max-w-sm w-full ${getBgColor()} border rounded-lg shadow-lg p-4`}
-        >
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              {getIcon()}
-            </div>
-            <div className="ml-3 flex-1">
-              <p className="text-sm font-medium text-gray-900">{message}</p>
-            </div>
-            <div className="ml-4 flex-shrink-0">
-              <button
-                onClick={onClose}
-                className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </motion.div>
+    <div
+      className={cn(
+        `fixed top-6 right-6 z-[10000] max-w-sm w-full ${getBgColor()} border rounded-lg shadow-lg p-4 transition-all duration-300 transform`,
+        isVisible ? "translate-y-0 opacity-100 scale-100" : "-translate-y-4 opacity-0 scale-95"
       )}
-    </AnimatePresence>
+      onTransitionEnd={() => {
+        if (!isVisible) setRender(false)
+      }}
+    >
+      <div className="flex items-start">
+        <div className="flex-shrink-0">
+          {getIcon()}
+        </div>
+        <div className="ml-3 flex-1">
+          <p className="text-sm font-medium text-gray-900">{message}</p>
+        </div>
+        <div className="ml-4 flex-shrink-0">
+          <button
+            onClick={onClose}
+            className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

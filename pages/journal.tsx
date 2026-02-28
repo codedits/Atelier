@@ -1,4 +1,4 @@
-import { Header } from '@/components'
+﻿import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import Image from 'next/image'
@@ -106,8 +106,8 @@ export default function Journal() {
                 </div>
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wider">Featured</span>
-                    <span className="text-xs text-[#9CA3AF]">•</span>
+                    <span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Featured</span>
+                    <span className="text-xs text-[#9CA3AF]">â€¢</span>
                     <span className="text-xs text-[#6B6B6B]">{blogPosts[0].category}</span>
                   </div>
                   <h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-4">
@@ -117,9 +117,9 @@ export default function Journal() {
                     {blogPosts[0].excerpt}
                   </p>
                   <p className="text-sm text-[#9CA3AF] mb-6">{blogPosts[0].date}</p>
-                  <button className="px-6 py-3 border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors font-medium">
-                    Read Article
-                  </button>
+                  <span className="inline-block px-6 py-3 border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors font-medium cursor-default opacity-50">
+                    Coming Soon
+                  </span>
                 </div>
               </div>
             </div>
@@ -138,9 +138,9 @@ export default function Journal() {
                       />
                     </div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wider">{post.category}</span>
+                      <span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">{post.category}</span>
                     </div>
-                    <h3 className="font-display text-xl text-[#1A1A1A] mb-3 group-hover:text-[#B91C1C] transition-colors">
+                    <h3 className="font-display text-xl text-[#1A1A1A] mb-3 group-hover:text-[#888] transition-colors">
                       {post.title}
                     </h3>
                     <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">
@@ -154,9 +154,9 @@ export default function Journal() {
 
             {/* Load More Button */}
             <div className="text-center mt-12">
-              <button className="px-8 py-3 border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors font-medium">
-                Load More Articles
-              </button>
+              <span className="inline-block px-8 py-3 border border-[#E5E5E5] text-[#9CA3AF] font-medium cursor-default">
+                More Articles Coming Soon
+              </span>
             </div>
           </div>
         </section>
@@ -174,12 +174,12 @@ export default function Journal() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#B91C1C]"
+                className="flex-1 px-4 py-3 border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#1A1A1A]"
                 required
               />
               <button
                 type="submit"
-                className="px-6 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-medium"
+                className="px-6 py-3 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#333] transition-colors font-medium"
               >
                 Subscribe
               </button>

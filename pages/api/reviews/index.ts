@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase, ProductReview } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { apiCache } from '@/lib/server-cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -10,51 +11,56 @@ if (supabaseUrl && supabaseServiceRoleKey) {
   supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
 }
 
+const REVIEWS_TTL = 600_000 // 10 minutes (matches s-maxage)
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = supabaseAdmin ?? supabase
 
   if (req.method === 'GET') {
-    // Get reviews for a product
     const { product_id, limit = '10', offset = '0' } = req.query
 
     if (!product_id) {
       return res.status(400).json({ error: 'product_id is required' })
     }
 
+    const cacheKey = `api:reviews:${product_id}:${limit}:${offset}`
+
     try {
-      const { data: reviews, error } = await client
-        .from('product_reviews')
-        .select('*')
-        .eq('product_id', product_id)
-        .eq('is_approved', true)
-        .order('created_at', { ascending: false })
-        .range(parseInt(offset as string), parseInt(offset as string) + parseInt(limit as string) - 1)
+      const { data, hit } = await apiCache.getOrFetch(
+        cacheKey,
+        async () => {
+          const { data: reviews, error } = await client
+            .from('product_reviews')
+            .select('id, product_id, order_id, user_name, rating, title, comment, is_verified_purchase, is_approved, created_at')
+            .eq('product_id', product_id)
+            .eq('is_approved', true)
+            .order('created_at', { ascending: false })
+            .range(parseInt(offset as string), parseInt(offset as string) + parseInt(limit as string) - 1)
 
-      if (error) throw error
+          if (error) throw error
 
-      // Get review stats
-      const { data: stats, error: statsError } = await client
-        .from('product_review_stats')
-        .select('*')
-        .eq('product_id', product_id)
-        .single()
+          const { data: stats } = await client
+            .from('product_review_stats')
+            .select('product_id, review_count, average_rating, five_star, four_star, three_star, two_star, one_star')
+            .eq('product_id', product_id)
+            .single()
 
-      // Stats might not exist if no reviews
-      const reviewStats = stats || {
-        product_id,
-        review_count: 0,
-        average_rating: 0,
-        five_star: 0,
-        four_star: 0,
-        three_star: 0,
-        two_star: 0,
-        one_star: 0
-      }
+          return {
+            reviews: reviews || [],
+            stats: stats || {
+              product_id,
+              review_count: 0,
+              average_rating: 0,
+              five_star: 0, four_star: 0, three_star: 0, two_star: 0, one_star: 0
+            }
+          }
+        },
+        { ttl: REVIEWS_TTL, tags: ['reviews', `reviews:${product_id}`], staleWhileRevalidate: true }
+      )
 
-      return res.status(200).json({
-        reviews: reviews || [],
-        stats: reviewStats
-      })
+      res.setHeader('X-Cache', hit ? 'HIT' : 'MISS')
+      res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200')
+      return res.status(200).json(data)
     } catch (error) {
       console.error('Error fetching reviews:', error)
       return res.status(500).json({ error: 'Failed to fetch reviews' })
@@ -129,6 +135,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (insertError) throw insertError
 
+      // Invalidate reviews cache for this product
+      apiCache.invalidateByTag(`reviews:${product_id}`)
       return res.status(201).json(review)
     } catch (error: any) {
       console.error('Error creating review:', error)

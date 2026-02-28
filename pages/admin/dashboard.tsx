@@ -106,116 +106,141 @@ function DashboardContent() {
       value: stats.totalProducts, 
       icon: Icons.products, 
       color: 'text-[#a78bfa]',
-      bgColor: 'bg-[#a78bfa]/10'
+      bgColor: 'bg-[#a78bfa]/10',
+      borderColor: 'border-[#a78bfa]/20',
+      link: '/admin/products'
     },
     { 
       label: 'Total Orders', 
       value: stats.totalOrders, 
       icon: Icons.orders, 
       color: 'text-[#60a5fa]',
-      bgColor: 'bg-[#60a5fa]/10'
+      bgColor: 'bg-[#60a5fa]/10',
+      borderColor: 'border-[#60a5fa]/20',
+      link: '/admin/orders'
     },
     { 
       label: 'Pending Orders', 
       value: stats.pendingOrders, 
       icon: Icons.pending, 
       color: 'text-[#f5a623]',
-      bgColor: 'bg-[#f5a623]/10'
+      bgColor: 'bg-[#f5a623]/10',
+      borderColor: 'border-[#f5a623]/20',
+      link: '/admin/orders?status=pending'
     },
     { 
       label: 'Total Revenue', 
       value: `₨${stats.totalRevenue.toLocaleString()}`, 
       icon: Icons.revenue, 
       color: 'text-[#50e3c2]',
-      bgColor: 'bg-[#50e3c2]/10'
+      bgColor: 'bg-[#50e3c2]/10',
+      borderColor: 'border-[#50e3c2]/20',
+      link: '/admin/orders'
     },
   ]
 
   return (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-semibold text-white mb-1">Welcome back</h2>
+          <p className="text-[#666] text-sm">Here&apos;s what&apos;s happening with your store today.</p>
+        </div>
+        <div className="flex gap-3">
+          <Link href="/admin/products?action=add" className="admin-btn admin-btn-primary text-sm">
+            {Icons.plus}
+            <span>Add Product</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Grid — larger cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {statCards.map(card => (
-          <div 
-            key={card.label} 
-            className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-5 hover:border-[#333] transition-colors"
+          <Link
+            key={card.label}
+            href={card.link}
+            className={`bg-[#0a0a0a] border ${card.borderColor} rounded-2xl p-5 sm:p-6 hover:bg-[#111] transition-all duration-200 group active:scale-[0.98]`}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className={`p-2 rounded-lg ${card.bgColor}`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className={`p-2.5 rounded-xl ${card.bgColor}`}>
                 <span className={card.color}>{card.icon}</span>
               </div>
+              <span className="text-[#333] group-hover:text-[#555] transition-colors">
+                {Icons.arrowRight}
+              </span>
             </div>
-            <div className="space-y-1">
-              <p className={`text-2xl font-semibold ${card.color}`}>{card.value}</p>
+            <div className="space-y-1.5">
+              <p className={`text-2xl sm:text-3xl font-bold ${card.color}`}>{card.value}</p>
               <p className="text-[#666] text-sm">{card.label}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
         {/* Today's Activity */}
-        <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#262626]">
-            <h3 className="text-[15px] font-medium text-white">Today's Activity</h3>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
+            <h3 className="text-[15px] font-semibold text-white">Today&apos;s Activity</h3>
+            <span className="admin-badge admin-badge-neutral text-[11px]">Live</span>
           </div>
-          <div className="p-5">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-[#888] text-sm">Orders Today</span>
-                <span className="text-white font-medium">{stats.todayOrderCount}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-t border-[#262626]">
-                <span className="text-[#888] text-sm">Sales Today</span>
-                <span className="text-[#50e3c2] font-medium">${stats.todaySales.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-t border-[#262626]">
-                <span className="text-[#888] text-sm">Shipped Orders</span>
-                <span className="text-[#60a5fa] font-medium">{stats.shippedOrders}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-t border-[#262626]">
-                <span className="text-[#888] text-sm">Delivered Orders</span>
-                <span className="text-[#50e3c2] font-medium">{stats.deliveredOrders}</span>
-              </div>
+          <div className="p-6">
+            <div className="space-y-0">
+              {[
+                { label: 'Orders Today', value: stats.todayOrderCount, color: 'text-white' },
+                { label: 'Sales Today', value: `₨${stats.todaySales.toLocaleString()}`, color: 'text-[#50e3c2]' },
+                { label: 'Shipped Orders', value: stats.shippedOrders, color: 'text-[#60a5fa]' },
+                { label: 'Delivered Orders', value: stats.deliveredOrders, color: 'text-[#50e3c2]' },
+              ].map((row, i) => (
+                <div key={i} className={`flex justify-between items-center py-3.5 ${i > 0 ? 'border-t border-[#1a1a1a]' : ''}`}>
+                  <span className="text-[#888] text-sm">{row.label}</span>
+                  <span className={`${row.color} font-semibold text-lg`}>{row.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Stock Alerts */}
-        <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#262626] flex items-center justify-between">
-            <h3 className="text-[15px] font-medium text-white">Stock Alerts</h3>
+        <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+          <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
+            <h3 className="text-[15px] font-semibold text-white">Stock Alerts</h3>
             {stats.outOfStock > 0 && (
-              <span className="admin-badge admin-badge-error">
+              <span className="admin-badge admin-badge-error text-[11px]">
                 {stats.outOfStock} out of stock
               </span>
             )}
           </div>
-          <div className="p-5">
+          <div className="p-6">
             {stats.lowStockProducts.length === 0 ? (
-              <div className="flex items-center gap-2 text-[#50e3c2] text-sm py-4">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                <span>All products are well-stocked</span>
+              <div className="flex flex-col items-center gap-3 text-[#50e3c2] py-8">
+                <div className="w-12 h-12 rounded-full bg-[#50e3c2]/10 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <span className="text-sm font-medium">All products are well-stocked</span>
               </div>
             ) : (
-              <div className="space-y-3">
-                {stats.lowStockProducts.slice(0, 5).map(product => (
-                  <div key={product.id} className="flex justify-between items-center py-2">
-                    <span className="text-[#888] text-sm truncate max-w-[200px]">{product.name}</span>
-                    <span className={`text-sm font-medium ${
-                      product.stock <= 2 ? 'text-[#ff6166]' : 'text-[#f5a623]'
+              <div className="space-y-0">
+                {stats.lowStockProducts.slice(0, 5).map((product, i) => (
+                  <div key={product.id} className={`flex justify-between items-center py-3.5 ${i > 0 ? 'border-t border-[#1a1a1a]' : ''}`}>
+                    <span className="text-[#888] text-sm truncate mr-4">{product.name}</span>
+                    <span className={`text-sm font-semibold px-2.5 py-1 rounded-lg ${
+                      product.stock === 0 ? 'bg-[#ff4444]/10 text-[#ff6166]' :
+                      product.stock <= 2 ? 'bg-[#ff6166]/10 text-[#ff6166]' : 'bg-[#f5a623]/10 text-[#f5a623]'
                     }`}>
-                      {product.stock} left
+                      {product.stock === 0 ? 'Out of stock' : `${product.stock} left`}
                     </span>
                   </div>
                 ))}
                 {stats.lowStockProducts.length > 5 && (
                   <Link 
                     href="/admin/products" 
-                    className="flex items-center gap-1 text-[#888] hover:text-white text-sm mt-2 transition-colors"
+                    className="flex items-center gap-2 text-[#888] hover:text-white text-sm mt-4 py-2 transition-colors"
                   >
                     <span>View all ({stats.lowStockProducts.length})</span>
                     {Icons.arrowRight}
@@ -227,38 +252,34 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626]">
-          <h3 className="text-[15px] font-medium text-white">Quick Actions</h3>
+      {/* Quick Actions — card grid */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a]">
+          <h3 className="text-[15px] font-semibold text-white">Quick Actions</h3>
+          <p className="text-[#555] text-xs mt-1">Jump to common tasks</p>
         </div>
-        <div className="p-5">
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/admin/products?action=add"
-              className="admin-btn admin-btn-primary"
-            >
-              {Icons.plus}
-              <span>Add Product</span>
-            </Link>
-            <Link
-              href="/admin/orders?status=pending"
-              className="admin-btn admin-btn-secondary"
-            >
-              View Pending Orders
-            </Link>
-            <Link
-              href="/admin/categories"
-              className="admin-btn admin-btn-secondary"
-            >
-              Manage Categories
-            </Link>
-            <Link
-              href="/admin/homepage"
-              className="admin-btn admin-btn-secondary"
-            >
-              Edit Homepage
-            </Link>
+        <div className="p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              { href: '/admin/products?action=add', label: 'Add Product', icon: Icons.plus, desc: 'Create new listing' },
+              { href: '/admin/orders?status=pending', label: 'Pending Orders', icon: Icons.pending, desc: `${stats.pendingOrders} awaiting` },
+              { href: '/admin/categories', label: 'Categories', icon: Icons.products, desc: 'Manage tags' },
+              { href: '/admin/homepage', label: 'Edit Homepage', icon: Icons.revenue, desc: 'Update content' },
+            ].map(action => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="flex flex-col gap-3 p-4 sm:p-5 rounded-xl border border-[#1a1a1a] hover:border-[#333] hover:bg-[#111] transition-all active:scale-[0.97] group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#1a1a1a] group-hover:bg-[#222] flex items-center justify-center text-[#888] group-hover:text-white transition-colors">
+                  {action.icon}
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium">{action.label}</p>
+                  <p className="text-[#555] text-xs mt-0.5">{action.desc}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
-import Head from 'next/head'
+﻿import Head from 'next/head'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { Header, Footer, ProductCard } from '@/components'
 import { useFavorites } from '@/context/FavoritesContext'
 
@@ -10,7 +9,7 @@ export default function FavoritesPage() {
   return (
     <>
       <Head>
-        <title>My Favorites — Atelier</title>
+        <title>My Favorites â€” Atelier</title>
         <meta name="description" content="Your favorite jewelry pieces from Atelier" />
       </Head>
 
@@ -19,11 +18,8 @@ export default function FavoritesPage() {
 
         <main className="pt-24 pb-20">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-12"
+            <div
+              className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
               <h1 className="text-4xl md:text-5xl font-medium text-[#111827] mb-4">
                 My Favorites
@@ -31,20 +27,18 @@ export default function FavoritesPage() {
               <p className="text-base text-[#6B7280] max-w-2xl mx-auto">
                 Your curated collection of pieces you love
               </p>
-            </motion.div>
+            </div>
 
             {loading ? (
               <div className="flex justify-center py-20">
                 <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
               </div>
             ) : favorites.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-20"
+              <div
+                className="text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-500"
               >
                 <div className="w-20 h-20 mx-auto mb-6 bg-pink-50 rounded-full flex items-center justify-center">
-                  <svg className="w-10 h-10 text-[#B91C1C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-10 h-10 text-[#1A1A1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
@@ -61,25 +55,25 @@ export default function FavoritesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
-              </motion.div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {favorites.map((product, index) => (
-                  <motion.div
+                  <div
                     key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <ProductCard
                       id={product.id}
+                      slug={product.slug}
                       name={product.name}
                       price={product.price}
                       oldPrice={product.old_price}
                       img={product.image_url}
                       category={product.category}
                     />
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}

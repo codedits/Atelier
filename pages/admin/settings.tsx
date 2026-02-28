@@ -15,6 +15,9 @@ interface StoreSettings {
   bank_name: string
   bank_account: string
   bank_holder: string
+  bank_iban: string
+  jazzcash_number: string
+  easypaisa_number: string
 }
 
 const defaultSettings: StoreSettings = {
@@ -26,7 +29,10 @@ const defaultSettings: StoreSettings = {
   free_delivery_above: '0',
   bank_name: '',
   bank_account: '',
-  bank_holder: ''
+  bank_holder: '',
+  bank_iban: '',
+  jazzcash_number: '',
+  easypaisa_number: ''
 }
 
 // Icons
@@ -116,14 +122,17 @@ function SettingsContent() {
   }
 
   return (
-    <form onSubmit={saveSettings} className="max-w-2xl space-y-6">
+    <form onSubmit={saveSettings} className="max-w-3xl space-y-8">
       {/* Store Info */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626] flex items-center gap-3">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center gap-3">
           <span className="text-[#888]">{Icons.store}</span>
-          <h3 className="text-[15px] font-medium text-white">Store Information</h3>
+          <div>
+            <h3 className="text-base font-semibold text-white">Store Information</h3>
+            <p className="text-[#555] text-sm mt-0.5">Basic details about your store</p>
+          </div>
         </div>
-        <div className="p-5 space-y-4">
+        <div className="p-6 space-y-5">
           <div>
             <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Store Name</label>
             <input
@@ -159,12 +168,15 @@ function SettingsContent() {
       </div>
 
       {/* Delivery */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626] flex items-center gap-3">
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center gap-3">
           <span className="text-[#888]">{Icons.truck}</span>
-          <h3 className="text-[15px] font-medium text-white">Delivery Settings</h3>
+          <div>
+            <h3 className="text-base font-semibold text-white">Delivery Settings</h3>
+            <p className="text-[#555] text-sm mt-0.5">Configure shipping and delivery options</p>
+          </div>
         </div>
-        <div className="p-5 space-y-4">
+        <div className="p-6 space-y-5">
           <div>
             <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">COD Service Areas</label>
             <textarea
@@ -177,7 +189,7 @@ function SettingsContent() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Delivery Charge ($)</label>
+              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Delivery Charge (₨)</label>
               <input
                 type="number"
                 value={settings.delivery_charge}
@@ -187,7 +199,7 @@ function SettingsContent() {
               />
             </div>
             <div>
-              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Free Delivery Above ($)</label>
+              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Free Delivery Above (₨)</label>
               <input
                 type="number"
                 value={settings.free_delivery_above}
@@ -200,42 +212,86 @@ function SettingsContent() {
         </div>
       </div>
 
-      {/* Bank Transfer */}
-      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#262626] flex items-center gap-3">
+      {/* Payment Methods */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center gap-3">
           <span className="text-[#888]">{Icons.creditCard}</span>
-          <h3 className="text-[15px] font-medium text-white">Bank Transfer Details</h3>
-        </div>
-        <div className="p-5 space-y-4">
           <div>
-            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Bank Name</label>
-            <input
-              type="text"
-              value={settings.bank_name}
-              onChange={e => updateField('bank_name', e.target.value)}
-              className="admin-input w-full"
-              placeholder="Enter bank name"
-            />
+            <h3 className="text-base font-semibold text-white">Payment Methods</h3>
+            <p className="text-[#555] text-sm mt-0.5">Payment information shown to customers at checkout</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+        </div>
+        <div className="p-6 space-y-6">
+          {/* Mobile Wallets */}
+          <div>
+            <h4 className="text-sm font-medium text-[#ccc] mb-3">Mobile Wallets</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">JazzCash Number</label>
+                <input
+                  type="text"
+                  value={settings.jazzcash_number}
+                  onChange={e => updateField('jazzcash_number', e.target.value)}
+                  className="admin-input w-full"
+                  placeholder="03XX-XXXXXXX"
+                />
+              </div>
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">EasyPaisa Number</label>
+                <input
+                  type="text"
+                  value={settings.easypaisa_number}
+                  onChange={e => updateField('easypaisa_number', e.target.value)}
+                  className="admin-input w-full"
+                  placeholder="03XX-XXXXXXX"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Transfer */}
+          <div className="border-t border-[#1a1a1a] pt-5">
+            <h4 className="text-sm font-medium text-[#ccc] mb-3">Bank Transfer</h4>
             <div>
-              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Account Number</label>
+              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Bank Name</label>
               <input
                 type="text"
-                value={settings.bank_account}
-                onChange={e => updateField('bank_account', e.target.value)}
+                value={settings.bank_name}
+                onChange={e => updateField('bank_name', e.target.value)}
                 className="admin-input w-full"
-                placeholder="Account number"
+                placeholder="Enter bank name"
               />
             </div>
-            <div>
-              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Account Holder Name</label>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Account Number</label>
+                <input
+                  type="text"
+                  value={settings.bank_account}
+                  onChange={e => updateField('bank_account', e.target.value)}
+                  className="admin-input w-full"
+                  placeholder="Account number"
+                />
+              </div>
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Account Holder Name</label>
+                <input
+                  type="text"
+                  value={settings.bank_holder}
+                  onChange={e => updateField('bank_holder', e.target.value)}
+                  className="admin-input w-full"
+                  placeholder="Account holder name"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">IBAN</label>
               <input
                 type="text"
-                value={settings.bank_holder}
-                onChange={e => updateField('bank_holder', e.target.value)}
+                value={settings.bank_iban}
+                onChange={e => updateField('bank_iban', e.target.value)}
                 className="admin-input w-full"
-                placeholder="Account holder name"
+                placeholder="PK00XXXX0000000000000000"
               />
             </div>
           </div>
@@ -247,7 +303,7 @@ function SettingsContent() {
         <button
           type="submit"
           disabled={saving}
-          className="admin-btn admin-btn-primary"
+          className="admin-btn admin-btn-primary py-3 px-6"
         >
           {saving ? (
             <span className="flex items-center gap-2">
@@ -279,7 +335,7 @@ export default function AdminSettings() {
         <Head>
           <title>Settings — Atelier Admin</title>
         </Head>
-        <AdminLayout title="Settings">
+        <AdminLayout title="Settings" subtitle="Configure your store preferences">
           <SettingsContent />
         </AdminLayout>
       </ToastProvider>

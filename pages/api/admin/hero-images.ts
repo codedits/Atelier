@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { verifyAdminToken } from '../../../lib/admin-auth'
 import { supabase as supabaseAnon } from '@/lib/supabase'
+import { invalidateSSGCache } from '@/lib/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -85,6 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .single()
 
       if (error) throw error
+      invalidateSSGCache('hero_images')
       return res.status(201).json(data)
     } catch (err: any) {
       return res.status(500).json({ error: err.message })
@@ -122,6 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await deleteStorageFile(oldImageUrl, 'hero')
       }
 
+      invalidateSSGCache('hero_images')
       return res.status(200).json(data)
     } catch (err: any) {
       return res.status(500).json({ error: err.message })
@@ -155,6 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await deleteStorageFile(heroImage.image_url, 'hero')
       }
 
+      invalidateSSGCache('hero_images')
       return res.status(200).json({ success: true })
     } catch (err: any) {
       return res.status(500).json({ error: err.message })

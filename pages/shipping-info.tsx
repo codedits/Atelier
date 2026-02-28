@@ -1,4 +1,4 @@
-import { Header } from '@/components'
+﻿import { Header } from '@/components'
 import Footer from '@/components/Footer'
 import Head from 'next/head'
 import { SITE_NAME, CONTACT_EMAIL } from '@/lib/constants'
@@ -39,13 +39,13 @@ export default function ShippingInfo() {
                   {
                     title: 'Standard Delivery',
                     time: '5-7 business days',
-                    cost: 'Free on orders over ₨5,000',
+                    cost: 'Free on orders over â‚¨5,000',
                     details: 'Nationwide delivery with full insurance and tracking'
                   },
                   {
                     title: 'Express Delivery',
                     time: '2-3 business days',
-                    cost: '₨500',
+                    cost: 'â‚¨500',
                     details: 'Priority handling and same-day dispatch'
                   },
                   {
@@ -57,13 +57,13 @@ export default function ShippingInfo() {
                   {
                     title: 'Same Day Delivery',
                     time: 'Karachi only',
-                    cost: '₨1,500',
+                    cost: 'â‚¨1,500',
                     details: 'Order before 12 PM for same-day delivery'
                   }
                 ].map((option, index) => (
                   <div key={index} className="border border-[#E5E5E5] rounded-lg p-6">
                     <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">{option.title}</h3>
-                    <p className="text-[#B91C1C] font-semibold mb-2">{option.time}</p>
+                    <p className="text-[#1A1A1A] font-semibold mb-2">{option.time}</p>
                     <p className="text-[#6B6B6B] mb-3">{option.cost}</p>
                     <p className="text-sm text-[#9CA3AF]">{option.details}</p>
                   </div>
@@ -86,7 +86,7 @@ export default function ShippingInfo() {
                   'Fully insured during transit'
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="text-[#B91C1C] font-bold mt-1">✓</span>
+                    <span className="text-[#1A1A1A] font-bold mt-1">âœ“</span>
                     <span className="text-[#6B6B6B]">{item}</span>
                   </li>
                 ))}
@@ -125,7 +125,7 @@ export default function ShippingInfo() {
               </p>
               <a 
                 href={`mailto:${CONTACT_EMAIL}`} 
-                className="inline-block px-6 py-2 bg-[#1A1A1A] text-white rounded hover:bg-[#B91C1C] transition-colors"
+                className="inline-block px-6 py-2 bg-[#1A1A1A] text-white rounded hover:bg-[#333] transition-colors"
               >
                 Get in Touch
               </a>

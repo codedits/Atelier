@@ -2,27 +2,71 @@
 @import "tailwindcss";
 
 /* ============================================ */
-/* HERO ANIMATIONS (moved from inline styles) */
+/* HERO ANIMATIONS                              */
 /* ============================================ */
 
-@keyframes heroZoom { 
-  from { transform: scale(1.03); } 
-  to { transform: scale(1); } 
+/* 1. Image zoom-out entrance — starts scaled up, reveals down to 1 */
+.animate-image-entrance {
+  transform: scale(1.5);
+  opacity: 0;
+  animation: heroImageReveal 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
 }
 
-/* Editorial hero heading - consolidated styles for performance */
+@keyframes heroImageReveal {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 2. Text content initial state — hidden and offset */
+.hero-subtext,
+.hero-text,
+.hero-cta {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+/* 3. Staggered text reveal triggered by .is-visible parent */
+.is-visible .hero-subtext,
+.is-visible .hero-text,
+.is-visible .hero-cta {
+  will-change: transform, opacity;
+  animation: heroTextReveal 1s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.is-visible .hero-subtext {
+  animation-delay: 0.4s;
+}
+
+.is-visible .hero-text {
+  animation-delay: 0.6s;
+}
+
+.is-visible .hero-cta {
+  animation-delay: 0.8s;
+}
+
+@keyframes heroTextReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Editorial hero heading */
 .hero-title {
   display: block;
   width: 100%;
   overflow: visible;
   white-space: normal;
   font-family: 'Cinzel', 'Cormorant Garamond', serif;
-  font-size: clamp(5rem, 24vw, 35rem);
+  font-size: clamp(4rem, 12vw, 10rem);
   font-weight: 50;
-  letter-spacing: -0.04em;
-  line-height: 0.85;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   color: #F5F5F0;
-  mix-blend-mode: difference;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-transform: uppercase;
@@ -37,54 +81,61 @@
 
 /* Apply the subtle negative left optical margin only on medium+ screens */
 @media (min-width: 768px) {
-  .hero-title, .hero-editorial { margin-left: -0.02em; }
+
+  .hero-title,
+  .hero-editorial {
+    margin-left: -0.02em;
+  }
 }
 
 /* Reduce the H1 scale on small screens to prevent clipping */
 @media (max-width: 640px) {
-  .hero-title, .hero-editorial {
-    font-size: clamp(3rem, 18vw, 10rem) !important;
-    line-height: 0.92 !important;
-    letter-spacing: -0.03em !important;
+
+  .hero-title,
+  .hero-editorial {
+    font-size: clamp(2.5rem, 10vw, 5rem) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.01em !important;
   }
 }
 
-@keyframes heroFadeIn { 
-  from { opacity: 0; transform: translateY(12px); } 
-  to { opacity: 1; transform: translateY(0); } 
+@keyframes heroBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(8px);
+  }
 }
 
-@keyframes heroBounce { 
-  0%, 100% { transform: translateY(0); } 
-  50% { transform: translateY(8px); } 
+.hero-bounce {
+  animation: heroBounce 1.5s ease-in-out infinite;
 }
 
-.hero-zoom { 
-  animation: heroZoom 1.6s ease-out forwards; 
-  will-change: transform;
-}
-
-.hero-fade { 
-  animation: heroFadeIn 0.85s ease-out forwards; 
-}
-
-.hero-fade-delay { 
-  animation: heroFadeIn 0.8s ease-out 0.18s forwards; 
-  opacity: 0; 
-}
-
-.hero-bounce { 
-  animation: heroBounce 1.5s ease-in-out infinite; 
+/* Scroll indicator fade-in after content reveals */
+.hero-scroll-indicator {
+  opacity: 0;
+  animation: heroTextReveal 0.8s cubic-bezier(0.33, 1, 0.68, 1) 1.4s forwards;
+  transform: translateY(10px);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-zoom, .hero-fade, .hero-fade-delay { 
-    animation: none; 
-    opacity: 1; 
-    transform: none; 
+
+  .animate-image-entrance,
+  .hero-subtext,
+  .hero-text,
+  .hero-cta,
+  .hero-scroll-indicator {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
   }
-  .hero-bounce { 
-    animation: none; 
+
+  .hero-bounce {
+    animation: none;
   }
 }
 
@@ -92,16 +143,19 @@
 /* PERFORMANCE OPTIMIZATIONS */
 /* ============================================ */
 
-/* Enable GPU acceleration globally for smoother animations */
-* {
+/* Apply GPU acceleration only to animated elements, not globally */
+.animate-image-entrance,
+.hero-bounce,
+.hero-scroll-indicator,
+[class*="transition-"] {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
 html {
   scroll-behavior: smooth;
-  /* Improve text rendering */
-  text-rendering: optimizeSpeed;
+  /* High-quality text rendering for luxury brand */
+  text-rendering: optimizeLegibility;
 }
 
 /* Content-visibility for off-screen elements - major perf win */
@@ -119,11 +173,7 @@ html {
   contain: paint;
 }
 
-/* Force white text inside the CollectionsHighlight section to avoid accidental overrides */
-.collections-highlight,
-.collections-highlight * {
-  color: #FFFFFF !important;
-}
+/* CollectionsHighlight uses light theme - no forced color overrides needed */
 
 .contain-strict {
   contain: strict;
@@ -137,8 +187,13 @@ html {
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Reduced motion - respect user preferences */
@@ -167,7 +222,7 @@ html {
 
 .hover-lift:hover {
   transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -186,25 +241,32 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-:root{
+:root {
   --color-white: #FFFFFF;
-  --color-offwhite: #F8F7F5;
-  --color-text: #271d11;
-  --color-text-muted: #313133;
-  --color-border: #E5E7EB;
+  --color-offwhite: #FAF9F6;
+  --color-ivory: #F5F0EB;
+  --color-text: #1A1A1A;
+  --color-text-muted: #6B6B6B;
+  --color-border: #E8E4DF;
+  --color-gold: #1A1A1A;
+  --color-gold-light: #333333;
+  --color-gold-dark: #000000;
+  --color-champagne: #F0E6D3;
   --color-rose: #7A4A2B;
   --color-rose-dark: #62381F;
+  --color-noir: #0A0A0A;
   --transition-fast: 200ms;
-  --transition-medium: 350ms;
-  
+  --transition-medium: 400ms;
+  --transition-slow: 700ms;
+
   /* Vercel-like Admin Theme Variables */
   --admin-bg: #000000;
   --admin-bg-secondary: #0a0a0a;
   --admin-bg-tertiary: #111111;
   --admin-bg-hover: #171717;
   --admin-bg-elevated: #1a1a1a;
-  --admin-border: #262626;
-  --admin-border-light: #333333;
+  --admin-border: #1a1a1a;
+  --admin-border-light: #2a2a2a;
   --admin-text: #ededed;
   --admin-text-secondary: #a1a1a1;
   --admin-text-tertiary: #666666;
@@ -216,7 +278,12 @@ body {
   --admin-error-light: #ff6166;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Cormorant Garamond', 'Poppins', serif;
   font-weight: 500;
   color: var(--color-text);
@@ -271,12 +338,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .logo-marquee { animation: none; }
+  .logo-marquee {
+    animation: none;
+  }
 }
 
 /* Marquee text item styling */
@@ -284,21 +358,35 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-  padding-right: 1rem;
+  padding-right: 0.5rem;
   flex: 0 0 auto;
 }
 
 .marquee-text {
-  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  font-weight: 600;
-  color: #1A1A1A;
-  letter-spacing: 0.08em;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: 0.25em;
   text-transform: uppercase;
-  font-size: 1.05rem;
+  font-size: 0.85rem;
+}
+
+.marquee-separator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--color-text);
+  transform: rotate(45deg);
+  margin: 0 1.5rem;
+  opacity: 0.6;
+  flex-shrink: 0;
 }
 
 @media (min-width: 768px) {
-  .marquee-text { font-size: 1.25rem; }
+  .marquee-text {
+    font-size: 0.95rem;
+    letter-spacing: 0.3em;
+  }
 }
 
 .btn-primary {
@@ -348,11 +436,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Smooth, subtle gold glow animation for CTA focus */
 .glow {
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
 /* Reduced motion - comprehensive support */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -361,7 +450,7 @@ h1, h2, h3, h4, h5, h6 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   .will-change-transform,
   .gpu-accelerated {
     will-change: auto;
@@ -370,11 +459,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Low-power mode optimizations */
-@media (prefers-reduced-motion: reduce), (update: slow) {
-  img, video {
+@media (prefers-reduced-motion: reduce),
+(update: slow) {
+
+  img,
+  video {
     animation: none !important;
   }
-  
+
   .animate-contained {
     contain: strict;
     will-change: auto;
@@ -392,39 +484,47 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Prevent accidental blue text inside admin UI (override Tailwind / component classes)
-   Keep primary text readable on dark background */
-.admin-layout .text-blue-700,
-.admin-layout .text-blue-600,
-.admin-layout .text-blue-500,
-.admin-layout .text-blue-400,
-.admin-layout .turbopack-text,
-.admin-layout a,
-.admin-layout .link {
+   Keep primary text readable on dark background. Exclude links with explicit color classes. */
+.admin-layout .turbopack-text {
   color: var(--admin-text) !important;
 }
 
-.admin-layout a:hover,
-.admin-layout .link:hover {
+.admin-layout a:not([class*="text-"]):not([class*="underline"]) {
+  color: var(--admin-text) !important;
+}
+
+.admin-layout a:not([class*="text-"]):not([class*="underline"]):hover {
   color: var(--admin-text) !important;
   text-decoration: underline;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
+
   /* Make modal dialogs full-width on small screens */
-  .admin-layout .max-w-lg {
-    max-width: calc(100vw - 2rem) !important;
+  .admin-layout .max-w-lg,
+  .admin-layout .sm\:max-w-3xl {
+    max-width: 100% !important;
   }
 
   /* Reduce page padding on small devices */
   .admin-layout main {
-    padding: 1rem !important;
+    padding: 0.75rem !important;
   }
 
   /* Sidebar should take most of the screen when open */
   .admin-sidebar {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 85vw !important;
+    max-width: 320px !important;
+  }
+
+  /* Compact table cells on mobile */
+  .admin-table th {
+    padding: 10px 12px;
+  }
+  
+  .admin-table td {
+    padding: 12px;
   }
 }
 
@@ -441,7 +541,7 @@ h1, h2, h3, h4, h5, h6 {
 .admin-card {
   background: var(--admin-bg-secondary);
   border: 1px solid var(--admin-border);
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .admin-card-hover:hover {
@@ -453,16 +553,16 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--admin-bg);
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 10px 14px;
   font-size: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-input:focus {
   outline: none;
   border-color: var(--admin-text-secondary);
-  box-shadow: 0 0 0 1px var(--admin-border-light);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
 }
 
 .admin-input::placeholder {
@@ -474,11 +574,11 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 18px;
   font-size: 14px;
   font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.15s ease;
+  border-radius: 10px;
+  transition: all 0.2s ease;
   cursor: pointer;
   border: none;
 }
@@ -520,18 +620,18 @@ h1, h2, h3, h4, h5, h6 {
 
 .admin-table th {
   text-align: left;
-  padding: 12px 16px;
-  font-size: 12px;
-  font-weight: 500;
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--admin-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   border-bottom: 1px solid var(--admin-border);
   background: var(--admin-bg-secondary);
 }
 
 .admin-table td {
-  padding: 12px 16px;
+  padding: 16px 20px;
   font-size: 14px;
   border-bottom: 1px solid var(--admin-border);
 }
@@ -571,8 +671,26 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Modal overlay */
 .admin-modal-overlay {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+/* Scrollbar utility for modals and panels */
+.admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--admin-border);
+  border-radius: 3px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-border-light);
 }
 
 /* Custom scrollbar for admin */
@@ -621,52 +739,346 @@ h1, h2, h3, h4, h5, h6 {
 /* PRODUCT PAGE ANIMATIONS */
 /* ============================================ */
 
-@keyframes slideInLeft { 
-  from { opacity: 0; transform: translateX(-16px); } 
-  to { opacity: 1; transform: translateX(0); } 
-}
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
 
-@keyframes slideInRight { 
-  from { opacity: 0; transform: translateX(16px); } 
-  to { opacity: 1; transform: translateX(0); } 
-}
-
-@keyframes fadeInUp { 
-  from { opacity: 0; transform: translateY(8px); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-slideInLeft { 
-  animation: slideInLeft 0.4s ease-out; 
-}
-
-.animate-slideInRight { 
-  animation: slideInRight 0.5s ease-out; 
-  animation-delay: 100ms; 
-  animation-fill-mode: backwards; 
-}
-
-.animate-fadeInUp { 
-  animation: fadeInUp 0.4s ease-out; 
-}
-
-.animate-fadeIn { 
-  animation: fadeIn 0.4s ease-out; 
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-slideInLeft, 
-  .animate-slideInRight, 
-  .animate-fadeInUp,
-  .animate-fadeIn { 
-    animation: none; 
-    opacity: 1; 
-    transform: none; 
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s ease-out;
+  animation-delay: 100ms;
+  animation-fill-mode: backwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* ============================================ */
+/* SCROLL REVEAL ANIMATIONS (Replacement for Framer) */
+/* ============================================ */
+
+@keyframes revealFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes revealSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revealScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reveal-fade-in {
+  opacity: 0;
+  animation: revealFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-slide-up {
+  opacity: 0;
+  animation: revealSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-scale-up {
+  opacity: 0;
+  animation: revealScaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for lists */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Keep elements hidden before animation starts */
+.invisible-before-reveal {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-slideInLeft,
+  .animate-slideInRight,
+  .animate-fadeInUp,
+  .animate-fadeIn,
+  .reveal-fade-in,
+  .reveal-slide-up,
+  .reveal-scale-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================ */
+/* LUXURY DESIGN SYSTEM                         */
+/* ============================================ */
+
+/* Gold ornamental divider */
+.luxury-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.luxury-divider::before,
+.luxury-divider::after {
+  content: '';
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+}
+
+.luxury-divider-diamond {
+  width: 8px;
+  height: 8px;
+  background: var(--color-gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* Gold shimmer text effect */
+.text-shimmer {
+  background: linear-gradient(
+    120deg,
+    var(--color-gold-dark) 0%,
+    var(--color-gold-light) 40%,
+    var(--color-gold) 60%,
+    var(--color-gold-dark) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Luxury section spacing */
+.luxury-section {
+  padding: 5rem 0;
+}
+
+@media (min-width: 768px) {
+  .luxury-section {
+    padding: 7rem 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .luxury-section {
+    padding: 9rem 0;
+  }
+}
+
+/* Luxury card hover with gold border glow */
+.luxury-card {
+  position: relative;
+  transition: transform var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  transition: border-color var(--transition-medium) ease;
+  pointer-events: none;
+}
+
+.luxury-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+}
+
+.luxury-card:hover::after {
+  border-color: var(--color-gold);
+}
+
+/* Luxury heading with fine underline */
+.luxury-heading-underline {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 1rem;
+}
+
+.luxury-heading-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 1px;
+  background: var(--color-gold);
+}
+
+/* Luxury button styles */
+.btn-luxury {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-luxury::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-gold);
+  transform: translateX(-101%);
+  transition: transform var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-luxury:hover {
+  color: #FFFFFF;
+}
+
+.btn-luxury:hover::before {
+  transform: translateX(0);
+}
+
+.btn-luxury span,
+.btn-luxury svg {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-luxury-filled {
+  background: var(--color-gold);
+  color: #FFFFFF;
+  border-color: var(--color-gold);
+}
+
+.btn-luxury-filled:hover {
+  background: var(--color-gold-light);
+  border-color: var(--color-gold-light);
+}
+
+.btn-luxury-filled::before {
+  display: none;
+}
+
+/* Vignette overlay for hero images */
+.vignette-overlay {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%);
+}
+
+/* Parallax image container */
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.float-subtle {
+  animation: subtleFloat 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-subtle {
+    animation: none;
+  }
+}

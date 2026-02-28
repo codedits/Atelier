@@ -4,6 +4,7 @@ import { memo, useState, useCallback } from 'react'
 
 type Props = {
   id?: string
+  slug?: string
   name: string
   price: string | number
   img: string
@@ -13,10 +14,10 @@ type Props = {
 }
 
 // Memoized component to prevent unnecessary re-renders
-const ProductCard = memo(function ProductCard({ id, name, price, img, images, category = 'Fine Jewellery', oldPrice }: Props) {
+const ProductCard = memo(function ProductCard({ id, slug, name, price, img, images, category = 'Fine Jewellery', oldPrice }: Props) {
   const [isHovered, setIsHovered] = useState(false)
   const formattedPrice = typeof price === 'number' ? `₨${price.toLocaleString()}` : price
-  const productUrl = id ? `/products/${id}` : '/products'
+  const productUrl = slug ? `/products/${slug}` : id ? `/products/${id}` : '/products'
   
   // Get secondary image from images array (index 1)
   const secondaryImg = images && images.length > 1 ? images[1] : undefined
@@ -31,8 +32,8 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, images, ca
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Link href={productUrl} className="block" prefetch={false}>
-        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#f0e3ce] rounded-lg transition-shadow duration-200 group-hover:shadow-lg">
+      <Link href={productUrl} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1A1A] focus-visible:ring-offset-2 rounded-sm" prefetch={false}>
+        <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-[#F5F0EB] transition-shadow duration-300 group-hover:shadow-lg">
           {/* Primary Image */}
           <div className="absolute inset-0 transition-transform duration-300 ease-out group-hover:scale-[1.03] gpu-accelerated">
             <Image 
@@ -69,13 +70,13 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, images, ca
 
           {/* Sale badge */}
           {oldPrice && (
-            <div className="absolute top-3 left-3 bg-[#B91C1C] text-white text-xs font-medium px-2 py-1 rounded">
+            <div className="absolute top-3 left-3 bg-[#1A1A1A] text-white text-[10px] font-medium uppercase tracking-[0.15em] px-3 py-1">
               Sale
             </div>
           )}
 
-          {/* Quick view button on hover - simplified animation */}
-          <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 translate-y-0">
+          {/* Quick view button on hover/focus - simplified animation */}
+          <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm py-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 translate-y-0">
             <span className="block w-full text-sm font-medium text-[#1A1A1A] text-center flex items-center justify-center gap-2">
               View Details
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +88,7 @@ const ProductCard = memo(function ProductCard({ id, name, price, img, images, ca
         
         <div className="space-y-2 text-center px-2">
           <p className="text-sm text-[#6B6B6B] uppercase tracking-wide">{category}</p>
-          <h3 className="font-bold text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#B91C1C] transition-colors duration-150" style={{ fontFamily: "'Poppins', sans-serif" }}>{name}</h3>
+          <h3 className="font-medium text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#888] transition-colors duration-300 font-serif">{name}</h3>
           <div className="flex items-center justify-center gap-2">
             <p className="text-base md:text-lg text-[#1A1A1A] font-medium">{formattedPrice}</p>
             {oldPrice && (
