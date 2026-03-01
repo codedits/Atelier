@@ -108,13 +108,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .eq('id', id)
                 .single()
 
+            const row = imageRow as { image_url?: string } | null
+
             const { error } = await supabaseAdmin.from('lookbook_images').delete().eq('id', id)
             if (error) throw error
 
             // Best-effort storage cleanup
-            if (imageRow?.image_url) {
+            if (row?.image_url) {
                 try {
-                    const url = new URL(imageRow.image_url)
+                    const url = new URL(row.image_url)
                     // Extract path after /storage/v1/object/public/
                     const match = url.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/)
                     if (match) {
