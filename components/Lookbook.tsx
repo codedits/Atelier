@@ -20,24 +20,24 @@ interface LookbookProps {
 // Generate column-based positions for images (4 columns)
 function generateGridPositions(count: number) {
     const positions: { top: string; left: string; width: string; mobileWidth: string; speed: number; zIndex: number; opacity: number; blur: string }[] = []
-    
+
     // Config for each column to create varied movement
     const columns = [
-        { left: '5%',   speed: 0.6, zIndex: 1 },  // Col 1
-        { left: '30%',  speed: 1.2, zIndex: 3 },  // Col 2 (Fast/Foreground)
-        { left: '55%',  speed: 0.8, zIndex: 2 },  // Col 3
-        { left: '80%',  speed: 0.4, zIndex: 0 },  // Col 4 (Slow/Background)
+        { left: '5%', speed: 0.6, zIndex: 1 },  // Col 1
+        { left: '30%', speed: 1.2, zIndex: 3 },  // Col 2 (Fast/Foreground)
+        { left: '55%', speed: 0.8, zIndex: 2 },  // Col 3
+        { left: '80%', speed: 0.4, zIndex: 0 },  // Col 4 (Slow/Background)
     ]
 
     for (let i = 0; i < count; i++) {
         const colIndex = i % 4
         const col = columns[colIndex]
-        
+
         // Distribute images vertically with significant spacing
         // Base top position plus a vertical offset within the 500vh container
         const row = Math.floor(i / 4)
         const topOffset = 5 + (row * 25) + (seededRandom(i) * 10)
-        
+
         positions.push({
             top: `${topOffset}%`,
             left: col.left,
@@ -132,7 +132,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
         <section
             ref={(node) => {
                 (localRef as any).current = node
-                ;(containerRef as any).current = node
+                    ; (containerRef as any).current = node
             }}
             className="relative w-full h-[500vh] bg-[#FAF9F6]"
             aria-label={`${subtitle} — ${title}`}
@@ -179,7 +179,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                                 loading={index < 6 ? 'eager' : 'lazy'}
                             />
                             {img.title && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
                                     <h3 className="text-white font-serif text-lg md:text-xl mb-1 text-center px-4">{img.title}</h3>
                                     {img.subtitle && <p className="text-white/80 text-[10px] md:text-sm uppercase tracking-widest text-center px-4">{img.subtitle}</p>}
                                 </div>
