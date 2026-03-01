@@ -58,8 +58,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
     const displaySubtitle = subtitle || "Discover"
 
     const containerRef = useRef<HTMLDivElement>(null)
-    const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 }) as { ref: any; isIntersecting: boolean }
-    const localRef = useRef<HTMLElement>(null)
+    const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 })
     const imageElementsRef = useRef<(HTMLDivElement | null)[]>([])
     const rafRef = useRef<number>(0)
     const [isMobile, setIsMobile] = useState(false)
@@ -72,16 +71,6 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
         mq.addEventListener('change', handler)
         return () => mq.removeEventListener('change', handler)
     }, [])
-
-    useEffect(() => {
-        if (localRef.current) {
-            if (typeof sectionRef === 'function') {
-                sectionRef(localRef.current)
-            } else if (sectionRef) {
-                (sectionRef as React.MutableRefObject<HTMLElement | null>).current = localRef.current
-            }
-        }
-    }, [sectionRef])
 
     // Memoize positions for the new grid layout
     const positions = useMemo(() => generateGridPositions(images.length), [images.length])
@@ -131,8 +120,8 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
     return (
         <section
             ref={(node) => {
-                (localRef as any).current = node
-                    ; (containerRef as any).current = node
+                (sectionRef as React.MutableRefObject<HTMLElement | null>).current = node;
+                (containerRef as React.MutableRefObject<HTMLElement | null>).current = node;
             }}
             className="relative w-full h-[500vh] bg-[#FAF9F6]"
             aria-label={`${subtitle} — ${title}`}
