@@ -13,8 +13,17 @@ export interface HeroImage {
   display_order: number
 }
 
+export interface HeroOverlay {
+  color?: string
+  opacity?: number
+  gradient_from?: number
+  gradient_to?: number
+  gradient_enabled?: boolean
+}
+
 interface HeroProps {
   heroImages?: HeroImage[]
+  overlay?: HeroOverlay
 }
 
 const defaultHeroImages: HeroImage[] = [
@@ -70,8 +79,23 @@ function useCountUp(target: number, duration = 2000, start = false) {
   return count
 }
 
-const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
+// Convert hex color to rgba string
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
+const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: HeroProps) {
   const heroImages = initialHeroImages && initialHeroImages.length > 0 ? initialHeroImages : defaultHeroImages
+  const ov = {
+    color: overlay?.color || '#000000',
+    opacity: overlay?.opacity ?? 40,
+    gradient_from: overlay?.gradient_from ?? 60,
+    gradient_to: overlay?.gradient_to ?? 20,
+    gradient_enabled: overlay?.gradient_enabled !== false,
+  }
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const [progressWidth, setProgressWidth] = useState(0)
@@ -144,8 +168,15 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages }: HeroProps) {
         ))}
 
         {/* Overlays */}
-        <div className="absolute inset-0 bg-black/40 z-[1]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 z-[2]" />
+        <div className="absolute inset-0 z-[1]" style={{ backgroundColor: ov.color, opacity: ov.opacity / 100 }} />
+        {ov.gradient_enabled && (
+          <div
+            className="absolute inset-0 z-[2]"
+            style={{
+              background: `linear-gradient(to top, ${hexToRgba(ov.color, ov.gradient_from / 100)}, transparent, ${hexToRgba(ov.color, ov.gradient_to / 100)})`
+            }}
+          />
+        )}
       </div>
 
       {/* Content */}

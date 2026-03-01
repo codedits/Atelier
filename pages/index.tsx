@@ -40,6 +40,7 @@ const ProcessSteps = dynamic(() => import('../components/ProcessSteps'), { ssr: 
 const Craftsmanship = dynamic(() => import('../components/Craftsmanship'), { ssr: true })
 const Testimonials = dynamic(() => import('../components/Testimonials'), { ssr: true })
 const InstagramGallery = dynamic(() => import('../components/InstagramGallery'), { ssr: true })
+const LimitedDrop = dynamic(() => import('../components/LimitedDrop'), { ssr: true })
 const Newsletter = dynamic(() => import('../components/Newsletter'), { ssr: true })
 const Footer = dynamic(() => import('../components/Footer'), { ssr: true })
 
@@ -126,8 +127,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
 
   // Default layout fallback
   const defaultLayout = [
-    'hero', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'trending_now', 'craftsmanship', 'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
   ]
 
   return {
@@ -149,7 +150,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   }
 }
 
-export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, collectionsHighlight, announcements, homepageSections }: HomeProps) {
+export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, collectionsHighlight, announcements, homepageSections, siteConfig }: HomeProps) {
   // Memoize for stable reference
   const products = useMemo(() => newArrivals, [newArrivals])
   const featured = useMemo(() => featuredProducts, [featuredProducts])
@@ -167,14 +168,14 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   const activeLayout = layout && layout.length > 0 ? layout : [
-    'hero', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'trending_now', 'craftsmanship', 'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
+    'process_steps', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
   ]
 
   const renderSection = (sectionId: string, index: number) => {
     switch (sectionId) {
       case 'hero':
-        return <Hero key={sectionId} heroImages={heroImages} />
+        return <Hero key={sectionId} heroImages={heroImages} overlay={siteConfig?.features?.hero?.overlay} />
       case 'announcement_banner':
         return <AnnouncementBanner key={sectionId} announcements={announcements?.length ? announcements : undefined} />
       case 'value_proposition':
@@ -193,6 +194,8 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
         return <Craftsmanship key={sectionId} data={sectionsByKey['craftsmanship']} />
       case 'brand_story':
         return <BrandStory key={sectionId} data={sectionsByKey['brand_story']} />
+      case 'limited_drop':
+        return <LimitedDrop key={sectionId} data={sectionsByKey['limited_drop']} />
       case 'new_arrivals':
         return (
           <section

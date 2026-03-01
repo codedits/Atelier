@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { sendDeliveryNotificationEmail } from '@/lib/email'
 import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -98,6 +99,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    apiCache.invalidateByTag('orders')
+    invalidateSSGCache('orders')
     return res.status(200).json(data)
   }
 
@@ -150,6 +153,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Stock was restored — invalidate products cache too
       apiCache.invalidateByTag('products')
+      apiCache.invalidateByTag('orders')
+      invalidateSSGCache('products')
+      invalidateSSGCache('orders')
       return res.status(200).json({ 
         message: 'Order removed successfully',
         order_id: orderId

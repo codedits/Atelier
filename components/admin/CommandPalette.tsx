@@ -37,16 +37,20 @@ export function CommandPalette() {
         const fetchResults = async () => {
             setLoading(true)
 
+            // Sanitize search input — escape PostgREST special characters
+            const sanitized = search.replace(/[%_\\(),.]/g, c => `\\${c}`)
+
             const { data: pData } = await supabase
                 .from('products')
                 .select('id, name')
-                .ilike('name', `%${search}%`)
+                .ilike('name', `%${sanitized}%`)
                 .limit(5)
 
+            // For orders, only use ilike on user_name (avoid injecting into .or filters)
             const { data: oData } = await supabase
                 .from('orders')
                 .select('id, user_name')
-                .or(`id.eq.${search},user_name.ilike.%${search}%`)
+                .ilike('user_name', `%${sanitized}%`)
                 .limit(5)
 
             setProducts(pData || [])

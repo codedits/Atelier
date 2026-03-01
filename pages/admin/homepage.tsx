@@ -5,6 +5,7 @@ import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import Image from 'next/image'
+import AdminImageUpload from '@/components/admin/AdminImageUpload'
 
 interface HeroImage {
   id: string
@@ -102,7 +103,7 @@ const Icons = {
 function HomepageContent() {
   const api = useAdminApi()
   const toast = useToast()
-  const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps'>('hero')
+  const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('hero')
   const [loading, setLoading] = useState(true)
 
   // Hero Images
@@ -119,8 +120,17 @@ function HomepageContent() {
     is_active: true
   })
   const [heroUploading, setHeroUploading] = useState(false)
-  const [heroSelectedFile, setHeroSelectedFile] = useState<File | null>(null)
   const [heroPreview, setHeroPreview] = useState('')
+
+  // Hero Overlay
+  const [heroOverlay, setHeroOverlay] = useState({
+    color: '#000000',
+    opacity: 40,
+    gradient_from: 60,
+    gradient_to: 20,
+    gradient_enabled: true
+  })
+  const [overlaySaving, setOverlaySaving] = useState(false)
 
   // Collections
   const [collections, setCollections] = useState<FeaturedCollection[]>([])
@@ -135,7 +145,6 @@ function HomepageContent() {
     is_active: true
   })
   const [collectionUploading, setCollectionUploading] = useState(false)
-  const [collectionSelectedFile, setCollectionSelectedFile] = useState<File | null>(null)
   const [collectionPreview, setCollectionPreview] = useState('')
 
   // Testimonials
@@ -174,18 +183,22 @@ function HomepageContent() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes] = await Promise.all([
+      const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes, overlayRes] = await Promise.all([
         api.get<HeroImage[]>('/hero-images'),
         api.get<FeaturedCollection[]>('/featured-collections'),
         api.get<Testimonial[]>('/testimonials'),
         api.get<Announcement[]>('/announcements'),
         api.get<HomepageSection[]>('/homepage-sections'),
+        api.get<any>('/hero-overlay'),
       ])
       setHeroImages(heroRes || [])
       setCollections(collectionsRes || [])
       setTestimonials(testimonialsRes || [])
       setAnnouncements(announcementsRes || [])
       setHomepageSections(sectionsRes || [])
+      if (overlayRes) {
+        setHeroOverlay(prev => ({ ...prev, ...overlayRes }))
+      }
     } catch (error) {
       console.error('Failed to load homepage content:', error)
     } finally {
@@ -202,60 +215,6 @@ function HomepageContent() {
     }
   }
 
-  // Hero Image Handlers
-  const handleHeroFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB')
-      return
-    }
-    setHeroSelectedFile(file)
-    const reader = new FileReader()
-    reader.onloadend = () => setHeroPreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  const handleHeroUpload = async () => {
-    if (!heroSelectedFile) return
-    setHeroUploading(true)
-    try {
-      const reader = new FileReader()
-      reader.readAsDataURL(heroSelectedFile)
-      await new Promise((resolve, reject) => {
-        reader.onload = async () => {
-          try {
-            const base64 = (reader.result as string).split(',')[1]
-            const response = await api.post<{ publicUrl: string }>('/upload', {
-              filename: heroSelectedFile.name,
-              fileData: base64,
-              contentType: heroSelectedFile.type,
-              folder: 'hero'
-            })
-            if (response.publicUrl) {
-              setHeroForm(f => ({ ...f, image_url: response.publicUrl }))
-              setHeroPreview(response.publicUrl)
-              toast.success('Hero image uploaded successfully')
-            }
-            resolve(response)
-          } catch (error) {
-            reject(error)
-          }
-        }
-        reader.onerror = reject
-      })
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error('Failed to upload hero image')
-    } finally {
-      setHeroUploading(false)
-    }
-  }
-
   const openHeroAdd = () => {
     setEditingHero(null)
     setHeroForm({
@@ -268,7 +227,6 @@ function HomepageContent() {
       is_active: true
     })
     setHeroPreview('')
-    setHeroSelectedFile(null)
     setHeroModal(true)
   }
 
@@ -284,7 +242,6 @@ function HomepageContent() {
       is_active: hero.is_active
     })
     setHeroPreview(hero.image_url)
-    setHeroSelectedFile(null)
     setHeroModal(true)
   }
 
@@ -324,55 +281,19 @@ function HomepageContent() {
     }
   }
 
-  // Collection Handlers
-  const handleCollectionFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
-      return
-    }
-    setCollectionSelectedFile(file)
-    const reader = new FileReader()
-    reader.onloadend = () => setCollectionPreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  const handleCollectionUpload = async () => {
-    if (!collectionSelectedFile) return
-    setCollectionUploading(true)
+  const handleOverlaySave = async () => {
+    setOverlaySaving(true)
     try {
-      const reader = new FileReader()
-      reader.readAsDataURL(collectionSelectedFile)
-      await new Promise((resolve, reject) => {
-        reader.onload = async () => {
-          try {
-            const base64 = (reader.result as string).split(',')[1]
-            const response = await api.post<{ publicUrl: string }>('/upload', {
-              filename: collectionSelectedFile.name,
-              fileData: base64,
-              contentType: collectionSelectedFile.type,
-              folder: 'collections'
-            })
-            if (response.publicUrl) {
-              setCollectionForm(f => ({ ...f, image_url: response.publicUrl }))
-              setCollectionPreview(response.publicUrl)
-              toast.success('Collection image uploaded successfully')
-            }
-            resolve(response)
-          } catch (error) {
-            reject(error)
-          }
-        }
-        reader.onerror = reject
-      })
-    } catch (error) {
-      toast.error('Failed to upload collection image')
+      await api.put('/hero-overlay', heroOverlay)
+      toast.success('Overlay settings saved')
+    } catch {
+      toast.error('Failed to save overlay settings')
     } finally {
-      setCollectionUploading(false)
+      setOverlaySaving(false)
     }
   }
 
+  // Collection Handlers
   const openCollectionAdd = () => {
     setEditingCollection(null)
     setCollectionForm({
@@ -384,7 +305,6 @@ function HomepageContent() {
       is_active: true
     })
     setCollectionPreview('')
-    setCollectionSelectedFile(null)
     setCollectionModal(true)
   }
 
@@ -399,7 +319,6 @@ function HomepageContent() {
       is_active: collection.is_active
     })
     setCollectionPreview(collection.image_url)
-    setCollectionSelectedFile(null)
     setCollectionModal(true)
   }
 
@@ -588,6 +507,7 @@ function HomepageContent() {
     { id: 'brand_story' as const, label: 'Brand Story' },
     { id: 'craftsmanship' as const, label: 'Craftsmanship' },
     { id: 'process_steps' as const, label: 'Process Steps' },
+    { id: 'limited_drop' as const, label: 'Limited Drop' },
   ]
 
   return (
@@ -675,6 +595,113 @@ function HomepageContent() {
                 No hero images yet. Add one to get started.
               </div>
             )}
+          </div>
+
+          {/* Hero Overlay Settings */}
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-5 mt-6">
+            <h3 className="text-white text-sm font-semibold">Dark Overlay Settings</h3>
+            <p className="text-[#666] text-xs">Controls the dark overlay on top of hero images to ensure text readability.</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Overlay Color</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={heroOverlay.color}
+                    onChange={e => setHeroOverlay(o => ({ ...o, color: e.target.value }))}
+                    className="w-10 h-10 rounded border border-[#333] bg-transparent cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={heroOverlay.color}
+                    onChange={e => setHeroOverlay(o => ({ ...o, color: e.target.value }))}
+                    className="admin-input flex-1"
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">
+                  Flat Overlay Opacity: <span className="text-white">{heroOverlay.opacity}%</span>
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={heroOverlay.opacity}
+                  onChange={e => setHeroOverlay(o => ({ ...o, opacity: Number(e.target.value) }))}
+                  className="w-full accent-white h-1.5 bg-[#333] rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-[#666] mt-1">
+                  <span>0% (none)</span>
+                  <span>100% (black)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-[#1a1a1a]">
+              <label className="flex items-center gap-2 cursor-pointer mb-4">
+                <input
+                  type="checkbox"
+                  checked={heroOverlay.gradient_enabled}
+                  onChange={e => setHeroOverlay(o => ({ ...o, gradient_enabled: e.target.checked }))}
+                  className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a]"
+                />
+                <span className="text-[#a1a1a1] text-sm">Enable gradient overlay (darker at bottom for text)</span>
+              </label>
+
+              {heroOverlay.gradient_enabled && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">
+                      Bottom (from): <span className="text-white">{heroOverlay.gradient_from}%</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={heroOverlay.gradient_from}
+                      onChange={e => setHeroOverlay(o => ({ ...o, gradient_from: Number(e.target.value) }))}
+                      className="w-full accent-white h-1.5 bg-[#333] rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">
+                      Top (to): <span className="text-white">{heroOverlay.gradient_to}%</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={heroOverlay.gradient_to}
+                      onChange={e => setHeroOverlay(o => ({ ...o, gradient_to: Number(e.target.value) }))}
+                      className="w-full accent-white h-1.5 bg-[#333] rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Preview bar */}
+            <div className="relative h-16 rounded-lg overflow-hidden border border-[#1a1a1a]">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-white to-gray-300" />
+              <div className="absolute inset-0" style={{ backgroundColor: heroOverlay.color, opacity: heroOverlay.opacity / 100 }} />
+              {heroOverlay.gradient_enabled && (() => {
+                const hex = heroOverlay.color || '#000000'
+                const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+                return <div className="absolute inset-0" style={{ background: `linear-gradient(to top, rgba(${r},${g},${b},${heroOverlay.gradient_from/100}), transparent, rgba(${r},${g},${b},${heroOverlay.gradient_to/100}))` }} />
+              })()}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white text-xs font-medium drop-shadow-lg">Preview — Text Readability Check</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button onClick={handleOverlaySave} disabled={overlaySaving} className="admin-btn admin-btn-primary disabled:opacity-50">
+                {overlaySaving ? 'Saving...' : 'Save Overlay'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -875,6 +902,13 @@ function HomepageContent() {
         return <ProcessStepsEditor section={section} meta={meta} onSave={saveSection} saving={sectionSaving} />
       })()}
 
+      {/* Limited Drop Tab */}
+      {activeTab === 'limited_drop' && (() => {
+        const section = getSection('limited_drop')
+        const meta = section?.metadata || {}
+        return <LimitedDropEditor section={section} meta={meta} onSave={saveSection} saving={sectionSaving} />
+      })()}
+
       {/* Hero Modal */}
       {heroModal && (
         <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4">
@@ -911,36 +945,11 @@ function HomepageContent() {
               </div>
 
               <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Image</label>
-                {heroPreview && (
-                  <div className="mb-3 relative w-full h-40 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1a1a1a]">
-                    <Image src={heroPreview} alt="Preview" fill className="object-cover" />
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <label className="flex-1 flex items-center justify-center gap-2 admin-input cursor-pointer hover:border-[#333] py-3">
-                    <input type="file" accept="image/*" onChange={handleHeroFileSelect} className="hidden" />
-                    {Icons.upload}
-                    <span className="text-[#888] text-sm">Choose file</span>
-                  </label>
-                  {heroSelectedFile && (
-                    <button
-                      type="button"
-                      onClick={handleHeroUpload}
-                      disabled={heroUploading}
-                      className="admin-btn admin-btn-primary disabled:opacity-50"
-                    >
-                      {heroUploading ? 'Uploading...' : 'Upload'}
-                    </button>
-                  )}
-                </div>
-                <input
-                  type="url"
+                <AdminImageUpload
                   value={heroForm.image_url}
-                  onChange={e => setHeroForm(f => ({ ...f, image_url: e.target.value }))}
-                  className="admin-input w-full mt-2"
-                  placeholder="Or paste image URL..."
-                  required
+                  onChange={(url) => { setHeroForm(f => ({ ...f, image_url: url })); setHeroPreview(url); }}
+                  label="Image"
+                  folder="hero"
                 />
               </div>
 
@@ -1038,36 +1047,11 @@ function HomepageContent() {
               </div>
 
               <div>
-                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Image</label>
-                {collectionPreview && (
-                  <div className="mb-3 relative w-full h-32 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1a1a1a]">
-                    <Image src={collectionPreview} alt="Preview" fill className="object-cover" />
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <label className="flex-1 flex items-center justify-center gap-2 admin-input cursor-pointer hover:border-[#333] py-3">
-                    <input type="file" accept="image/*" onChange={handleCollectionFileSelect} className="hidden" />
-                    {Icons.upload}
-                    <span className="text-[#888] text-sm">Choose file</span>
-                  </label>
-                  {collectionSelectedFile && (
-                    <button
-                      type="button"
-                      onClick={handleCollectionUpload}
-                      disabled={collectionUploading}
-                      className="admin-btn admin-btn-primary disabled:opacity-50"
-                    >
-                      {collectionUploading ? 'Uploading...' : 'Upload'}
-                    </button>
-                  )}
-                </div>
-                <input
-                  type="url"
+                <AdminImageUpload
                   value={collectionForm.image_url}
-                  onChange={e => setCollectionForm(f => ({ ...f, image_url: e.target.value }))}
-                  className="admin-input w-full mt-2"
-                  placeholder="Or paste image URL..."
-                  required
+                  onChange={(url) => { setCollectionForm(f => ({ ...f, image_url: url })); setCollectionPreview(url); }}
+                  label="Image"
+                  folder="collections"
                 />
               </div>
 
@@ -1359,8 +1343,7 @@ function BrandStoryEditor({ section, meta, onSave, saving }: { section: any; met
             <input type="text" value={highlightWord} onChange={e => setHighlightWord(e.target.value)} className="admin-input w-full" placeholder="modern artistry" />
           </div>
           <div>
-            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Background Image URL</label>
-            <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="admin-input w-full" />
+            <AdminImageUpload value={imageUrl} onChange={setImageUrl} label="Background Image" folder="hero" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -1415,31 +1398,41 @@ function BrandStoryEditor({ section, meta, onSave, saving }: { section: any; met
           </button>
         </div>
         {images.map((img, i) => (
-          <div key={i} className="flex gap-3 items-start">
-            <input
-              type="url"
+          <div key={i} className="space-y-3 bg-[#111] border border-[#1a1a1a] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[#666] text-[11px] uppercase tracking-wider">Image {i + 1}</span>
+              <button type="button" onClick={() => setImages(images.filter((_, j) => j !== i))} className="p-1 text-[#666] hover:text-[#ff6166] transition-colors text-xs">
+                ✕ Remove
+              </button>
+            </div>
+            <AdminImageUpload
               value={img.url}
-              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], url: e.target.value }; setImages(arr) }}
-              className="admin-input flex-1"
-              placeholder="Image URL..."
+              onChange={(url) => { const arr = [...images]; arr[i] = { ...arr[i], url }; setImages(arr) }}
+              label="Image"
+              folder="hero"
             />
-            <input
-              type="text"
-              value={img.alt}
-              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], alt: e.target.value }; setImages(arr) }}
-              className="admin-input w-36"
-              placeholder="Alt text"
-            />
-            <input
-              type="text"
-              value={img.caption}
-              onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], caption: e.target.value }; setImages(arr) }}
-              className="admin-input w-36"
-              placeholder="Caption"
-            />
-            <button type="button" onClick={() => setImages(images.filter((_, j) => j !== i))} className="p-2 text-[#666] hover:text-[#ff6166] transition-colors">
-              ✕
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[#a1a1a1] text-[11px] font-medium mb-1">Alt text</label>
+                <input
+                  type="text"
+                  value={img.alt}
+                  onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], alt: e.target.value }; setImages(arr) }}
+                  className="admin-input w-full"
+                  placeholder="Alt text"
+                />
+              </div>
+              <div>
+                <label className="block text-[#a1a1a1] text-[11px] font-medium mb-1">Caption</label>
+                <input
+                  type="text"
+                  value={img.caption}
+                  onChange={e => { const arr = [...images]; arr[i] = { ...arr[i], caption: e.target.value }; setImages(arr) }}
+                  className="admin-input w-full"
+                  placeholder="Caption"
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -1489,10 +1482,7 @@ function CraftsmanshipEditor({ section, meta, onSave, saving }: { section: any; 
           <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Content (use blank lines to split paragraphs)</label>
           <textarea value={content} onChange={e => setContent(e.target.value)} className="admin-input w-full h-28 resize-none" />
         </div>
-        <div>
-          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Image URL</label>
-          <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="admin-input w-full" />
-        </div>
+        <AdminImageUpload value={imageUrl} onChange={setImageUrl} label="Image" folder="hero" />
       </div>
 
       {/* Stats */}
@@ -1616,6 +1606,113 @@ function ProcessStepsEditor({ section, meta, onSave, saving }: { section: any; m
       <div className="flex justify-end">
         <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Process Steps'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function LimitedDropEditor({ section, meta, onSave, saving }: { section: any; meta: any; onSave: (d: any) => Promise<void>; saving: boolean }) {
+  const [title, setTitle] = useState(section?.title || 'The Midnight Collection')
+  const [subtitle, setSubtitle] = useState(section?.subtitle || 'Limited Edition')
+  const [content, setContent] = useState(section?.content || 'An exclusive capsule of 48 hand-finished pieces, each uniquely numbered.')
+  const [imageUrl, setImageUrl] = useState(section?.image_url || '')
+  const [targetDate, setTargetDate] = useState(meta.target_date ? new Date(meta.target_date).toISOString().slice(0, 16) : '')
+  const [totalPieces, setTotalPieces] = useState<number>(meta.total_pieces || 48)
+  const [badgeText, setBadgeText] = useState(meta.badge_text || 'Dropping Soon')
+  const [ctaText, setCtaText] = useState(meta.cta_text || 'Reserve Yours')
+  const [ctaLink, setCtaLink] = useState(meta.cta_link || '/products')
+
+  const handleSave = () => {
+    onSave({
+      section_key: 'limited_drop',
+      title,
+      subtitle,
+      content,
+      image_url: imageUrl,
+      metadata: {
+        target_date: targetDate ? new Date(targetDate).toISOString() : null,
+        total_pieces: totalPieces,
+        badge_text: badgeText,
+        cta_text: ctaText,
+        cta_link: ctaLink,
+      }
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Content */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Content</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="admin-input w-full" placeholder="The Midnight Collection" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Subtitle</label>
+            <input type="text" value={subtitle} onChange={e => setSubtitle(e.target.value)} className="admin-input w-full" placeholder="Limited Edition" />
+          </div>
+        </div>
+        <div>
+          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Description</label>
+          <textarea value={content} onChange={e => setContent(e.target.value)} className="admin-input w-full h-24 resize-none" placeholder="An exclusive capsule of hand-finished pieces..." />
+        </div>
+        <AdminImageUpload value={imageUrl} onChange={setImageUrl} label="Product / Hero Image" folder="hero" />
+      </div>
+
+      {/* Countdown & Drop Settings */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Drop Settings</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Drop Date & Time</label>
+            <input
+              type="datetime-local"
+              value={targetDate}
+              onChange={e => setTargetDate(e.target.value)}
+              className="admin-input w-full"
+            />
+            <p className="text-[#555] text-[11px] mt-1">Countdown timer counts down to this date</p>
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Total Pieces</label>
+            <input
+              type="number"
+              min={1}
+              value={totalPieces}
+              onChange={e => setTotalPieces(parseInt(e.target.value) || 1)}
+              className="admin-input w-full"
+            />
+            <p className="text-[#555] text-[11px] mt-1">Shows "Only X pieces worldwide"</p>
+          </div>
+        </div>
+        <div>
+          <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Badge Text</label>
+          <input type="text" value={badgeText} onChange={e => setBadgeText(e.target.value)} className="admin-input w-full" placeholder="Dropping Soon" />
+          <p className="text-[#555] text-[11px] mt-1">Appears as a floating badge on the image. Leave blank to hide.</p>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-4">
+        <h3 className="text-white text-sm font-semibold">Call to Action</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Button Text</label>
+            <input type="text" value={ctaText} onChange={e => setCtaText(e.target.value)} className="admin-input w-full" placeholder="Reserve Yours" />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Button Link</label>
+            <input type="text" value={ctaLink} onChange={e => setCtaLink(e.target.value)} className="admin-input w-full" placeholder="/products" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={handleSave} disabled={saving} className="admin-btn admin-btn-primary disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save Limited Drop'}
         </button>
       </div>
     </div>

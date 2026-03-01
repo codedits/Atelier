@@ -24,18 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
+  const client = supabaseAdmin ?? supabase
+
   if (req.method === 'GET') {
-    const client = supabaseAdmin ?? supabase
     const { data, error } = await client
-      .from('store_settings')
+      .from('site_config')
       .select('*')
+      .single()
 
     if (error) return res.status(500).json({ error: error.message })
-
-    const settings: Record<string, string> = {}
-    data?.forEach((s: any) => { settings[s.key] = s.value })
-
-    return res.status(200).json(settings)
+    return res.status(200).json(data)
   }
 
   if (req.method === 'PUT') {
@@ -43,26 +41,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
     }
 
-    const updates = req.body as Record<string, string>
-    const errors: string[] = []
+    const { homepage_layout, nav_menu, theme_colors, features } = req.body
 
-    for (const [key, value] of Object.entries(updates)) {
-      const { error } = await (supabaseAdmin as any)
-        .from('store_settings')
-        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    // Find the existing config row ID dynamically instead of using a hardcoded UUID
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('site_config')
+      .select('id')
+      .single() as { data: any, error: any }
 
-      if (error) errors.push(`${key}: ${error.message}`)
+    if (fetchError || !existing) {
+      return res.status(500).json({ error: 'site_config row not found' })
     }
 
-    if (errors.length > 0) {
-      return res.status(500).json({ error: `Failed to update: ${errors.join(', ')}` })
-    }
+    const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() }
+    if (homepage_layout !== undefined) updatePayload.homepage_layout = homepage_layout
+    if (nav_menu !== undefined) updatePayload.nav_menu = nav_menu
+    if (theme_colors !== undefined) updatePayload.theme_colors = theme_colors
+    if (features !== undefined) updatePayload.features = features
 
-    apiCache.invalidateByTag('store_settings')
+    const { error } = await (supabaseAdmin as any)
+      .from('site_config')
+      .update(updatePayload)
+      .eq('id', existing.id)
+
+    if (error) return res.status(500).json({ error: error.message })
+
+    apiCache.invalidateByTag('site_config')
     invalidateSSGCache('site_config')
     try { await res.revalidate('/') } catch {}
 
-    return res.status(200).json({ message: 'Settings updated' })
+    return res.status(200).json({ message: 'Site config updated' })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

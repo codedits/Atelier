@@ -1,15 +1,13 @@
 import jwt from 'jsonwebtoken'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getSupabaseAdmin } from './admin-api-utils'
+import { verifyUserToken, type UserPayload } from './user-token'
+
+// Re-export from lightweight module (no admin dependencies)
+export { verifyUserToken, type UserPayload }
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET || 'atelier-user-secret-key-change-in-production'
 const USER_TOKEN_EXPIRY = '7d' // Users stay logged in longer than admins
-
-export interface UserPayload {
-  id: string
-  email: string
-  name?: string
-}
 
 /**
  * Generate a JWT token for a user
@@ -20,19 +18,6 @@ export function generateUserToken(user: UserPayload): string {
     USER_JWT_SECRET,
     { expiresIn: USER_TOKEN_EXPIRY }
   )
-}
-
-/**
- * Verify a user JWT token
- */
-export function verifyUserToken(token: string): UserPayload | null {
-  try {
-    const decoded = jwt.verify(token, USER_JWT_SECRET) as UserPayload & { role: string }
-    if (decoded.role !== 'user') return null
-    return { id: decoded.id, email: decoded.email, name: decoded.name }
-  } catch {
-    return null
-  }
 }
 
 /**

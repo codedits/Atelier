@@ -65,9 +65,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         upsertData.metadata = metadata
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await (supabaseAdmin as any)
         .from('homepage_sections')
-        .upsert(upsertData)
+        .upsert(upsertData, { onConflict: 'section_key' })
         .select()
         .single()
 

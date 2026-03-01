@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useUserAuth } from '@/context/UserAuthContext'
+import { verifyUserToken, UserPayload } from '@/lib/user-token'
+import type { GetServerSideProps } from 'next'
 
 interface Order {
   id: string
@@ -22,9 +24,43 @@ interface Order {
   }>
 }
 
-export default function AccountPage() {
+interface AccountPageProps {
+  initialUser: UserPayload
+}
+
+export const getServerSideProps: GetServerSideProps<AccountPageProps> = async (context) => {
+  const token = context.req.cookies['atelier_user_token']
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login?redirect=/account',
+        permanent: false,
+      },
+    }
+  }
+
+  const user = verifyUserToken(token)
+  if (!user) {
+    return {
+      redirect: {
+        destination: '/login?redirect=/account',
+        permanent: false,
+      },
+    }
+  }
+
+  return {
+    props: {
+      initialUser: user,
+    },
+  }
+}
+
+export default function AccountPage({ initialUser }: AccountPageProps) {
   const router = useRouter()
-  const { user, isAuthenticated, isLoading, logout, refreshUser } = useUserAuth()
+  const { user: contextUser, logout, refreshUser } = useUserAuth()
+  // Use context user if available (stays fresh with phone/address), fall back to SSR user
+  const user = contextUser || { ...initialUser, phone: undefined, address: undefined }
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
   
@@ -40,16 +76,8 @@ export default function AccountPage() {
   const [profileSuccess, setProfileSuccess] = useState(false)
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login?redirect=/account')
-    }
-  }, [isAuthenticated, isLoading, router])
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchOrders()
-    }
-  }, [isAuthenticated])
+    fetchOrders()
+  }, [])
 
   // Sync profile form with user data
   useEffect(() => {
@@ -148,25 +176,6 @@ export default function AccountPage() {
       setDeleteError('Internal error')
       setDeleting(false)
     }
-  }
-
-  if (isLoading) {
-    return (
-      <>
-        <Head>
-          <title>My Account | Atelier</title>
-        </Head>
-        <Header />
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-900 border-t-transparent rounded-full" />
-        </main>
-        <Footer />
-      </>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return null
   }
 
   const getStatusBadgeClass = (status: string) => {

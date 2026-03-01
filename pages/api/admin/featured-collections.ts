@@ -121,6 +121,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Collection creation error:', error)
       return res.status(500).json({ error: error.message })
     }
+    invalidateCache()
+    try { await res.revalidate('/') } catch {}
     return res.status(201).json(data)
   }
 
@@ -157,6 +159,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await deleteStorageFile(oldImageUrl, 'collections')
     }
 
+    invalidateCache()
+    try { await res.revalidate('/') } catch {}
     return res.status(200).json(data)
   }
 
@@ -189,6 +193,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await deleteStorageFile(collection.image_url, 'collections')
     }
 
+    invalidateCache()
+    try { await res.revalidate('/') } catch {}
     return res.status(200).json({ message: 'Collection deleted' })
   }
 

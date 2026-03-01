@@ -49,6 +49,8 @@ export function clearOtpForUser(username: string) {
   otpStore.delete(username)
 }
 
+// Debug helper — only available in development
 export function _debugListOtps() {
+  if (process.env.NODE_ENV === 'production') return []
   return Array.from(otpStore.entries())
 }

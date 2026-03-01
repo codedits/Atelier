@@ -67,8 +67,9 @@ function SortableBlockItem({ id, label, isNav, onEdit, onDelete }: any) {
 }
 
 const ALL_HOMEPAGE_SECTIONS = [
-    'hero', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections',
+    'logo_marquee', 'collections_highlight', 'process_steps', 'trending_now', 'craftsmanship',
+    'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
 ]
 
 function BuilderContent() {
@@ -93,30 +94,41 @@ function BuilderContent() {
 
     const loadConfig = async () => {
         setLoading(true)
-        const { data, error } = await supabase.from('site_config').select('*').single()
-        if (data) {
-            setLayout(data.homepage_layout || ALL_HOMEPAGE_SECTIONS)
-            setNavMenu(data.nav_menu || [])
-            setThemeColors(data.theme_colors || { primary: '', secondary: '', accent: '' })
-            setFeatures(data.features || {})
-        } else {
-            setLayout(ALL_HOMEPAGE_SECTIONS)
-            setNavMenu([])
-            setFeatures({})
+        try {
+            // Load site_config through admin API
+            const cfgRes = await api.get('/site-config')
+            const data = cfgRes as any
+            if (data) {
+                setLayout(data.homepage_layout || ALL_HOMEPAGE_SECTIONS)
+                setNavMenu(data.nav_menu || [])
+                setThemeColors(data.theme_colors || { primary: '', secondary: '', accent: '' })
+                setFeatures(data.features || {})
+            } else {
+                setLayout(ALL_HOMEPAGE_SECTIONS)
+                setNavMenu([])
+                setFeatures({})
+            }
+        } catch {
+            // Fallback: try direct read (anon may have SELECT on site_config)
+            const { data } = await supabase.from('site_config').select('*').single()
+            if (data) {
+                setLayout(data.homepage_layout || ALL_HOMEPAGE_SECTIONS)
+                setNavMenu(data.nav_menu || [])
+                setThemeColors(data.theme_colors || { primary: '', secondary: '', accent: '' })
+                setFeatures(data.features || {})
+            } else {
+                setLayout(ALL_HOMEPAGE_SECTIONS)
+                setNavMenu([])
+                setFeatures({})
+            }
         }
         setLoading(false)
     }
 
     const handleSave = async () => {
         setSaving(true)
-        const { error } = await supabase
-            .from('site_config')
-            .update({ homepage_layout: layout, nav_menu: navMenu, theme_colors: themeColors, features, updated_at: new Date() })
-            .eq('id', '00000000-0000-4000-8000-000000000001')
-
-        if (error) {
-            toastError('Failed to save configuration')
-        } else {
+        try {
+            await api.put('/site-config', { homepage_layout: layout, nav_menu: navMenu, theme_colors: themeColors, features })
             // Bust the ISR cache so the frontend regenerates
             try {
                 await api.post('/revalidate', { tag: 'site_config' })
@@ -124,6 +136,8 @@ function BuilderContent() {
                 console.warn('Revalidation failed, cache may be stale:', e)
             }
             success('Configuration saved — frontend will update shortly')
+        } catch {
+            toastError('Failed to save configuration')
         }
         setSaving(false)
     }

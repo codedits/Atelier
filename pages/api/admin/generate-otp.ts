@@ -1,6 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { generateOtpForUser } from '@/lib/admin-otp'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let supabaseAdmin: ReturnType<typeof createClient> | null = null
+if (supabaseUrl && supabaseServiceKey) {
+  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -15,7 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Ensure the admin user exists
-  const { data, error } = await supabase
+  const client = supabaseAdmin ?? supabase
+  const { data, error } = await client
     .from('admin_users')
     .select('id, username')
     .eq('username', username)
@@ -27,7 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const code = generateOtpForUser(username)
 
-  // For a simple flow return the code in the response and log it.
-  // Replace this with an email/SMS in production.
-  return res.status(200).json({ ok: true, code })
+  // In development, return the code for testing. In production, send it via email/SMS.
+  if (process.env.NODE_ENV !== 'production') {
+    return res.status(200).json({ ok: true, code })
+  }
+
+  // TODO: Send OTP via email or SMS here
+  return res.status(200).json({ ok: true })
 }

@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { apiCache } from '@/lib/server-cache'
+import { invalidateSSGCache } from '@/lib/cache'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -98,6 +100,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       console.log(`Successfully deleted ${deletedCount} orders`)
+      apiCache.invalidateByTag('products')
+      apiCache.invalidateByTag('orders')
+      invalidateSSGCache('products')
+      invalidateSSGCache('orders')
+      try { await res.revalidate('/') } catch {}
       return res.status(200).json({ 
         message: 'All orders deleted successfully',
         deleted_count: deletedCount,

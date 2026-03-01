@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import OrderReviewForm from '@/components/OrderReviewForm'
-import { useUserAuth } from '@/context/UserAuthContext'
+import { verifyUserToken } from '@/lib/user-token'
+import type { GetServerSideProps } from 'next'
 
 interface OrderItem {
   product_id?: string
@@ -30,10 +31,45 @@ interface Order {
   items: OrderItem[]
 }
 
-export default function OrderDetailPage() {
+interface OrderDetailPageProps {
+  orderId: string
+}
+
+export const getServerSideProps: GetServerSideProps<OrderDetailPageProps> = async (context) => {
+  const orderId = context.params?.id as string
+  if (!orderId) {
+    return { notFound: true }
+  }
+
+  const token = context.req.cookies['atelier_user_token']
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/login?redirect=' + encodeURIComponent(`/orders/${orderId}`),
+        permanent: false,
+      },
+    }
+  }
+
+  const user = verifyUserToken(token)
+  if (!user) {
+    return {
+      redirect: {
+        destination: '/login?redirect=' + encodeURIComponent(`/orders/${orderId}`),
+        permanent: false,
+      },
+    }
+  }
+
+  return {
+    props: {
+      orderId,
+    },
+  }
+}
+
+export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const router = useRouter()
-  const { id } = router.query
-  const { isAuthenticated, isLoading: authLoading } = useUserAuth()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,16 +78,8 @@ export default function OrderDetailPage() {
   const [cancelSuccess, setCancelSuccess] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login?redirect=' + encodeURIComponent(`/orders/${id}`))
-    }
-  }, [authLoading, isAuthenticated, router, id])
-
-  useEffect(() => {
-    if (isAuthenticated && id && typeof id === 'string') {
-      fetchOrder(id)
-    }
-  }, [isAuthenticated, id])
+    fetchOrder(orderId)
+  }, [orderId])
 
   const fetchOrder = async (orderId: string) => {
     try {
@@ -184,7 +212,7 @@ export default function OrderDetailPage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <>
         <Head>
