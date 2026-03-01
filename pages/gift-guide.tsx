@@ -76,7 +76,7 @@ export default function GiftGuide() {
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-[#1A1A1A] mb-6 tracking-tight">
               Gift Guide
             </h1>
-            <p className="text-lg text-[#6B6B6B] max-w-2xl mx-auto">
+            <p className="text-lg text-[#4A4A4A] max-w-2xl mx-auto">
               Find the perfect piece for every personality, occasion, and budget. From romantic gestures to personal milestones, our curated collections help you choose with confidence.
             </p>
           </div>
@@ -105,7 +105,7 @@ export default function GiftGuide() {
                     <h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-3">
                       {category.title}
                     </h2>
-                    <p className="text-[#6B6B6B] text-lg mb-6 leading-relaxed">
+                    <p className="text-[#4A4A4A] text-lg mb-6 leading-relaxed">
                       {category.description}
                     </p>
                     <div className="mb-6">
@@ -116,7 +116,7 @@ export default function GiftGuide() {
                       <p className="text-sm font-semibold text-[#1A1A1A] mb-3">COLLECTION INCLUDES</p>
                       <ul className="space-y-2">
                         {category.items.map((item, i) => (
-                          <li key={i} className="flex items-center gap-2 text-[#6B6B6B]">
+                          <li key={i} className="flex items-center gap-2 text-[#4A4A4A]">
                             <span className="w-1.5 h-1.5 bg-[#1A1A1A] rounded-full"></span>
                             {item}
                           </li>
@@ -168,7 +168,7 @@ export default function GiftGuide() {
               ].map((tip, index) => (
                 <div key={index} className="bg-[#F8F7F5] rounded-lg p-6 border border-[#E5E5E5]">
                   <h3 className="font-semibold text-[#1A1A1A] mb-3">{tip.title}</h3>
-                  <p className="text-[#6B6B6B] text-sm leading-relaxed">{tip.description}</p>
+                  <p className="text-[#4A4A4A] text-sm leading-relaxed">{tip.description}</p>
                 </div>
               ))}
             </div>
@@ -181,7 +181,7 @@ export default function GiftGuide() {
             <h2 className="font-display text-3xl text-[#1A1A1A] mb-4">
               Need Personalized Help?
             </h2>
-            <p className="text-[#6B6B6B] text-lg mb-8 leading-relaxed">
+            <p className="text-[#4A4A4A] text-lg mb-8 leading-relaxed">
               Our expert team is ready to help you find the perfect piece. Schedule a personal consultation or call us for styling advice tailored to your recipient.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -204,7 +204,7 @@ export default function GiftGuide() {
             <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">
               Create a Custom Piece
             </h2>
-            <p className="text-[#6B6B6B] text-lg mb-8 leading-relaxed">
+            <p className="text-[#4A4A4A] text-lg mb-8 leading-relaxed">
               Can't find exactly what you're looking for? We specialize in bespoke jewelry. Work with our master craftspeople to create a truly unique gift that will be treasured for generations.
             </p>
             <button className="px-8 py-3 border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors font-medium">

@@ -22,7 +22,7 @@ export default function TermsOfService() {
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">
               Terms of Service
             </h1>
-            <p className="text-lg text-[#6B6B6B]">
+            <p className="text-lg text-[#4A4A4A]">
               Last updated: December 16, 2025
             </p>
           </div>
@@ -30,7 +30,7 @@ export default function TermsOfService() {
 
         {/* Content Section */}
         <section className="py-16 md:py-24 px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto space-y-8 text-[#6B6B6B]">
+          <div className="max-w-4xl mx-auto space-y-8 text-[#4A4A4A]">
             
             <div>
               <h2 className="font-display text-2xl text-[#1A1A1A] mb-4">1. Agreement to Terms</h2>

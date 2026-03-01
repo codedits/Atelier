@@ -83,7 +83,7 @@ export default function LoginPage() {
 
           {/* Additional Links */}
           <div className="mt-8 text-center space-y-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-700">
               By signing in, you agree to our{' '}
               <Link href="/terms-of-service" className="text-gray-700 hover:underline">
                 Terms of Service

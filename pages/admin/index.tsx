@@ -41,7 +41,7 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Atelier Admin</h1>
-          <p className="text-gray-400">Enter password to continue</p>
+          <p className="text-gray-600">Enter password to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-zinc-900 p-8 rounded-xl border border-zinc-800">
@@ -52,7 +52,7 @@ function LoginForm() {
           )}
           
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-400 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               Password
             </label>
             <input

@@ -6,6 +6,8 @@ import { CartProvider } from '@/context/CartContext'
 import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
 import { SiteConfigProvider } from '@/context/SiteConfigContext'
+import CartDrawer from '@/components/CartDrawer'
+import Lenis from 'lenis'
 import '../styles/globals.css'
 
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, DEFAULT_OG, KEYWORDS } from '@/lib/constants'
@@ -17,6 +19,34 @@ const MemoizedComponent = memo(function MemoizedComponent({ Component, pageProps
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter()
+
+  useEffect(() => {
+    // Initialize Lenis for buttery smooth scrolling
+    const lenis = new Lenis({
+      lerp: 0.08, 
+      wheelMultiplier: 1,
+      infinite: false,
+    })
+
+    function raf(time: number) {
+      lenis.raf(time)
+      requestAnimationFrame(raf)
+    }
+
+    requestAnimationFrame(raf)
+
+    // Handle Route changes for scroll reset
+    const handleRouteChange = () => {
+      lenis.scrollTo(0, { immediate: true })
+    }
+
+    router.events.on('routeChangeComplete', handleRouteChange)
+
+    return () => {
+      lenis.destroy()
+      router.events.off('routeChangeComplete', handleRouteChange)
+    }
+  }, [router.events])
 
   // Prefetch critical routes on mount for faster navigation (only on idle)
   useEffect(() => {
@@ -73,6 +103,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <meta name="google-site-verification" content="lbE-B7d1GY7dOpPWJGwKeSOE71vpYNkby-KMNJ0IwyE" />
               <link rel="canonical" href={SITE_URL} />
             </Head>
+            <CartDrawer />
             <MemoizedComponent Component={Component} pageProps={pageProps} />
           </FavoritesProvider>
         </CartProvider>

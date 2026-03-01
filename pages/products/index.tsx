@@ -313,7 +313,7 @@ export default function ProductsPage({ initialProducts }: ProductsPageProps) {
                     {searchQuery ? `Results for "${searchQuery}"` : 'All Creations'}
                   </h1>
                   <div className="w-16 h-px bg-gradient-to-r from-[#1A1A1A] to-transparent mb-6" />
-                  <p className="text-base text-[#6B6B6B] leading-relaxed">
+                  <p className="text-base text-[#4A4A4A] leading-relaxed">
                     {searchQuery
                       ? `Discover our pieces matching your search for "${searchQuery}". Each creation is handcrafted with precision and care.`
                       : 'Explore our curated selection of handcrafted jewelry, where traditional craftsmanship meets contemporary elegance.'
@@ -402,7 +402,7 @@ export default function ProductsPage({ initialProducts }: ProductsPageProps) {
 
                   {searchQuery && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-[#FAF9F6] border border-[#E8E4DF]">
-                      <span className="text-[10px] uppercase tracking-wider text-[#6B6B6B]">Search:</span>
+                      <span className="text-[10px] uppercase tracking-wider text-[#4A4A4A]">Search:</span>
                       <span className="text-[10px] font-medium text-[#1A1A1A]">{searchQuery}</span>
                       <button onClick={() => {
                         setSearchQuery('')
@@ -430,7 +430,7 @@ export default function ProductsPage({ initialProducts }: ProductsPageProps) {
             <div className="min-h-[400px]">
               {filteredProducts.length > 0 ? (
                 <div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16"
+                  className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-12 sm:gap-y-16"
                 >
                   {filteredProducts.map((product, index) => (
                     <ProductGridItem key={product.id} product={product} index={index} />
@@ -444,7 +444,7 @@ export default function ProductsPage({ initialProducts }: ProductsPageProps) {
                     <FilterIcon className="w-8 h-8 text-[#1A1A1A]" />
                   </div>
                   <h3 className="font-serif text-2xl text-[#1A1A1A] mb-4">No pieces found</h3>
-                  <p className="text-[#6B6B6B] mb-10 max-w-md mx-auto text-sm">
+                  <p className="text-[#4A4A4A] mb-10 max-w-md mx-auto text-sm">
                     We couldn&apos;t find any jewelry matching your current filters. Try adjusting your selection or clear all filters.
                   </p>
                   <button

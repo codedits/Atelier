@@ -21,7 +21,7 @@ module.exports = {
         brand: '0.25em',
       },
       fontFamily: {
-        display: ['Cinzel', 'serif'],
+        display: ['Cormorant Garamond', 'serif'],
         serif: ['Cormorant Garamond', 'Georgia', 'serif'],
         sans: ['Poppins', 'system-ui', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],

@@ -157,7 +157,7 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
 
               {/* Info */}
               <div className="px-1">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#6B6B6B] mb-1">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A] mb-1">
                   {product.category}
                 </p>
                 <h3 className="text-sm font-medium text-[#1A1A1A] mb-2 group-hover:text-[#C9A96E] transition-colors duration-300 line-clamp-1">
@@ -195,7 +195,7 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
             </div>
             <div className="text-center">
               <p className="text-sm font-medium text-[#1A1A1A] uppercase tracking-[0.15em]">View All</p>
-              <p className="text-[11px] text-[#6B6B6B] mt-1">Explore the full collection</p>
+              <p className="text-[11px] text-[#4A4A4A] mt-1">Explore the full collection</p>
             </div>
           </div>
         </Link>

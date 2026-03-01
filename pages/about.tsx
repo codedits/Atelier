@@ -23,7 +23,7 @@ export default function About() {
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-[#1A1A1A] mb-6 tracking-tight">
                 About Atelier
               </h1>
-              <p className="text-lg text-[#6B6B6B] max-w-2xl mx-auto">
+              <p className="text-lg text-[#4A4A4A] max-w-2xl mx-auto">
                 Three decades of excellence in fine jewelry craftsmanship
               </p>
             </div>
@@ -48,13 +48,13 @@ export default function About() {
                 <h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-6">
                   Crafted for Eternity
                 </h2>
-                <p className="text-lg text-[#6B6B6B] mb-4 leading-relaxed">
+                <p className="text-lg text-[#4A4A4A] mb-4 leading-relaxed">
                   Since 1987, Atelier has been synonymous with exceptional craftsmanship and timeless beauty. Our journey began with a simple vision: to create jewelry that transcends trends and becomes a cherished heirloom.
                 </p>
-                <p className="text-lg text-[#6B6B6B] mb-4 leading-relaxed">
+                <p className="text-lg text-[#4A4A4A] mb-4 leading-relaxed">
                   Every piece is meticulously crafted by our master artisans using only the finest materials — ethically sourced diamonds, premium metals, and carefully selected gemstones. We believe that luxury is not about excess, but about the art of perfection.
                 </p>
-                <p className="text-lg text-[#6B6B6B] leading-relaxed">
+                <p className="text-lg text-[#4A4A4A] leading-relaxed">
                   Our commitment to quality extends beyond the product. We work closely with our clients to understand their vision and create bespoke pieces that tell their unique stories.
                 </p>
               </div>
@@ -85,7 +85,7 @@ export default function About() {
               ].map((value, index) => (
                 <div key={index} className="bg-[#F8F7F5] p-8 rounded-lg border border-[#E5E5E5]">
                   <h3 className="text-xl font-semibold text-[#1A1A1A] mb-3">{value.title}</h3>
-                  <p className="text-[#6B6B6B] leading-relaxed">{value.description}</p>
+                  <p className="text-[#4A4A4A] leading-relaxed">{value.description}</p>
                 </div>
               ))}
             </div>
@@ -98,7 +98,7 @@ export default function About() {
             <h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-12 text-center">
               Master Craftspeople
             </h2>
-            <p className="text-center text-[#6B6B6B] max-w-2xl mx-auto mb-12">
+            <p className="text-center text-[#4A4A4A] max-w-2xl mx-auto mb-12">
               Our team comprises award-winning artisans and designers who bring decades of experience to each creation. From design to execution, every step reflects our unwavering commitment to excellence.
             </p>
           </div>

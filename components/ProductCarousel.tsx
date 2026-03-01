@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef, memo } from 'react'
+import { useState, useRef, useCallback, memo } from 'react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 interface ProductCarouselProps {
   images: string[]
@@ -10,149 +11,126 @@ interface ProductCarouselProps {
 // Memoized to prevent re-renders
 const ProductCarousel = memo(function ProductCarousel({ images, productName, saleBadge }: ProductCarouselProps) {
   const [selected, setSelected] = useState(0)
-  const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
-
-  // Reset to first image when images change
-  useEffect(() => {
-    setSelected(0)
-  }, [images])
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const hasMultiple = images.length > 1
 
-  // Memoized navigation handlers
-  const goPrev = useCallback(() => {
-    setSelected((i) => (i - 1 + images.length) % images.length)
-  }, [images.length])
-  
-  const goNext = useCallback(() => {
-    setSelected((i) => (i + 1) % images.length)
-  }, [images.length])
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return
+    const scrollPosition = scrollRef.current.scrollLeft
+    const width = scrollRef.current.clientWidth
+    // Calculate which slide is currently in view
+    const newSelected = Math.round(scrollPosition / width)
+    if (newSelected !== selected && newSelected >= 0 && newSelected < images.length) {
+      setSelected(newSelected)
+    }
+  }, [images.length, selected])
 
-  const selectImage = useCallback((idx: number) => {
+  const scrollToImage = useCallback((idx: number) => {
+    if (!scrollRef.current) return
+    const width = scrollRef.current.clientWidth
+    scrollRef.current.scrollTo({
+      left: width * idx,
+      behavior: 'smooth'
+    })
     setSelected(idx)
   }, [])
 
-  // Touch/swipe handlers for mobile
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    touchEndX.current = e.touches[0].clientX
-  }, [])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX
-  }, [])
-
-  const handleTouchEnd = useCallback(() => {
-    const diff = touchStartX.current - touchEndX.current
-    const threshold = 50 // minimum swipe distance in px
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0) goNext()   // swipe left → next
-      else goPrev()            // swipe right → prev
-    }
-  }, [goNext, goPrev])
-
   return (
-    <div className="space-y-4 contain-layout">
-      {/* Main Image - 4:5 aspect ratio */}
-      <div
-        className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden contain-paint touch-pan-y"
-        style={{ aspectRatio: '4 / 5' }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {images[selected] ? (
-          <Image
-            key={selected}
-            src={images[selected]}
-            alt={`${productName} - Image ${selected + 1}`}
-            fill
-            className="object-cover object-center w-full h-full gpu-accelerated"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority={selected === 0}
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-[#9CA3AF]">
-            No image
-          </div>
-        )}
-
+    <div className="space-y-4 w-full">
+      {/* Native Scroll Carousel Container */}
+      <div className="relative w-full rounded-none md:rounded-lg overflow-hidden bg-[#F8F7F5]">
         {/* Sale Badge */}
         {saleBadge && (
-          <div className="absolute top-4 left-4 bg-[#1A1A1A] text-white text-[10px] font-medium uppercase tracking-[0.15em] px-3 py-1.5 z-10">
+          <div className="absolute top-4 left-4 bg-[#1A1A1A] text-white text-[10px] font-medium uppercase tracking-[0.15em] px-3 py-1.5 z-20 shadow-sm">
             {saleBadge}
           </div>
         )}
 
-        {/* Arrows - simplified transitions */}
-        {hasMultiple && (
-          <>
-            <button
-              type="button"
-              onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md z-10 transition-colors duration-150"
-              aria-label="Previous"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-md z-10 transition-colors duration-150"
-              aria-label="Next"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            {/* Dots */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                {images.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => selectImage(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-150 ${
-                    idx === selected ? 'bg-white scale-110' : 'bg-white/50 hover:bg-white/80'
-                  }`}
-                  aria-label={`Image ${idx + 1}`}
+        {/* Scroll Track */}
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory w-full"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {/* Hide webkit scrollbar via inline styles injection for full cross-browser support */}
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          
+          {images.length > 0 ? (
+            images.map((src, idx) => (
+              <div 
+                key={idx}
+                className="relative flex-none w-full snap-center"
+                style={{ aspectRatio: '3 / 4' }} // Portrait aspect ratio (3:4 is standard for fashion/jewelry)
+              >
+                <Image
+                  src={src}
+                  alt={`${productName} - View ${idx + 1}`}
+                  fill
+                  className="object-cover object-center w-full h-full"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority={idx === 0}
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjhGN0Y1Ii8+PC9zdmc+"
                 />
-              ))}
+              </div>
+            ))
+          ) : (
+            <div className="relative flex-none w-full flex items-center justify-center text-[#9CA3AF] snap-center" style={{ aspectRatio: '3 / 4' }}>
+              No image
             </div>
-          </>
+          )}
+        </div>
+
+        {/* Progress Dots overlaid on image */}
+        {hasMultiple && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => scrollToImage(idx)}
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                  idx === selected 
+                    ? "bg-[#1A1A1A] scale-125 w-3" // Active dot gets wider like a capsule
+                    : "bg-black/30 hover:bg-black/50"
+                )}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails (optional but good for desktop/tablet) */}
       {hasMultiple && (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                {images.map((src, idx) => (
+        <div className="flex gap-2 overflow-x-auto pb-2 px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {images.map((src, idx) => (
             <button
               key={idx}
               type="button"
-              onClick={() => selectImage(idx)}
-              className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 transition-all duration-150 ${
-                idx === selected
-                  ? 'border-[#1A1A1A] ring-2 ring-[#1A1A1A]/30'
-                  : 'border-transparent hover:border-[#1A1A1A]/50'
-              }`}
+              onClick={() => scrollToImage(idx)}
+              className={cn(
+                "flex-none relative w-[72px] h-[96px] rounded bg-[#F8F7F5] overflow-hidden transition-all duration-300",
+                idx === selected 
+                  ? "ring-1 ring-[#1A1A1A] ring-offset-2 opacity-100" 
+                  : "opacity-60 hover:opacity-100"
+              )}
             >
-              <div className="relative w-full h-full bg-[#F8F7F5]">
-                <Image 
-                  src={src} 
-                  alt={`Thumbnail ${idx + 1}`} 
-                  fill 
-                  className="object-cover" 
-                  sizes="80px"
-                  loading="lazy"
-                />
-              </div>
+              <Image 
+                src={src} 
+                alt={`Thumbnail ${idx + 1}`} 
+                fill 
+                className="object-cover" 
+                sizes="72px"
+                loading="lazy"
+              />
             </button>
           ))}
         </div>

@@ -61,7 +61,7 @@
   width: 100%;
   overflow: visible;
   white-space: normal;
-  font-family: 'Cinzel', 'Cormorant Garamond', serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: clamp(4rem, 12vw, 10rem);
   font-weight: 50;
   letter-spacing: -0.02em;
@@ -246,7 +246,7 @@ body {
   --color-offwhite: #FAF9F6;
   --color-ivory: #F5F0EB;
   --color-text: #1A1A1A;
-  --color-text-muted: #6B6B6B;
+  --color-text-muted: #4A4A4A;
   --color-border: #E8E4DF;
   --color-gold: #1A1A1A;
   --color-gold-light: #333333;
@@ -522,7 +522,7 @@ h6 {
   .admin-table th {
     padding: 10px 12px;
   }
-  
+
   .admin-table td {
     padding: 12px;
   }
@@ -929,13 +929,11 @@ h6 {
 
 /* Gold shimmer text effect */
 .text-shimmer {
-  background: linear-gradient(
-    120deg,
-    var(--color-gold-dark) 0%,
-    var(--color-gold-light) 40%,
-    var(--color-gold) 60%,
-    var(--color-gold-dark) 100%
-  );
+  background: linear-gradient(120deg,
+      var(--color-gold-dark) 0%,
+      var(--color-gold-light) 40%,
+      var(--color-gold) 60%,
+      var(--color-gold-dark) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -963,7 +961,7 @@ h6 {
 .luxury-card {
   position: relative;
   transition: transform var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow var(--transition-medium) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .luxury-card::after {
@@ -1067,8 +1065,15 @@ h6 {
 /* ============================================ */
 
 @keyframes announcementSlideIn {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0);     opacity: 1; }
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .announcement-slide-in {
@@ -1076,19 +1081,22 @@ h6 {
 }
 
 @keyframes announcementShimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0;  }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .announcement-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.06) 40%,
-    rgba(255,255,255,0.12) 50%,
-    rgba(255,255,255,0.06) 60%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 40%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.06) 60%,
+      transparent 100%);
   background-size: 200% 100%;
   animation: announcementShimmer 3s ease-in-out infinite;
 }
@@ -1146,13 +1154,20 @@ h6 {
 
 /* Vignette overlay for hero images */
 .vignette-overlay {
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 /* Parallax image container */
 @keyframes subtleFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .float-subtle {

@@ -142,7 +142,7 @@ export default function LoginForm({ onSuccess, redirectUrl }: LoginFormProps) {
             )}
           </button>
 
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-gray-700">
             We&apos;ll send a one-time code to your email to sign in.
           </p>
         </form>
@@ -159,12 +159,12 @@ export default function LoginForm({ onSuccess, redirectUrl }: LoginFormProps) {
               <button
                 type="button"
                 onClick={handleBackToEmail}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-gray-700 hover:text-gray-700"
               >
                 Change email
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-3">
+            <p className="text-sm text-gray-700 mb-3">
               Code sent to <span className="font-medium text-gray-700">{email}</span>
             </p>
             <input
@@ -222,7 +222,7 @@ export default function LoginForm({ onSuccess, redirectUrl }: LoginFormProps) {
               type="button"
               onClick={handleResendOtp}
               disabled={loading}
-              className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              className="text-sm text-gray-700 hover:text-gray-700 disabled:opacity-50"
             >
               Didn&apos;t receive the code? <span className="underline">Resend OTP</span>
             </button>

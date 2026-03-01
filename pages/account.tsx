@@ -214,7 +214,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-semibold">{user?.name || 'Welcome back!'}</h1>
-                  <p className="text-gray-400 text-sm sm:text-base mt-0.5">{user?.email}</p>
+                  <p className="text-gray-600 text-sm sm:text-base mt-0.5">{user?.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -240,15 +240,15 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
           <div className="bg-white rounded-xl shadow-lg hover:shadow-xl border border-gray-900/10 p-4 grid grid-cols-3 gap-4 transition-shadow duration-300">
             <div className="text-center">
               <p className="text-2xl font-semibold text-gray-900">{orders.length}</p>
-              <p className="text-xs text-gray-500">Orders</p>
+              <p className="text-xs text-gray-700">Orders</p>
             </div>
             <Link href="/favorites" className="text-center">
               <p className="text-2xl font-semibold text-gray-900">♥</p>
-              <p className="text-xs text-gray-500">Favorites</p>
+              <p className="text-xs text-gray-700">Favorites</p>
             </Link>
             <Link href="/cart" className="text-center">
               <p className="text-2xl font-semibold text-gray-900">🛒</p>
-              <p className="text-xs text-gray-500">Cart</p>
+              <p className="text-xs text-gray-700">Cart</p>
             </Link>
           </div>
         </div>
@@ -353,47 +353,47 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                     <div className="space-y-5">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-wide">Email</p>
                           <p className="text-gray-900 truncate">{user?.email}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Name</p>
-                          <p className="text-gray-900">{user?.name || <span className="text-gray-400 italic">Not set</span>}</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-wide">Name</p>
+                          <p className="text-gray-900">{user?.name || <span className="text-gray-600 italic">Not set</span>}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
-                          <p className="text-gray-900">{user?.phone || <span className="text-gray-400 italic">Not set</span>}</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-wide">Phone</p>
+                          <p className="text-gray-900">{user?.phone || <span className="text-gray-600 italic">Not set</span>}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-gray-500 uppercase tracking-wide">Address</p>
-                          <p className="text-gray-900">{user?.address || <span className="text-gray-400 italic">Not set</span>}</p>
+                          <p className="text-xs text-gray-700 uppercase tracking-wide">Address</p>
+                          <p className="text-gray-900">{user?.address || <span className="text-gray-600 italic">Not set</span>}</p>
                         </div>
                       </div>
                     </div>
@@ -440,7 +440,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                   <h2 className="font-semibold text-gray-900">Account Settings</h2>
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-gray-500 mb-4">Permanently delete your account and all associated data.</p>
+                  <p className="text-sm text-gray-700 mb-4">Permanently delete your account and all associated data.</p>
                   <button
                     onClick={handleDeleteAccount}
                     disabled={deleting}
@@ -460,7 +460,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
               <div className="bg-white rounded-xl shadow-lg hover:shadow-xl border border-gray-900/10 overflow-hidden transition-shadow duration-300">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                   <h2 className="font-semibold text-gray-900">Order History</h2>
-                  <span className="text-sm text-gray-500">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
+                  <span className="text-sm text-gray-700">{orders.length} order{orders.length !== 1 ? 's' : ''}</span>
                 </div>
 
                 <div className="p-6">
@@ -471,12 +471,12 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                   ) : orders.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                        <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-10 h-10 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                       </div>
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                      <p className="text-gray-500 mb-6 max-w-sm mx-auto">Start shopping to see your orders here</p>
+                      <p className="text-gray-700 mb-6 max-w-sm mx-auto">Start shopping to see your orders here</p>
                       <Link
                         href="/products"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors font-medium"
@@ -497,13 +497,13 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">#{order.id.slice(0, 8).toUpperCase()}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-700">
                                   {new Date(order.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',
@@ -535,7 +535,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                                   </Link>
                                 ) : (
                                   <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border border-gray-300 flex items-center justify-center shadow-sm">
-                                    <span className="text-xs text-gray-400 font-medium">No image</span>
+                                    <span className="text-xs text-gray-600 font-medium">No image</span>
                                   </div>
                                 )}
                                 
@@ -547,18 +547,18 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                                   >
                                     {item.name}
                                   </Link>
-                                  <p className="text-xs text-gray-500 mt-0.5 font-medium">Quantity: <span className="text-gray-700 font-semibold">{item.quantity}</span></p>
+                                  <p className="text-xs text-gray-700 mt-0.5 font-medium">Quantity: <span className="text-gray-700 font-semibold">{item.quantity}</span></p>
                                 </div>
 
                                 {/* Price - Premium Display */}
                                 <div className="flex-shrink-0 text-right">
                                   <p className="text-sm font-bold text-gray-900">₨{(item.price * item.quantity).toFixed(0)}</p>
-                                  <p className="text-xs text-gray-500 mt-1">₨{item.price.toFixed(0)}/unit</p>
+                                  <p className="text-xs text-gray-700 mt-1">₨{item.price.toFixed(0)}/unit</p>
                                 </div>
                               </div>
                             ))}
                             {order.items.length > 3 && (
-                              <p className="text-xs text-gray-500 px-4 py-3 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 font-medium">
+                              <p className="text-xs text-gray-700 px-4 py-3 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 font-medium">
                                 +{order.items.length - 3} more item{order.items.length - 3 > 1 ? 's' : ''}
                               </p>
                             )}

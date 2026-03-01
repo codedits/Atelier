@@ -38,27 +38,27 @@ export default function SignaturePiece() {
             style={{ animationDelay: isIntersecting ? '150ms' : '0ms' }}
           >
             <div>
-              <p className="text-sm uppercase tracking-wider text-[#6B6B6B] mb-3">Signature Collection</p>
+              <p className="text-sm uppercase tracking-wider text-[#4A4A4A] mb-3">Signature Collection</p>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#1A1A1A] leading-tight mb-4">
                 Diamond Elegance Necklace
               </h2>
             </div>
 
-            <p className="text-base text-[#6B6B6B] leading-relaxed">
+            <p className="text-base text-[#4A4A4A] leading-relaxed">
               Handcrafted with 18k gold and precision-cut diamonds. This masterpiece embodies timeless elegance and exceptional artistry.
             </p>
 
             <div className="space-y-3 pt-4">
               <div className="flex justify-between py-2 border-b border-[#E5E5E5]">
-                <p className="text-sm text-[#6B6B6B]">Material</p>
+                <p className="text-sm text-[#4A4A4A]">Material</p>
                 <p className="text-sm text-[#1A1A1A] font-medium">18K Gold</p>
               </div>
               <div className="flex justify-between py-2 border-b border-[#E5E5E5]">
-                <p className="text-sm text-[#6B6B6B]">Stones</p>
+                <p className="text-sm text-[#4A4A4A]">Stones</p>
                 <p className="text-sm text-[#1A1A1A] font-medium">42 Diamonds (12.5ct)</p>
               </div>
               <div className="flex justify-between py-2">
-                <p className="text-sm text-[#6B6B6B]">Price</p>
+                <p className="text-sm text-[#4A4A4A]">Price</p>
                 <p className="text-xl text-[#1A1A1A] font-medium">₨1,650,000</p>
               </div>
             </div>

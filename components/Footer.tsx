@@ -12,7 +12,7 @@ const Footer = memo(function Footer() {
           {/* Brand Section */}
           <div>
             <div className="font-display font-bold text-lg tracking-[0.05em] text-[#1A1A1A] mb-4">{SITE_NAME.toUpperCase()}</div>
-            <p className="text-sm text-[#6B6B6B] leading-relaxed mb-4">
+            <p className="text-sm text-[#4A4A4A] leading-relaxed mb-4">
               Handcrafted jewelry since 1987. Luxury, elegance, and timeless beauty.
             </p>
             <p className="text-xs text-[#1A1A1A] mb-3 font-semibold tracking-wider">CONTACT US</p>
@@ -87,7 +87,7 @@ const Footer = memo(function Footer() {
               </a>
             </div>
             <p className="text-xs text-[#1A1A1A] mb-2 font-semibold tracking-wider">NEWSLETTER</p>
-            <p className="text-xs text-[#6B6B6B]">Subscribe to receive updates and special offers.</p>
+            <p className="text-xs text-[#4A4A4A]">Subscribe to receive updates and special offers.</p>
           </div>
         </div>
         
@@ -95,11 +95,11 @@ const Footer = memo(function Footer() {
         <div className="pt-8 space-y-6 md:space-y-0">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="flex flex-col gap-4 w-full md:w-auto">
-              <p className="text-xs text-[#6B6B6B]">Â© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+              <p className="text-xs text-[#4A4A4A]">Â© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
               <div className="flex flex-wrap gap-6">
-                <Link href="/privacy-policy" className="text-xs text-[#6B6B6B] hover:text-[#888] transition-colors duration-150">Privacy Policy</Link>
-                <Link href="/terms-of-service" className="text-xs text-[#6B6B6B] hover:text-[#888] transition-colors duration-150">Terms of Service</Link>
-                <Link href="/cookie-policy" className="text-xs text-[#6B6B6B] hover:text-[#888] transition-colors duration-150">Cookie Policy</Link>
+                <Link href="/privacy-policy" className="text-xs text-[#4A4A4A] hover:text-[#888] transition-colors duration-150">Privacy Policy</Link>
+                <Link href="/terms-of-service" className="text-xs text-[#4A4A4A] hover:text-[#888] transition-colors duration-150">Terms of Service</Link>
+                <Link href="/cookie-policy" className="text-xs text-[#4A4A4A] hover:text-[#888] transition-colors duration-150">Cookie Policy</Link>
               </div>
             </div>
             <div className="text-right w-full md:w-auto">

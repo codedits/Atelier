@@ -43,7 +43,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
       </div>
 
       {/* Full-bleed editorial grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#E8E4DF]">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#E8E4DF]">
         {collections.map((collection, index) => (
           <div
             key={collection.id}
@@ -55,33 +55,33 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
           >
             <Link
               href={collection.link}
-              className="group relative overflow-hidden block h-screen w-full cursor-pointer bg-[#FAF9F6]"
+              className="group relative overflow-hidden block h-[45vh] md:h-[65vh] lg:h-[130vh] w-full cursor-pointer bg-[#FAF9F6]"
             >
               <Image
                 src={collection.image_url}
                 alt={collection.title}
                 fill
                 className="object-cover transition-all duration-[1200ms] ease-out group-hover:scale-105"
-                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 50vw"
               />
 
-              {/* Refined gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
+              {/* Refined gradient overlay - Darker for mobile centering readability */}
+              <div className="absolute inset-0 bg-black/30 lg:bg-gradient-to-t lg:from-black/60 lg:via-black/10 lg:to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
 
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-10">
+              {/* Content - Absolute center on mobile, bottom on desktop */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center lg:justify-end p-4 md:p-10">
                 <div className="text-center w-full">
                   {/* Gold accent line */}
-                  <div className="w-8 h-px bg-white mx-auto mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-center" />
+                  <div className="hidden lg:block w-8 h-px bg-white mx-auto mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-center" />
 
-                  <h3 className="text-2xl md:text-3xl font-medium !text-white mb-4 tracking-wide font-serif">
+                  <h3 className="text-xl md:text-2xl lg:text-3xl font-medium !text-white mb-2 lg:mb-4 tracking-wide font-serif">
                     {collection.title}
                   </h3>
 
-                  <div className="flex items-center justify-center gap-2 text-white/80 text-xs font-medium uppercase tracking-[0.2em] group-hover:gap-3 transition-all duration-500">
-                    <span>Discover</span>
-                    <svg className="w-3 h-3 group-hover:translate-x-1.5 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  <div className="flex flex-col items-center justify-center lg:flex lg:opacity-100 opacity-60">
+                    <span className="text-white/80 text-[10px] lg:text-xs font-medium uppercase tracking-[0.2em] mb-1 transition-all duration-500 group-hover:-translate-y-1">Discover</span>
+                    <svg className="hidden lg:block w-3 h-3 text-white/50 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                   </div>
                 </div>

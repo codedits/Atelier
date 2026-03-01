@@ -17,7 +17,7 @@ const DEFAULT_COLORS = {
     secondary: '#FAFAF8',
     accent: '#D4AF37',
     text: '#1A1A1A',
-    text_light: '#6B6B6B'
+    text_light: '#4A4A4A'
 }
 
 export function SiteConfigProvider({ children, initialConfig }: { children: ReactNode, initialConfig?: SiteConfig | null }) {

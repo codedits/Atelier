@@ -60,7 +60,7 @@ const InstagramGallery = memo(function InstagramGallery() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] mb-6 font-serif">
             Follow Our Journey
           </h2>
-          <p className="text-sm text-[#6B6B6B] max-w-md mx-auto">
+          <p className="text-sm text-[#4A4A4A] max-w-md mx-auto">
             Behind-the-scenes, styling inspiration, and moments of beauty.
           </p>
         </div>

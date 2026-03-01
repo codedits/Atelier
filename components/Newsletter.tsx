@@ -81,14 +81,14 @@ export default function Newsletter() {
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#1A1A1A] leading-tight font-serif">
                 Stay<br />Inspired
               </h2>
-              <p className="text-sm text-[#6B6B6B] leading-relaxed">
+              <p className="text-sm text-[#4A4A4A] leading-relaxed">
                 Join our inner circle for first access to new collections, behind-the-scenes stories, and members-only offers.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="newsletter-email" className="text-[10px] uppercase tracking-[0.2em] text-[#6B6B6B] mb-2 block">
+                <label htmlFor="newsletter-email" className="text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A] mb-2 block">
                   Email Address
                 </label>
                 <input

@@ -79,7 +79,7 @@ const ValueProposition = memo(function ValueProposition() {
               <h3 className="text-[10px] font-medium text-[#1A1A1A] uppercase tracking-[0.15em] mb-0.5">
                 {value.title}
               </h3>
-              <p className="text-[9px] text-[#6B6B6B] tracking-wider">{value.description}</p>
+              <p className="text-[9px] text-[#4A4A4A] tracking-wider">{value.description}</p>
             </div>
           ))}
         </div>
@@ -97,7 +97,7 @@ const ValueProposition = memo(function ValueProposition() {
                 <span className="text-[11px] font-medium text-[#1A1A1A] uppercase tracking-[0.15em]">
                   {value.title}
                 </span>
-                <span className="text-[10px] text-[#6B6B6B] tracking-wider ml-2">
+                <span className="text-[10px] text-[#4A4A4A] tracking-wider ml-2">
                   — {value.description}
                 </span>
               </div>

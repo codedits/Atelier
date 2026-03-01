@@ -11,7 +11,6 @@ import {
   getCachedFeaturedCollections,
   getCachedNewArrivals,
   getCachedTestimonials,
-  getCachedCollectionsHighlight,
   getCachedFeaturedProducts,
   getCachedAnnouncements,
   getCachedHomepageSections
@@ -22,6 +21,7 @@ import {
   ProductCard,
   FeaturedCollections,
   LogoMarquee,
+  Lookbook, // Added Lookbook import
 } from '../components'
 import { HeroImage } from '../components/Hero'
 import { Testimonial } from '../components/Testimonials'
@@ -35,7 +35,6 @@ const ValueProposition = dynamic(() => import('../components/ValueProposition'),
 const TrendingNow = dynamic(() => import('../components/TrendingNow'), { ssr: true })
 const BrandStory = dynamic(() => import('../components/BrandStory'), { ssr: true })
 
-const CollectionsHighlight = dynamic(() => import('../components/CollectionsHighlight'), { ssr: true })
 const ProcessSteps = dynamic(() => import('../components/ProcessSteps'), { ssr: true })
 const Craftsmanship = dynamic(() => import('../components/Craftsmanship'), { ssr: true })
 const Testimonials = dynamic(() => import('../components/Testimonials'), { ssr: true })
@@ -70,24 +69,23 @@ interface HomeProps {
   featuredProducts: Product[]
   featuredCollections: Collection[]
   layout: string[]
-  heroImages: HeroImage[]
-  testimonials: Testimonial[]
-  collectionsHighlight: any[]
+  heroImages: any[]
+  testimonials: any[]
   siteConfig: any
   announcements: any[]
   homepageSections: any[]
+  lookbookImages: { id: string, image_url: string, title?: string, subtitle?: string, link?: string }[]
 }
 
 // SSG with ISR - Pre-render at build time, revalidate every 60 seconds
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   // Fetch cached products, collections, layout config, hero images, testimonials, and collections highlight in parallel
-  const [productsData, collectionsData, configData, heroImagesData, testimonialsData, collectionsHighlightData, featuredProductsData, announcementsData, homepageSectionsData] = await Promise.all([
+  const [productsData, collectionsData, configData, heroImagesData, testimonialsData, featuredProductsData, announcementsData, homepageSectionsData] = await Promise.all([
     getCachedNewArrivals(),
     getCachedFeaturedCollections(),
     getCachedSiteConfig(),
     getCachedHeroImages(),
     getCachedTestimonials(),
-    getCachedCollectionsHighlight(),
     getCachedFeaturedProducts(),
     getCachedAnnouncements(),
     getCachedHomepageSections()
@@ -125,10 +123,17 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
     }
   ]
 
+  // 5. Fetch lookbook imagery
+  const { data: lookbook_images } = await supabase
+    .from('lookbook_images')
+    .select('id, image_url, title, subtitle, link')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
+
   // Default layout fallback
   const defaultLayout = [
-    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
+    'process_steps', 'lookbook', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
   ]
 
   return {
@@ -141,16 +146,16 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       layout: configData?.homepage_layout || defaultLayout,
       heroImages: (heroImagesData || []) as HeroImage[],
       testimonials: (testimonialsData || []) as Testimonial[],
-      collectionsHighlight: collectionsHighlightData || [],
       siteConfig: configData || null,
       announcements: (announcementsData || []) as any[],
       homepageSections: (homepageSectionsData || []) as any[],
+      lookbookImages: lookbook_images || [],
     },
-    revalidate: 3600, // ISR: Regenerate page every 1 hour
+    revalidate: 60, // ISR: Regenerate page every 1 minute
   }
 }
 
-export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, collectionsHighlight, announcements, homepageSections, siteConfig }: HomeProps) {
+export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, announcements, homepageSections, siteConfig, lookbookImages }: HomeProps) {
   // Memoize for stable reference
   const products = useMemo(() => newArrivals, [newArrivals])
   const featured = useMemo(() => featuredProducts, [featuredProducts])
@@ -167,10 +172,26 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
 
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
-  const activeLayout = layout && layout.length > 0 ? layout : [
-    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee', 'collections_highlight',
-    'process_steps', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
-  ]
+  // Ensure lookbook is always injected for now during development,
+  // even if it's missing from the database layout configuration
+  const activeLayout = useMemo(() => {
+    let currentLayout = layout && layout.length > 0 ? layout : [
+      'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
+      'process_steps', 'lookbook', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+    ]
+
+    // Auto-inject lookbook before trending_now if absent from db config
+    if (!currentLayout.includes('lookbook')) {
+      currentLayout = [...currentLayout]
+      const trendingIndex = currentLayout.indexOf('trending_now')
+      if (trendingIndex !== -1) {
+        currentLayout.splice(trendingIndex, 0, 'lookbook')
+      } else {
+        currentLayout.push('lookbook')
+      }
+    }
+    return currentLayout
+  }, [layout])
 
   const renderSection = (sectionId: string, index: number) => {
     switch (sectionId) {
@@ -184,10 +205,10 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
         return <FeaturedCollections key={sectionId} collections={collections} />
       case 'logo_marquee':
         return <LogoMarquee key={sectionId} />
-      case 'collections_highlight':
-        return <CollectionsHighlight key={sectionId} highlights={collectionsHighlight.length > 0 ? collectionsHighlight : undefined} />
       case 'process_steps':
         return <ProcessSteps key={sectionId} data={sectionsByKey['process_steps']} />
+      case 'lookbook':
+        return <Lookbook key={sectionId} images={lookbookImages} title={sectionsByKey['lookbook']?.title} subtitle={sectionsByKey['lookbook']?.subtitle} />
       case 'trending_now':
         return featured.length > 0 ? <TrendingNow key={sectionId} products={featured} /> : null
       case 'craftsmanship':
@@ -220,7 +241,7 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
               </div>
 
               {products.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-10">
                   {products.map((product, pIndex) => (
                     <div
                       key={product.id}
@@ -244,7 +265,7 @@ export default function Home({ newArrivals, featuredProducts, featuredCollection
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-10">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="flex flex-col space-y-4">
                       <Skeleton className="h-[400px] w-full" />

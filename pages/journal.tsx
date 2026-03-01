@@ -84,7 +84,7 @@ export default function Journal() {
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">
               Journal
             </h1>
-            <p className="text-lg text-[#6B6B6B]">
+            <p className="text-lg text-[#4A4A4A]">
               Stories, insights, and expertise from the world of fine jewelry
             </p>
           </div>
@@ -108,12 +108,12 @@ export default function Journal() {
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Featured</span>
                     <span className="text-xs text-[#9CA3AF]">â€¢</span>
-                    <span className="text-xs text-[#6B6B6B]">{blogPosts[0].category}</span>
+                    <span className="text-xs text-[#4A4A4A]">{blogPosts[0].category}</span>
                   </div>
                   <h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-4">
                     {blogPosts[0].title}
                   </h2>
-                  <p className="text-[#6B6B6B] mb-6 leading-relaxed text-lg">
+                  <p className="text-[#4A4A4A] mb-6 leading-relaxed text-lg">
                     {blogPosts[0].excerpt}
                   </p>
                   <p className="text-sm text-[#9CA3AF] mb-6">{blogPosts[0].date}</p>
@@ -143,7 +143,7 @@ export default function Journal() {
                     <h3 className="font-display text-xl text-[#1A1A1A] mb-3 group-hover:text-[#888] transition-colors">
                       {post.title}
                     </h3>
-                    <p className="text-[#6B6B6B] text-sm mb-4 line-clamp-2">
+                    <p className="text-[#4A4A4A] text-sm mb-4 line-clamp-2">
                       {post.excerpt}
                     </p>
                     <p className="text-xs text-[#9CA3AF]">{post.date}</p>
@@ -167,7 +167,7 @@ export default function Journal() {
             <h2 className="font-display text-3xl text-[#1A1A1A] mb-4">
               Stay Updated
             </h2>
-            <p className="text-[#6B6B6B] mb-8">
+            <p className="text-[#4A4A4A] mb-8">
               Subscribe to our newsletter to receive new articles and exclusive insights delivered to your inbox.
             </p>
             <form className="flex flex-col sm:flex-row gap-3">

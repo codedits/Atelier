@@ -65,7 +65,7 @@ export default function Craftsmanship({ data: propData }: CraftsmanshipProps) {
             {/* Gold divider */}
             <div className="w-16 h-px bg-gradient-to-r from-[#1A1A1A] to-transparent" />
 
-            <div className="space-y-5 text-base text-[#6B6B6B] leading-relaxed">
+            <div className="space-y-5 text-base text-[#4A4A4A] leading-relaxed">
               {paragraphs.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
@@ -75,10 +75,10 @@ export default function Craftsmanship({ data: propData }: CraftsmanshipProps) {
             <div className="grid grid-cols-3 gap-8 pt-10 border-t border-[#E8E4DF]">
               {stats.map((stat, i) => (
                 <div key={i} className="text-center">
-                  <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-serif">
+                  <div className="text-4xl md:text-5xl text-[#1A1A1A] font-light mb-2 font-display">
                     {stat.value}
                   </div>
-                  <div className="text-[10px] text-[#6B6B6B] uppercase tracking-[0.2em]">
+                  <div className="text-[10px] text-[#4A4A4A] uppercase tracking-[0.2em]">
                     {stat.label}
                   </div>
                 </div>

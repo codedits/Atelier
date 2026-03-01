@@ -22,7 +22,7 @@ export default function ShippingInfo() {
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">
               Shipping Information
             </h1>
-            <p className="text-lg text-[#6B6B6B]">
+            <p className="text-lg text-[#4A4A4A]">
               Fast, secure, and insured delivery to your door.
             </p>
           </div>
@@ -64,7 +64,7 @@ export default function ShippingInfo() {
                   <div key={index} className="border border-[#E5E5E5] rounded-lg p-6">
                     <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">{option.title}</h3>
                     <p className="text-[#1A1A1A] font-semibold mb-2">{option.time}</p>
-                    <p className="text-[#6B6B6B] mb-3">{option.cost}</p>
+                    <p className="text-[#4A4A4A] mb-3">{option.cost}</p>
                     <p className="text-sm text-[#9CA3AF]">{option.details}</p>
                   </div>
                 ))}
@@ -74,7 +74,7 @@ export default function ShippingInfo() {
             {/* Packaging */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Premium Packaging</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 Every piece from Atelier arrives in our signature packaging designed to protect your precious jewelry and enhance your unboxing experience. Each item is:
               </p>
               <ul className="space-y-3">
@@ -87,7 +87,7 @@ export default function ShippingInfo() {
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <span className="text-[#1A1A1A] font-bold mt-1">âœ“</span>
-                    <span className="text-[#6B6B6B]">{item}</span>
+                    <span className="text-[#4A4A4A]">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -97,10 +97,10 @@ export default function ShippingInfo() {
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Insurance & Tracking</h2>
               <div className="space-y-4">
-                <p className="text-[#6B6B6B] leading-relaxed">
+                <p className="text-[#4A4A4A] leading-relaxed">
                   All shipments from Atelier are fully insured against loss, theft, or damage during transit. You'll receive a tracking number via email immediately after dispatch, allowing you to monitor your delivery in real-time.
                 </p>
-                <p className="text-[#6B6B6B] leading-relaxed">
+                <p className="text-[#4A4A4A] leading-relaxed">
                   In the unlikely event of any damage or loss, please contact us within 48 hours of delivery. We maintain comprehensive insurance coverage and will work to resolve any issues promptly.
                 </p>
               </div>
@@ -109,10 +109,10 @@ export default function ShippingInfo() {
             {/* Customs & International */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">International Orders & Customs</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 For international shipments, we provide all necessary documentation including detailed invoices and certificates of authenticity. Customers are responsible for any applicable customs duties or taxes in their country.
               </p>
-              <p className="text-[#6B6B6B] leading-relaxed">
+              <p className="text-[#4A4A4A] leading-relaxed">
                 We work with trusted international couriers to ensure smooth customs clearance. Typical delivery times for international orders are 10-20 business days depending on the destination country.
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function ShippingInfo() {
             {/* Contact */}
             <div className="bg-[#F8F7F5] rounded-lg p-8">
               <h3 className="font-display text-2xl text-[#1A1A1A] mb-4">Questions about shipping?</h3>
-              <p className="text-[#6B6B6B] mb-4">
+              <p className="text-[#4A4A4A] mb-4">
                 Contact our customer service team for more information.
               </p>
               <a 

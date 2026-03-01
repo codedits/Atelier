@@ -22,7 +22,7 @@ export default function ReturnsPolicy() {
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">
               Returns & Refund Policy
             </h1>
-            <p className="text-lg text-[#6B6B6B]">
+            <p className="text-lg text-[#4A4A4A]">
               Your satisfaction is our priority. Shop with confidence.
             </p>
           </div>
@@ -34,7 +34,7 @@ export default function ReturnsPolicy() {
             {/* 30-Day Return Policy */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">30-Day Return Policy</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 We offer a hassle-free 30-day return policy on all non-custom jewelry pieces. If you're not completely satisfied with your purchase, you can return it for a full refund within 30 days of delivery.
               </p>
               <div className="bg-[#F8F7F5] rounded-lg p-6 border border-[#E5E5E5]">
@@ -49,7 +49,7 @@ export default function ReturnsPolicy() {
                   ].map((item, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <span className="text-[#1A1A1A] font-bold mt-0.5">âœ“</span>
-                      <span className="text-[#6B6B6B]">{item}</span>
+                      <span className="text-[#4A4A4A]">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -88,7 +88,7 @@ export default function ReturnsPolicy() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-[#1A1A1A] mb-1">{item.title}</h3>
-                      <p className="text-[#6B6B6B]">{item.description}</p>
+                      <p className="text-[#4A4A4A]">{item.description}</p>
                     </div>
                   </div>
                 ))}
@@ -98,10 +98,10 @@ export default function ReturnsPolicy() {
             {/* Exchanges */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Exchanges</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 We're happy to exchange your item for a different size, color, or design within 30 days of purchase. Please contact us to arrange an exchange.
               </p>
-              <p className="text-[#6B6B6B] leading-relaxed">
+              <p className="text-[#4A4A4A] leading-relaxed">
                 If you're exchanging for a higher-priced item, you'll pay the difference. If exchanging for a lower-priced item, we'll credit the difference to your account.
               </p>
             </div>
@@ -109,7 +109,7 @@ export default function ReturnsPolicy() {
             {/* Custom Orders */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Custom Orders & Bespoke Pieces</h2>
-              <p className="text-[#6B6B6B] leading-relaxed">
+              <p className="text-[#4A4A4A] leading-relaxed">
                 Custom and bespoke pieces are non-returnable as they are created specifically to your specifications. However, if there's a manufacturing defect, we'll repair or replace the item at no cost. We're committed to working with you to ensure your bespoke piece exceeds your expectations.
               </p>
             </div>
@@ -117,13 +117,13 @@ export default function ReturnsPolicy() {
             {/* Warranty */}
             <div className="bg-[#F8F7F5] rounded-lg p-8">
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Lifetime Warranty</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 All Atelier pieces come with a lifetime warranty covering manufacturing defects including broken clasps, loose settings, or stone displacement.
               </p>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 This warranty does not cover damage from accidents, misuse, or normal wear and tear. Our expert craftspeople will repair any defects promptly at no charge.
               </p>
-              <p className="text-[#6B6B6B] leading-relaxed">
+              <p className="text-[#4A4A4A] leading-relaxed">
                 We also offer complimentary cleaning, polishing, and inspection services for all pieces.
               </p>
             </div>
@@ -131,10 +131,10 @@ export default function ReturnsPolicy() {
             {/* Damaged Items */}
             <div>
               <h2 className="font-display text-3xl text-[#1A1A1A] mb-6">Damaged or Defective Items</h2>
-              <p className="text-[#6B6B6B] mb-4 leading-relaxed">
+              <p className="text-[#4A4A4A] mb-4 leading-relaxed">
                 If your item arrives damaged or defective, please contact us within 48 hours with photos. We'll arrange an immediate replacement or full refund.
               </p>
-              <p className="text-[#6B6B6B] leading-relaxed">
+              <p className="text-[#4A4A4A] leading-relaxed">
                 We take pride in our quality control, but accidents can happen during shipping. We're committed to making it right.
               </p>
             </div>
@@ -142,7 +142,7 @@ export default function ReturnsPolicy() {
             {/* Contact */}
             <div className="bg-[#F8F7F5] rounded-lg p-8 text-center border-l-4 border-[#1A1A1A]">
               <h3 className="font-display text-2xl text-[#1A1A1A] mb-4">Need Help with a Return?</h3>
-              <p className="text-[#6B6B6B] mb-6">
+              <p className="text-[#4A4A4A] mb-6">
                 Our customer service team is here to help. Contact us anytime.
               </p>
               <div className="space-y-3">

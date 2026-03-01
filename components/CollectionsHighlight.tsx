@@ -123,7 +123,7 @@ const CollectionsHighlight = memo(function CollectionsHighlight({ highlights = d
                   <h3 className="text-2xl md:text-3xl font-medium text-[#1A1A1A] mb-3 tracking-wide font-serif">
                     {highlight.title}
                   </h3>
-                  <p className="text-[#6B6B6B] text-sm leading-relaxed mb-5 flex-1">
+                  <p className="text-[#4A4A4A] text-sm leading-relaxed mb-5 flex-1">
                     {highlight.subtitle}
                   </p>
 

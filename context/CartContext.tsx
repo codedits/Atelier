@@ -18,6 +18,9 @@ interface CartContextType {
   totalPrice: number
   getItemQuantity: (productId: string) => number
   canAddMore: (product: Product, additionalQty?: number) => boolean
+  isCartOpen: boolean
+  openCart: () => void
+  closeCart: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -27,6 +30,10 @@ const CART_STORAGE_KEY = 'atelier_cart'
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+
+  const openCart = useCallback(() => setIsCartOpen(true), [])
+  const closeCart = useCallback(() => setIsCartOpen(false), [])
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -155,6 +162,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { product, quantity }]
     })
+
+    // Automatically open the cart drawer when an item is added
+    openCart()
     return true
   }
 
@@ -212,6 +222,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalPrice,
         getItemQuantity,
         canAddMore,
+        isCartOpen,
+        openCart,
+        closeCart,
       }}
     >
       {children}

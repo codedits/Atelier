@@ -63,7 +63,7 @@ const ProcessSteps = memo(function ProcessSteps({ data: propData }: ProcessSteps
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 })
 
   return (
-    <section className="luxury-section w-full overflow-hidden bg-[#FAF9F6]" ref={sectionRef}>
+    <section className="luxury-section w-full overflow-hidden bg-[#FAF9F6]/50" ref={sectionRef}>
       <div className="w-full mx-auto px-6 lg:px-8 max-w-7xl">
         {/* Header */}
         <div
@@ -72,53 +72,67 @@ const ProcessSteps = memo(function ProcessSteps({ data: propData }: ProcessSteps
             isIntersecting && "reveal-slide-up"
           )}
         >
-          <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
+          <p className="text-[11px] uppercase tracking-[0.4em] text-[#1A1A1A] mb-4 font-medium opacity-70">
             {d.subtitle}
           </p>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-[#1A1A1A] mb-8 italic">
             {d.title}
           </h2>
-          <div className="luxury-divider mt-6">
-            <div className="luxury-divider-diamond" />
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-[1px] w-12 bg-[#1A1A1A]/20" />
+            <div className="w-1.5 h-1.5 rotate-45 border border-[#1A1A1A]/40" />
+            <div className="h-[1px] w-12 bg-[#1A1A1A]/20" />
           </div>
         </div>
 
         {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-0 relative">
-          {/* Connecting line (desktop only) */}
-          <div className="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-[#1A1A1A]/20 to-transparent" />
+        <div className="relative">
+          {/* Mobile Snap Slider / Desktop Grid */}
+          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar -mx-6 px-6 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:pb-0 relative">
+            {/* Connecting line (desktop only) */}
+            <div className="hidden lg:block absolute top-[2rem] left-[15%] right-[15%] h-px bg-[#1A1A1A]/10" />
 
-          {steps.map((step, index) => (
-            <div
-              key={step.number}
-              className={cn(
-                "relative text-center px-6 invisible-before-reveal",
-                isIntersecting && "reveal-slide-up"
-              )}
-              style={{ animationDelay: isIntersecting ? `${index * 150 + 150}ms` : '0ms' }}
-            >
-              {/* Step number indicator */}
-              <div className="relative z-10 w-16 h-16 mx-auto mb-8 flex items-center justify-center">
-                <div className="absolute inset-0 border border-[#1A1A1A]/30 rotate-45 transition-all duration-500 group-hover:border-[#1A1A1A]" />
-                <span className="text-[#1A1A1A] text-lg font-light tracking-wider font-serif">
-                  {step.number}
-                </span>
+            {steps.map((step, index) => (
+              <div
+                key={step.number}
+                className={cn(
+                  "relative text-center px-10 md:px-6 min-w-[300px] md:min-w-0 snap-center flex-shrink-0 invisible-before-reveal group",
+                  isIntersecting && "reveal-slide-up"
+                )}
+                style={{ animationDelay: isIntersecting ? `${index * 150 + 150}ms` : '0ms' }}
+              >
+                {/* Step number indicator */}
+                <div className="relative z-10 w-16 h-16 mx-auto mb-10 flex items-center justify-center">
+                  <div className="absolute inset-0 border border-[#1A1A1A]/20 rotate-45 transition-all duration-700 group-hover:rotate-[135deg] group-hover:border-[#1A1A1A]/50 bg-white shadow-sm" />
+                  <span className="relative z-20 text-[#1A1A1A] text-lg font-light tracking-wider font-serif">
+                    {step.number}
+                  </span>
+                </div>
+
+                {/* Icon Container */}
+                <div className="text-[#1A1A1A]/60 flex justify-center mb-6 transition-transform duration-500 group-hover:scale-110">
+                  <div className="w-14 h-14 rounded-full bg-white shadow-sm border border-[#1A1A1A]/5 flex items-center justify-center">
+                    {defaultIcons[index % defaultIcons.length]}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <h3 className="text-xl font-medium text-[#1A1A1A] mb-4 tracking-wider uppercase text-[13px]">
+                  {step.title}
+                </h3>
+                <p className="text-[14px] text-[#555] leading-relaxed max-w-[260px] mx-auto opacity-90 font-light italic">
+                  &ldquo;{step.description}&rdquo;
+                </p>
               </div>
-
-              {/* Icon */}
-              <div className="text-[#1A1A1A]/70 flex justify-center mb-5">
-                {defaultIcons[index % defaultIcons.length]}
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl md:text-2xl font-medium text-[#1A1A1A] mb-3 tracking-wide font-serif">
-                {step.title}
-              </h3>
-              <p className="text-sm text-[#6B6B6B] leading-relaxed max-w-[260px] mx-auto">
-                {step.description}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
+          
+          {/* Mobile Scroll Indicator */}
+          <div className="flex justify-center gap-2 mt-8 md:hidden">
+            {steps.map((_, i) => (
+              <div key={i} className="w-1 h-1 rounded-full bg-[#1A1A1A]/20" />
+            ))}
+          </div>
         </div>
       </div>
     </section>

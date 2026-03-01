@@ -49,6 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let bucket = 'product-images'
     if (folder === 'hero') bucket = 'hero-images'
     else if (folder === 'collections') bucket = 'collection-images'
+    else if (folder === 'lookbook') bucket = 'lookbook-images'
 
     // Ensure bucket exists
     const { error: listError } = await supabaseAdmin.storage.getBucket(bucket)

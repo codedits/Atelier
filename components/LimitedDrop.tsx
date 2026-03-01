@@ -67,7 +67,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
           {String(value).padStart(2, '0')}
         </div>
       </div>
-      <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.3em] text-[#1A1A1A]/40 mt-3">
+      <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.3em] text-[#1A1A1A]/70 mt-3">
         {label}
       </div>
     </div>
@@ -75,6 +75,9 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 const LimitedDrop = memo(function LimitedDrop({ data: propData }: LimitedDropProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   const d = { ...defaultData, ...propData, metadata: { ...defaultData.metadata, ...propData?.metadata } }
   const meta = d.metadata!
   const countdown = useCountdown(meta.target_date || defaultData.metadata!.target_date!)
@@ -101,8 +104,8 @@ const LimitedDrop = memo(function LimitedDrop({ data: propData }: LimitedDropPro
             sizes="(min-width: 1024px) 50vw, 100vw"
           />
           {/* Overlay gradient toward content side */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#FAF9F6]/80 hidden lg:block" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#FAF9F6]/90 lg:hidden" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#FAF9F6]/40 hidden lg:block" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#FAF9F6]/40 lg:hidden" />
 
           {/* Badge */}
           {meta.badge_text && (
@@ -157,7 +160,7 @@ const LimitedDrop = memo(function LimitedDrop({ data: propData }: LimitedDropPro
           {/* Description */}
           <p
             className={cn(
-              'text-sm sm:text-base text-[#1A1A1A]/50 leading-relaxed max-w-md mb-10 text-center lg:text-left invisible-before-reveal',
+              'text-sm sm:text-base text-[#1A1A1A]/80 leading-relaxed max-w-md mb-10 text-center lg:text-left invisible-before-reveal',
               isIntersecting && 'reveal-slide-up'
             )}
             style={{ animationDelay: '300ms' }}
@@ -174,38 +177,39 @@ const LimitedDrop = memo(function LimitedDrop({ data: propData }: LimitedDropPro
               )}
               style={{ animationDelay: '400ms' }}
             >
-              <div className="h-px w-8 bg-[#C9A96E]/40" />
-              <span className="text-[11px] uppercase tracking-[0.2em] text-[#1A1A1A]/60">
+              <div className="h-px w-8 bg-[#C9A96E]/60" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-[#1A1A1A]/80">
                 Only <span className="text-[#C9A96E] font-medium">{meta.total_pieces}</span> pieces worldwide
               </span>
-              <div className="h-px w-8 bg-[#C9A96E]/40" />
+              <div className="h-px w-8 bg-[#C9A96E]/60" />
             </div>
           )}
 
           {/* Countdown */}
-          {!countdown.expired ? (
-            <div
-              className={cn(
-                'invisible-before-reveal',
-                isIntersecting && 'reveal-slide-up'
-              )}
-              style={{ animationDelay: '500ms' }}
-            >
+          <div
+            className={cn(
+              'invisible-before-reveal transition-opacity duration-700',
+              isIntersecting && 'reveal-slide-up',
+              !mounted && 'opacity-0'
+            )}
+            style={{ animationDelay: '500ms' }}
+          >
+            {!mounted || !countdown.expired ? (
               <div className="flex items-center gap-6 sm:gap-8 md:gap-10">
-                <CountdownUnit value={countdown.days} label="Days" />
-                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/15 font-light -mt-5">:</div>
-                <CountdownUnit value={countdown.hours} label="Hours" />
-                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/15 font-light -mt-5">:</div>
-                <CountdownUnit value={countdown.minutes} label="Minutes" />
-                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/15 font-light -mt-5">:</div>
-                <CountdownUnit value={countdown.seconds} label="Seconds" />
+                <CountdownUnit value={mounted ? countdown.days : 0} label="Days" />
+                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/40 font-light -mt-5">:</div>
+                <CountdownUnit value={mounted ? countdown.hours : 0} label="Hours" />
+                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/40 font-light -mt-5">:</div>
+                <CountdownUnit value={mounted ? countdown.minutes : 0} label="Minutes" />
+                <div className="text-2xl sm:text-3xl text-[#1A1A1A]/40 font-light -mt-5">:</div>
+                <CountdownUnit value={mounted ? countdown.seconds : 0} label="Seconds" />
               </div>
-            </div>
-          ) : (
-            <div className="text-center lg:text-left">
-              <p className="text-lg text-[#C9A96E] font-serif italic">Available Now</p>
-            </div>
-          )}
+            ) : (
+              <div className="text-center lg:text-left">
+                <p className="text-lg text-[#C9A96E] font-serif italic">Available Now</p>
+              </div>
+            )}
+          </div>
 
           {/* CTA */}
           <div

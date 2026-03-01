@@ -87,7 +87,7 @@ const ProductCard = memo(function ProductCard({ id, slug, name, price, img, imag
         </div>
         
         <div className="space-y-2 text-center px-2">
-          <p className="text-sm text-[#6B6B6B] uppercase tracking-wide">{category}</p>
+          <p className="text-sm text-[#4A4A4A] uppercase tracking-wide">{category}</p>
           <h3 className="font-medium text-lg md:text-xl text-[#1A1A1A] group-hover:text-[#888] transition-colors duration-300 font-serif">{name}</h3>
           <div className="flex items-center justify-center gap-2">
             <p className="text-base md:text-lg text-[#1A1A1A] font-medium">{formattedPrice}</p>

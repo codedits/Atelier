@@ -145,7 +145,7 @@ export default function OrderReviewForm({ orderId, items, userEmail, userName }:
         </div>
         <div>
           <h2 className="text-lg font-medium text-gray-900">Review Your Purchase</h2>
-          <p className="text-sm text-gray-500">Share your experience with these products</p>
+          <p className="text-sm text-gray-700">Share your experience with these products</p>
         </div>
       </div>
 
@@ -171,7 +171,7 @@ export default function OrderReviewForm({ orderId, items, userEmail, userName }:
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-xs text-gray-400">No img</span>
+                      <span className="text-xs text-gray-600">No img</span>
                     </div>
                   )}
                 </div>
@@ -209,16 +209,16 @@ export default function OrderReviewForm({ orderId, items, userEmail, userName }:
                     />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-xs text-gray-400">No img</span>
+                      <span className="text-xs text-gray-600">No img</span>
                     </div>
                   )}
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Click to write a review</p>
+                  <p className="text-xs text-gray-700 mt-0.5">Click to write a review</p>
                 </div>
                 <svg 
-                  className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                  className={`w-5 h-5 text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
@@ -279,7 +279,7 @@ export default function OrderReviewForm({ orderId, items, userEmail, userName }:
                       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FDB022]/30 focus:border-[#FDB022] resize-none"
                       maxLength={1000}
                     />
-                    <p className="text-xs text-gray-400 mt-1 text-right">
+                    <p className="text-xs text-gray-600 mt-1 text-right">
                       {review.comment.length}/1000
                     </p>
                   </div>

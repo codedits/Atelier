@@ -299,7 +299,7 @@ export default function ProductDetailPage({ product, relatedProducts, reviews, r
 
             {/* Breadcrumb - Elegant & Minimal */}
             <nav className="mb-12 animate-fadeIn">
-              <ol className="flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-[#6B6B6B]">
+              <ol className="flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-[#4A4A4A]">
                 <li>
                   <Link href="/" className="hover:text-[#888] transition-colors">Home</Link>
                 </li>
@@ -375,11 +375,11 @@ export default function ProductDetailPage({ product, relatedProducts, reviews, r
 
                   <div className="w-16 h-px bg-gradient-to-r from-[#1A1A1A] to-transparent my-4" />
 
-                  <p className="text-base text-[#6B6B6B] font-normal leading-relaxed max-w-xl">
+                  <p className="text-base text-[#4A4A4A] font-normal leading-relaxed max-w-xl">
                     {product.description}
                   </p>
 
-                  <ul className="flex flex-wrap gap-6 mt-4 text-sm text-[#6B6B6B]">
+                  <ul className="flex flex-wrap gap-6 mt-4 text-sm text-[#4A4A4A]">
                     <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#1A1A1A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h4l3 8 4-16 3 8h4" /></svg> Free shipping</li>
                     <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#1A1A1A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l2 2" /></svg> 30-day returns</li>
                     <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#1A1A1A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg> Warranty</li>
@@ -424,8 +424,8 @@ export default function ProductDetailPage({ product, relatedProducts, reviews, r
                       onClick={handleAddToCart}
                       disabled={isOutOfStock || (product.stock > 0 && maxCanAdd === 0)}
                       className={`relative h-14 md:h-16 w-full overflow-hidden font-medium text-xs tracking-[0.15em] uppercase transition-all duration-300 flex items-center justify-center gap-3 px-6 ${addedToCart
-                          ? 'bg-green-600 text-white'
-                          : 'bg-[#1A1A1A] text-white hover:bg-[#333] active:scale-[0.99]'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-[#1A1A1A] text-white hover:bg-[#333] active:scale-[0.99]'
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <div className="relative overflow-hidden w-full h-full flex items-center justify-center">
@@ -453,8 +453,8 @@ export default function ProductDetailPage({ product, relatedProducts, reviews, r
                     <button
                       onClick={handleToggleFavorite}
                       className={`h-14 md:h-16 w-full border font-medium text-xs tracking-[0.15em] uppercase transition-all duration-300 flex items-center justify-center gap-3 px-4 ${isInFavorites
-                          ? 'bg-[#FAF9F6] border-[#1A1A1A] text-[#1A1A1A]'
-                          : 'border-[#E8E4DF] text-[#1A1A1A] hover:border-[#1A1A1A] hover:text-[#888]'
+                        ? 'bg-[#FAF9F6] border-[#1A1A1A] text-[#1A1A1A]'
+                        : 'border-[#E8E4DF] text-[#1A1A1A] hover:border-[#1A1A1A] hover:text-[#888]'
                         }`}
                     >
                       <svg className={`w-5 h-5 ${isInFavorites ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
@@ -533,7 +533,7 @@ export default function ProductDetailPage({ product, relatedProducts, reviews, r
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-12">
                   {relatedProducts.map((item) => (
                     <ProductCard
                       key={item.id}

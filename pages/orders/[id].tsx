@@ -280,7 +280,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                 <h1 className="text-xl font-medium text-gray-900">
                   Order #{order.id.slice(0, 8).toUpperCase()}
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-700 mt-1">
                   Placed on{' '}
                   {new Date(order.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -311,7 +311,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                         {cancelLoading ? 'Cancelling...' : 'Cancel Order'}
                       </button>
                     ) : (
-                      <p className="text-xs text-gray-500">Cannot cancel (older than 2 days)</p>
+                      <p className="text-xs text-gray-700">Cannot cancel (older than 2 days)</p>
                     )}
                   </>
                 )}
@@ -328,7 +328,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Items */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+              <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-4">
                 Items ({order.items.length})
               </h2>
               <div className="space-y-2.5">
@@ -349,7 +349,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       </Link>
                     ) : (
                       <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl border border-gray-300 flex items-center justify-center shadow-sm">
-                        <span className="text-xs text-gray-400 font-medium">No image</span>
+                        <span className="text-xs text-gray-600 font-medium">No image</span>
                       </div>
                     )}
                     
@@ -361,13 +361,13 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                       >
                         {item.name}
                       </Link>
-                      <p className="text-xs text-gray-500 mt-0.5 font-medium">Quantity: <span className="text-gray-700 font-semibold">{item.quantity}</span></p>
+                      <p className="text-xs text-gray-700 mt-0.5 font-medium">Quantity: <span className="text-gray-700 font-semibold">{item.quantity}</span></p>
                     </div>
 
                     {/* Price - Premium Display */}
                     <div className="flex-shrink-0 text-right">
                       <p className="text-sm font-bold text-gray-900">₨{(item.price * item.quantity).toFixed(0)}</p>
-                      <p className="text-xs text-gray-500 mt-1">₨{item.price.toFixed(0)}/unit</p>
+                      <p className="text-xs text-gray-700 mt-1">₨{item.price.toFixed(0)}/unit</p>
                     </div>
                   </div>
                 ))}
@@ -384,7 +384,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
             <div className="space-y-6">
               {/* Shipping Info */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+                <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-4">
                   Shipping Information
                 </h2>
                 <div className="space-y-2 text-sm">
@@ -397,7 +397,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
 
               {/* Payment Info */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+                <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-4">
                   Payment Method
                 </h2>
                 <p className="text-gray-900">{order.payment_method}</p>

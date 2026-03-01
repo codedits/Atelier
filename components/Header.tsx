@@ -12,7 +12,7 @@ const Header = memo(function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [hasScrolled, setHasScrolled] = useState(false)
-  const { totalItems } = useCart()
+  const { totalItems, openCart } = useCart()
   const { isAuthenticated, user } = useUserAuth()
   const { favorites } = useFavorites()
   const { config } = useSiteConfig()
@@ -139,124 +139,121 @@ const Header = memo(function Header() {
 
       {/* Promotional Banner - Only visible on non-homepage */}
       {router.pathname !== '/' && (
-        <div className="bg-[#1A1A1A] text-white text-center py-2.5 px-4">
-          <p className="text-xs font-medium tracking-wide">✨ Free shipping on orders over ₨5,000 | Free returns</p>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A] text-white text-center py-2 px-4 shadow-sm h-8 flex items-center justify-center">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-medium text-[#FAF9F6]"><span className="text-[#C9A96E] mr-2">✦</span> Complimentary shipping on orders over ₨5,000 <span className="text-[#C9A96E] ml-2">✦</span></p>
         </div>
       )}
 
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${shouldBeTransparent
-          ? 'bg-transparent border-b-0'
-          : 'bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm'
+      <header className={`fixed ${router.pathname === '/' ? 'top-0' : 'top-8 md:top-8'} left-0 right-0 z-40 transition-all duration-500 ease-out ${shouldBeTransparent
+        ? 'bg-transparent border-b-0 py-2'
+        : 'bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm py-0'
         }`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className={`font-display text-xl font-semibold tracking-[0.05em] transition-colors ${
-              // Hide on mobile homepage while hero is visible to avoid collision with large editorial text
-              isHomepage && !hasScrolled ? 'hidden sm:inline-block' : 'inline-block'
-              } ${shouldBeTransparent
-                ? 'text-white hover:text-white/80'
-                : 'text-[#1A1A1A] hover:text-[#888]'
-              }`}>
-              ATELIER
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-8">
-              {config?.nav_menu && config.nav_menu.length > 0 ? (
-                config.nav_menu.map(item => (
-                  <Link key={item.id} href={item.href} className={`text-sm transition-colors font-semibold relative ${isActive(item.href) ? 'text-[#1A1A1A]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#888]'}`}>
-                    {item.label}
-                    {isActive(item.href) && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#1A1A1A] rounded-full" />}
-                  </Link>
-                ))
-              ) : (
-                <Link href="/products" className={`text-sm transition-colors font-semibold relative ${isActive('/products') ? 'text-[#1A1A1A]' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#888]'}`}>
-                  Shop All
-                  {isActive('/products') && <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#1A1A1A] rounded-full" />}
-                </Link>
-              )}
-            </nav>            <div className="hidden md:flex items-center gap-6">
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Search"
-                className={`transition-all ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#888] hover:scale-110'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              <Link href="/favorites" aria-label="Favorites" className={`transition-all relative ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#888] hover:scale-110'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                {favorites.length > 0 && (
-                  <span className="absolute -top-2 -right-2 w-4 h-4 bg-[#1A1A1A] text-white text-[10px] rounded-full flex items-center justify-center font-medium">
-                    {favorites.length > 9 ? '9+' : favorites.length}
-                  </span>
-                )}
-              </Link>
-              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`transition-all relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white hover:scale-110' : 'text-[#1A1A1A] hover:text-[#888] hover:scale-110'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                {isAuthenticated && (
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-[#6B6B6B] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                    {user?.name || user?.email?.split('@')[0]}
-                  </span>
-                )}
-              </Link>
-              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#888]'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#1A1A1A] text-white text-xs rounded-full flex items-center justify-center font-medium">
-                    {totalItems > 9 ? '9+' : totalItems}
-                  </span>
-                )}
-              </Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-4">
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Search"
-                className={`transition-colors ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#888]'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-              <Link href="/cart" aria-label="Cart" className={`transition-colors relative ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#888]'}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#1A1A1A] text-white text-xs rounded-full flex items-center justify-center font-medium">
-                    {totalItems > 9 ? '9+' : totalItems}
-                  </span>
-                )}
-              </Link>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <div className="flex items-center justify-between h-20">
+            {/* Left: Navigation & Hamburger */}
+            <div className="flex-1 flex items-center justify-start gap-4">
               <button
                 aria-label="Toggle menu"
                 aria-expanded={open}
                 onClick={toggleMenu}
-                className={`p-2 focus:outline-none ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#888]'}`}
+                className={`lg:hidden p-2 -ml-2 focus:outline-none transition-colors ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#888]'}`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {open ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
                   )}
                 </svg>
+              </button>
+
+              <nav className="hidden lg:flex items-center gap-8">
+                {config?.nav_menu && config.nav_menu.length > 0 ? (
+                  config.nav_menu.map(item => (
+                    <Link key={item.id} href={item.href} className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive(item.href) ? 'text-[#1A1A1A] font-medium' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A]/80 hover:text-[#1A1A1A]'}`}>
+                      {item.label}
+                      <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                    </Link>
+                  ))
+                ) : (
+                  <Link href="/products" className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive('/products') ? 'text-[#1A1A1A] font-medium' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A]/80 hover:text-[#1A1A1A]'}`}>
+                    Shop All
+                    <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive('/products') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                  </Link>
+                )}
+              </nav>
+            </div>
+
+            {/* Center: Logo */}
+            <div className="flex-[1.5] max-w-fit flex justify-center items-center">
+              <Link href="/" className={`font-display text-2xl md:text-3xl lg:text-[2rem] font-medium tracking-[0.15em] transition-colors ${shouldBeTransparent
+                ? 'text-white hover:text-white/90'
+                : 'text-[#1A1A1A] hover:text-[#4A4A4A]'
+                }`}>
+                ATELIER
+              </Link>
+            </div>
+
+            {/* Right: Icons */}
+            <div className="flex-1 flex items-center justify-end gap-5 lg:gap-7">
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+                className={`transition-colors flex items-center gap-2 group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}
+              >
+                <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Search</span>
+                <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
+              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`hidden md:flex flex-col items-center gap-1 transition-colors relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Sign In</span>
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                {isAuthenticated && (
+                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] tracking-[0.1em] uppercase text-[#4A4A4A] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {user?.name || user?.email?.split('@')[0]}
+                  </span>
+                )}
+              </Link>
+
+              <Link href="/favorites" aria-label="Favorites" className={`hidden md:flex items-center gap-2 transition-colors relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+                <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Wishlist</span>
+                <div className="relative">
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {favorites.length > 0 && (
+                    <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-[#1A1A1A] text-white text-[9px] rounded-full flex items-center justify-center font-medium">
+                      {favorites.length > 9 ? '9+' : favorites.length}
+                    </span>
+                  )}
+                </div>
+              </Link>
+
+              <button onClick={openCart} aria-label="Cart" className={`transition-colors relative flex items-center gap-2 group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+                <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Bag</span>
+                <div className="relative">
+                  <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1.5 -right-2 w-[18px] h-[18px] bg-[#1A1A1A] text-white text-[9px] rounded-full flex items-center justify-center font-medium">
+                      {totalItems > 9 ? '9+' : totalItems}
+                    </span>
+                  )}
+                </div>
               </button>
             </div>
           </div>
         </div>
 
         {/* Mobile menu panel */}
-        <div className={`md:hidden transition-all duration-300 overflow-hidden bg-white border-t border-[#E5E5E5] ${open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`lg:hidden transition-all duration-300 overflow-hidden bg-white border-t border-[#E5E5E5] ${open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="px-6 py-6">
             <div className="flex flex-col gap-4">
               {config?.nav_menu && config.nav_menu.length > 0 ? (

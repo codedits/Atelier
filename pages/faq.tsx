@@ -65,7 +65,7 @@ export default function FAQ() {
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">
               Frequently Asked Questions
             </h1>
-            <p className="text-lg text-[#6B6B6B]">
+            <p className="text-lg text-[#4A4A4A]">
               Find answers to common questions about our jewelry, services, and policies.
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function FAQ() {
                   >
                     <div className="overflow-hidden">
                       <div className="px-6 py-4 border-t border-[#E5E5E5] bg-[#F8F7F5]">
-                        <p className="text-[#6B6B6B] leading-relaxed">
+                        <p className="text-[#4A4A4A] leading-relaxed">
                           {faq.answer}
                         </p>
                       </div>
@@ -110,7 +110,7 @@ export default function FAQ() {
               <h3 className="font-display text-2xl text-[#1A1A1A] mb-4">
                 Didn't find your answer?
               </h3>
-              <p className="text-[#6B6B6B] mb-6">
+              <p className="text-[#4A4A4A] mb-6">
                 Our customer service team is here to help. Reach out to us for any additional questions.
               </p>
               <a 
