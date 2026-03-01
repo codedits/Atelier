@@ -53,6 +53,10 @@ function generateGridPositions(count: number) {
 }
 
 export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "Discover" }: LookbookProps) {
+    // Only use provided props if they exist, otherwise fallback
+    const displayTitle = title || "THE LOOK"
+    const displaySubtitle = subtitle || "Discover"
+
     const containerRef = useRef<HTMLDivElement>(null)
     const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 }) as { ref: any; isIntersecting: boolean }
     const localRef = useRef<HTMLElement>(null)
@@ -142,10 +146,10 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                     )}
                 >
                     <span className="text-[12px] md:text-[14px] uppercase tracking-[0.4em] text-[#1A1A1A] font-medium mb-4 md:mb-6 block drop-shadow-sm">
-                        {subtitle}
+                        {displaySubtitle}
                     </span>
                     <h2 className="text-6xl md:text-8xl lg:text-9xl font-serif text-[#1A1A1A] tracking-widest drop-shadow-md">
-                        {title}
+                        {displayTitle}
                     </h2>
                 </div>
             </div>
