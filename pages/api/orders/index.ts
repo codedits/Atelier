@@ -69,30 +69,36 @@ export default async function handler(
       return res.status(400).json({ error: 'Order must contain at least one item' })
     }
 
-    // Validate stock availability for all items
+    // Validate stock availability and get real prices from database
     const productIds = items.map((item: any) => item.product_id).filter(Boolean)
-    if (productIds.length > 0) {
-      const { data: products, error: stockError } = await supabase
-        .from('products')
-        .select('id, name, stock')
-        .in('id', productIds)
+    if (productIds.length === 0) {
+      return res.status(400).json({ error: 'Order items must have valid product IDs' })
+    }
 
-      if (stockError) {
-        return res.status(500).json({ error: 'Failed to validate stock' })
-      }
+    const { data: products, error: stockError } = await supabase
+      .from('products')
+      .select('id, name, stock, price')
+      .in('id', productIds)
 
-      const productMap = new Map(products?.map(p => [p.id, p]) || [])
-      for (const item of items) {
-        if (!item.product_id) continue
-        const product = productMap.get(item.product_id)
-        if (!product) {
-          return res.status(400).json({ error: `Product not found: ${item.name}` })
-        }
-        // Only check stock if product has limited stock (stock > 0 means limited)
-        if (product.stock > 0 && item.quantity > product.stock) {
-          return res.status(400).json({ error: `Insufficient stock for ${product.name}. Available: ${product.stock}` })
-        }
+    if (stockError) {
+      return res.status(500).json({ error: 'Failed to validate stock' })
+    }
+
+    const productMap = new Map(products?.map(p => [p.id, p]) || [])
+
+    // Validate stock AND recalculate total from real prices (prevent price tampering)
+    let serverCalculatedTotal = 0
+    for (const item of items) {
+      if (!item.product_id) continue
+      const product = productMap.get(item.product_id)
+      if (!product) {
+        return res.status(400).json({ error: `Product not found: ${item.name}` })
       }
+      // Only check stock if product has limited stock (stock > 0 means limited)
+      if (product.stock > 0 && item.quantity > product.stock) {
+        return res.status(400).json({ error: `Insufficient stock for ${product.name}. Available: ${product.stock}` })
+      }
+      serverCalculatedTotal += product.price * item.quantity
     }
 
     const newOrder: Record<string, unknown> = {
@@ -100,7 +106,7 @@ export default async function handler(
       phone,
       address,
       items: items as OrderItem[],
-      total_price: Number(total_price),
+      total_price: serverCalculatedTotal, // Use server-calculated price, not client-supplied
       payment_method,
       payment_status: payment_method === 'COD' ? 'proof_pending' : 'pending',
       status: 'pending',
@@ -139,53 +145,48 @@ export default async function handler(
       return res.status(500).json({ error: error.message })
     }
 
-    console.log('Order created successfully:', data.id)
-
-    // Reduce stock for ordered products in batch
+    // Reduce stock for ordered products — atomic, race-condition-safe
     const stockUpdates = items
       .filter((item: any) => item.product_id && item.quantity > 0)
       .map((item: any) => ({ id: item.product_id, qty: item.quantity }))
 
     if (stockUpdates.length > 0) {
-      // Try batch RPC first (handles all items in one transaction)
-      const { error: rpcError } = await supabase.rpc('decrement_stock_batch', {
-        updates: stockUpdates,
-      })
+      // Use the safe batch RPC (all-or-nothing with WHERE stock >= qty guard)
+      const { data: batchResult, error: rpcError } = await supabase.rpc(
+        'decrement_stock_batch_safe',
+        { updates: JSON.stringify(stockUpdates) }
+      )
 
       if (rpcError) {
-        // Fallback: try individual RPC calls
+        // Fallback: try individual safe decrements
         for (const update of stockUpdates) {
-          const { error: singleRpcError } = await supabase.rpc('decrement_stock', {
-            p_id: update.id,
-            qty: update.qty,
-          })
+          const { data: ok, error: singleErr } = await supabase.rpc(
+            'decrement_stock_safe',
+            { p_id: update.id, qty: update.qty }
+          )
 
-          if (singleRpcError) {
-            // Last resort: fetch current stock and update directly
-            const { data: currentProduct } = await supabase
-              .from('products')
-              .select('stock')
-              .eq('id', update.id)
-              .single()
-            if (currentProduct) {
-              await supabase
-                .from('products')
-                .update({ stock: Math.max(0, (currentProduct.stock || 0) - update.qty) })
-                .eq('id', update.id)
-            }
+          if (singleErr || ok === false) {
+            // Stock was insufficient — the order row already exists so
+            // we leave it as-is (status: pending) for manual review.
+            console.warn(
+              `Stock decrement failed for product ${update.id} (qty ${update.qty}):`,
+              singleErr?.message ?? 'insufficient stock'
+            )
           }
         }
+      } else if (batchResult && batchResult.success === false) {
+        // Batch reported insufficient stock for one product
+        console.warn(
+          `Batch stock decrement failed for product ${batchResult.failed_product_id}. Available: ${batchResult.available}`
+        )
       }
     }
 
     // Clear cart if user is authenticated and clearCart is true
     if (user && clearCart) {
-      console.log('Clearing user cart for user:', user.id)
       const { error: cartError } = await supabase.from('user_cart').delete().eq('user_id', user.id)
       if (cartError) {
         console.error('Failed to clear cart:', cartError)
-      } else {
-        console.log('Cart cleared successfully')
       }
     }
 
@@ -197,7 +198,7 @@ export default async function handler(
           orderId: data.id,
           userName: user_name,
           items: items as any[],
-          totalPrice: Number(total_price),
+          totalPrice: serverCalculatedTotal,
           paymentMethod: payment_method,
           address,
           phone,
@@ -208,7 +209,6 @@ export default async function handler(
       }
     }
 
-    console.log('Order creation completed successfully, returning order:', data.id)
     return res.status(201).json({ ...data, message: 'Order created successfully' })
   }
 

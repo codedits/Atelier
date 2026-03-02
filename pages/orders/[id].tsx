@@ -7,7 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import OrderReviewForm from '@/components/OrderReviewForm'
 import { verifyUserToken } from '@/lib/user-token'
-import type { GetServerSideProps } from 'next'
+import { useUserAuth } from '@/context/UserAuthContext'
 
 interface OrderItem {
   product_id?: string
@@ -29,47 +29,17 @@ interface Order {
   address: string
   email?: string
   items: OrderItem[]
+  can_cancel?: boolean
+  status_history?: Array<{ old_status: string; new_status: string; changed_by: string; created_at: string }>
 }
 
-interface OrderDetailPageProps {
-  orderId: string
-}
-
-export const getServerSideProps: GetServerSideProps<OrderDetailPageProps> = async (context) => {
-  const orderId = context.params?.id as string
-  if (!orderId) {
-    return { notFound: true }
-  }
-
-  const token = context.req.cookies['atelier_user_token']
-  if (!token) {
-    return {
-      redirect: {
-        destination: '/login?redirect=' + encodeURIComponent(`/orders/${orderId}`),
-        permanent: false,
-      },
-    }
-  }
-
-  const user = verifyUserToken(token)
-  if (!user) {
-    return {
-      redirect: {
-        destination: '/login?redirect=' + encodeURIComponent(`/orders/${orderId}`),
-        permanent: false,
-      },
-    }
-  }
-
-  return {
-    props: {
-      orderId,
-    },
-  }
-}
-
-export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
+export default function OrderDetailPage() {
   const router = useRouter()
+  const { id } = router.query
+  const orderId = typeof id === 'string' ? id : ''
+  const { user } = useUserAuth()
+  const [isHydrated, setIsHydrated] = useState(false)
+
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,16 +47,31 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [cancelSuccess, setCancelSuccess] = useState(false)
 
+  // Client-side auth protection
   useEffect(() => {
-    fetchOrder(orderId)
-  }, [orderId])
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (isHydrated && !user) {
+      if (document.cookie.indexOf('atelier_user_token=') === -1) {
+        router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`)
+      }
+    }
+  }, [user, isHydrated, router])
+
+  useEffect(() => {
+    if (orderId && user) {
+      fetchOrder(orderId)
+    }
+  }, [orderId, user])
 
   const fetchOrder = async (orderId: string) => {
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
         credentials: 'include',
       })
-      
+
       if (!res.ok) {
         if (res.status === 404) {
           setError('Order not found')
@@ -98,7 +83,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
         setLoading(false)
         return
       }
-      
+
       const data = await res.json()
       setOrder(data)
     } catch (err) {
@@ -135,45 +120,8 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
     }
   }
 
-  const canCancelOrder = () => {
-    if (!order) {
-      console.log('canCancelOrder: No order data')
-      return false
-    }
-    
-    // Only pending orders can be cancelled
-    if (order.status !== 'pending') {
-      console.log('canCancelOrder: Order status is', order.status, '(not pending)')
-      return false
-    }
-    
-    try {
-      const orderDate = new Date(order.created_at)
-      const currentDate = new Date()
-      
-      // If date parsing failed, don't allow cancellation
-      if (isNaN(orderDate.getTime())) {
-        console.error('Invalid order date:', order.created_at)
-        return false
-      }
-      
-      // Calculate difference in milliseconds
-      const timeDifference = currentDate.getTime() - orderDate.getTime()
-      
-      // Convert to days (using exact calculation: 24 * 60 * 60 * 1000 ms per day)
-      const daysDifference = timeDifference / (1000 * 60 * 60 * 24)
-      
-      console.log('canCancelOrder: Order date:', order.created_at, 'Days difference:', daysDifference.toFixed(2))
-      
-      // Allow if within 2 days (< 2 days, not <=)
-      const canCancel = daysDifference < 2
-      console.log('canCancelOrder: Result =', canCancel)
-      return canCancel
-    } catch (e) {
-      console.error('Error checking cancel eligibility:', e)
-      return false
-    }
-  }
+  // Cancel eligibility is now computed server-side (Issue 5)
+  const canCancelOrder = () => order?.can_cancel ?? false
 
   const handleCancelOrder = async () => {
     if (!order || !window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
@@ -352,7 +300,7 @@ export default function OrderDetailPage({ orderId }: OrderDetailPageProps) {
                         <span className="text-xs text-gray-600 font-medium">No image</span>
                       </div>
                     )}
-                    
+
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <Link

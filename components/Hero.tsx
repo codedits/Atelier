@@ -98,7 +98,7 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
   }
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [progressWidth, setProgressWidth] = useState(0)
+  const progressRef = useRef<HTMLDivElement>(null)
 
   const years = useCountUp(35, 2200, isLoaded)
   const pieces = useCountUp(5000, 2500, isLoaded)
@@ -109,22 +109,29 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
     if (mediaQuery.matches) return
 
     const SLIDE_DURATION = 6000
-    let start = Date.now()
 
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - start
-      setProgressWidth(Math.min((elapsed / SLIDE_DURATION) * 100, 100))
-    }, 50)
+    // Use CSS transition for progress bar — eliminates 20fps re-renders
+    const startProgress = () => {
+      const el = progressRef.current
+      if (el) {
+        el.style.transition = 'none'
+        el.style.width = '0%'
+        // Force reflow to reset the transition
+        void el.offsetWidth
+        el.style.transition = `width ${SLIDE_DURATION}ms linear`
+        el.style.width = '100%'
+      }
+    }
+
+    startProgress()
 
     const slideInterval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
-      start = Date.now()
-      setProgressWidth(0)
+      startProgress()
     }, SLIDE_DURATION)
 
     return () => {
       clearInterval(slideInterval)
-      clearInterval(progressInterval)
     }
   }, [heroImages.length])
 
@@ -239,7 +246,15 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
               key={index}
               onClick={() => {
                 setCurrentImageIndex(index)
-                setProgressWidth(0)
+                // Reset CSS progress animation
+                const el = progressRef.current
+                if (el) {
+                  el.style.transition = 'none'
+                  el.style.width = '0%'
+                  void el.offsetWidth
+                  el.style.transition = 'width 6000ms linear'
+                  el.style.width = '100%'
+                }
               }}
               className="relative overflow-hidden transition-all duration-500"
               aria-label={`Go to slide ${index + 1}`}
@@ -251,8 +266,9 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
               }`} />
               {index === currentImageIndex && (
                 <div
-                  className="absolute top-0 left-0 h-full bg-white transition-none"
-                  style={{ width: `${progressWidth}%` }}
+                  ref={progressRef}
+                  className="absolute top-0 left-0 h-full bg-white"
+                  style={{ width: '0%' }}
                 />
               )}
             </button>

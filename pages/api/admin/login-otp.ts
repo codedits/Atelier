@@ -1,15 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { verifyOtpForUser } from '@/lib/admin-otp'
-import { supabase } from '@/lib/supabase'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { generateAdminToken } from '@/lib/admin-auth'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
-}
+const supabaseAdmin = getSupabaseAdmin()
+const supabaseAnon = getSupabaseClient()
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -28,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!ok) return res.status(401).json({ error: 'Invalid or expired OTP' })
 
   // Fetch admin user
-  const client = supabaseAdmin ?? supabase
+  const client = supabaseAdmin ?? supabaseAnon
   const { data, error } = await client
     .from('admin_users')
     .select('id, username')

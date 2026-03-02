@@ -24,46 +24,26 @@ interface Order {
   }>
 }
 
-interface AccountPageProps {
-  initialUser: UserPayload
-}
-
-export const getServerSideProps: GetServerSideProps<AccountPageProps> = async (context) => {
-  const token = context.req.cookies['atelier_user_token']
-  if (!token) {
-    return {
-      redirect: {
-        destination: '/login?redirect=/account',
-        permanent: false,
-      },
-    }
-  }
-
-  const user = verifyUserToken(token)
-  if (!user) {
-    return {
-      redirect: {
-        destination: '/login?redirect=/account',
-        permanent: false,
-      },
-    }
-  }
-
-  return {
-    props: {
-      initialUser: user,
-    },
-  }
-}
-
-export default function AccountPage({ initialUser }: AccountPageProps) {
+export default function AccountPage() {
   const router = useRouter()
-  const { user: contextUser, logout, refreshUser } = useUserAuth()
-  // Use context user if available (stays fresh with phone/address), fall back to SSR user
-  const user = contextUser || { ...initialUser, phone: undefined, address: undefined }
+  const { user, logout, refreshUser } = useUserAuth()
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // Client-side auth protection
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (isHydrated && !user) {
+      if (document.cookie.indexOf('atelier_user_token=') === -1) {
+        router.push('/login?redirect=/account')
+      }
+    }
+  }, [user, isHydrated, router])
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
-  
+
   // Profile editing state
   const [isEditing, setIsEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({
@@ -125,7 +105,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
       })
 
       const data = await res.json()
-      
+
       if (!res.ok) {
         setProfileError(data.error || 'Failed to update profile')
         setProfileSaving(false)
@@ -538,7 +518,7 @@ export default function AccountPage({ initialUser }: AccountPageProps) {
                                     <span className="text-xs text-gray-600 font-medium">No image</span>
                                   </div>
                                 )}
-                                
+
                                 {/* Product Info */}
                                 <div className="flex-1 min-w-0">
                                   <Link

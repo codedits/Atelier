@@ -1,22 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import { verifyAdminToken } from '../../../lib/admin-auth'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-    supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-        auth: { persistSession: false }
-    })
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-    const authHeader = req.headers.authorization
-    if (!authHeader?.startsWith('Bearer ')) return null
-    return verifyAdminToken(authHeader.substring(7))
-}
+import { withAdminAuth } from '@/lib/admin-api-utils'
 
 // Whitelist of fields allowed in single-image updates
 const ALLOWED_UPDATE_FIELDS = ['title', 'subtitle', 'link', 'is_active', 'display_order'] as const
@@ -37,13 +20,8 @@ function sanitizeUpdates(raw: Record<string, any>): Record<string, any> {
     return clean
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const admin = getAdminFromRequest(req)
-    if (!admin) {
-        return res.status(401).json({ error: 'Unauthorized' })
-    }
-
-    if (!supabaseAdmin) {
+export default withAdminAuth(async (req, res, { adminClient }) => {
+    if (!adminClient) {
         return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
     }
 
@@ -66,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             // @ts-ignore
-            const { data, error } = await supabaseAdmin.from('lookbook_images').insert(sanitized).select()
+            const { data, error } = await adminClient.from('lookbook_images').insert(sanitized).select()
             if (error) throw error
             return res.status(200).json({ success: true, data })
 
@@ -79,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     return res.status(400).json({ error: 'No valid fields to update' })
                 }
                 // @ts-ignore
-                const { error } = await supabaseAdmin.from('lookbook_images').update(clean).eq('id', id)
+                const { error } = await adminClient.from('lookbook_images').update(clean).eq('id', id)
                 if (error) throw error
             } else if (Array.isArray(updates)) {
                 // Upsert array (for shuffle) — only allow id + display_order
@@ -88,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     display_order: typeof u.display_order === 'number' ? u.display_order : 0,
                 }))
                 // @ts-ignore
-                const { error } = await supabaseAdmin.from('lookbook_images').upsert(safeUpdates, { onConflict: 'id', ignoreDuplicates: false })
+                const { error } = await adminClient.from('lookbook_images').upsert(safeUpdates, { onConflict: 'id', ignoreDuplicates: false })
                 if (error) throw error
             } else {
                 return res.status(400).json({ error: 'Provide id with updates, or an updates array' })
@@ -102,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             // Fetch image_url before deleting so we can clean up storage
-            const { data: imageRow } = await supabaseAdmin
+            const { data: imageRow } = await adminClient
                 .from('lookbook_images')
                 .select('image_url')
                 .eq('id', id)
@@ -110,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             const row = imageRow as { image_url?: string } | null
 
-            const { error } = await supabaseAdmin.from('lookbook_images').delete().eq('id', id)
+            const { error } = await adminClient.from('lookbook_images').delete().eq('id', id)
             if (error) throw error
 
             // Best-effort storage cleanup
@@ -121,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     const match = url.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/)
                     if (match) {
                         const [, bucket, filePath] = match
-                        await supabaseAdmin.storage.from(bucket).remove([filePath])
+                        await adminClient.storage.from(bucket).remove([filePath])
                     }
                 } catch (cleanupErr) {
                     console.warn('Storage cleanup failed (non-fatal):', cleanupErr)
@@ -136,4 +114,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.error('Lookbook images API error:', err)
         return res.status(500).json({ error: err.message || 'Failed to update lookbook images' })
     }
-}
+})

@@ -1,9 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabase'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
+
+const limiter = rateLimit({ interval: 60_000, maxRequests: 5 }) // 5 per minute
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  // Rate limit by IP
+  const ip = getClientIp(req)
+  const { success } = await limiter.check(ip)
+  if (!success) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' })
   }
 
   const { email } = req.body

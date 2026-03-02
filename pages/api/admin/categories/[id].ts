@@ -1,33 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { supabase } from '@/lib/supabase'
-import { createClient } from '@supabase/supabase-js'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   const { id } = req.query
   const categoryId = String(id)
-  const client = supabaseAdmin ?? supabase
 
   if (req.method === 'GET') {
     const { data, error } = await client
@@ -40,15 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(data)
   }
 
-  // Require service role for write operations
-  if (!supabaseAdmin) {
+  if (!adminClient) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
   }
 
   if (req.method === 'PUT') {
     const { name } = req.body
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('categories')
       // @ts-ignore - Supabase client without typed schema
       .update({ name })
@@ -64,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'DELETE') {
-    const { error } = await supabaseAdmin
+    const { error } = await adminClient
       .from('categories')
       .delete()
       .eq('id', categoryId)
@@ -77,4 +54,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+})

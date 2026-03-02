@@ -22,7 +22,7 @@ export default async function handler(
 
   // 2. Rate limiting
   const ip = getClientIp(req)
-  const rateLimitResult = limiter.check(ip)
+  const rateLimitResult = await limiter.check(ip)
   
   if (!rateLimitResult.success) {
     return res.status(429).json({ 

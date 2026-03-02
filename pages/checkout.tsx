@@ -188,8 +188,6 @@ export default function CheckoutPage() {
         }
       }
 
-      console.log('Submitting order with data:', orderData)
-
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -197,17 +195,12 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData),
       })
 
-      console.log('Order API response status:', res.status)
-
       if (!res.ok) {
         const data = await res.json()
-        console.error('Order failed:', data)
         throw new Error(data.error || 'Failed to create order')
       }
 
       const order = await res.json()
-      console.log('Order created successfully:', order)
-      console.log('Setting orderId to:', order.id)
 
       // Clear progress interval and show 100% immediately
       if (progressInterval) clearInterval(progressInterval)
@@ -226,18 +219,15 @@ export default function CheckoutPage() {
 
       // Redirect after 4 seconds (gives user time to see the confirmation)
       redirectTimeout = setTimeout(() => {
-        console.log('Redirecting to order confirmation')
-        // Clear cart before redirecting
-        console.log('Clearing cart...')
-        clearCart()
-        console.log('Cart cleared')
         setSubmitting(false)
         setLoadingProgress(0)
         router.push(`/order-confirmation?id=${order.id}`)
       }, 4000)
+
+      // Clear cart immediately after successful order
+      clearCart()
     } catch (err) {
       if (progressInterval) clearInterval(progressInterval)
-      console.error('Checkout error:', err)
       const errorMsg = err instanceof Error ? err.message : 'Something went wrong'
       setError(errorMsg)
       setSubmitting(false)

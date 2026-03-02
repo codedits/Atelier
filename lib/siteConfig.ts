@@ -55,8 +55,8 @@ export async function getSiteConfig(): Promise<SiteConfig | null> {
             console.error('Unexpected error fetching site config:', e)
             return null
         } finally {
-            // Clear the promise so next call can retry if it failed
-            if (!cachedConfig) fetchPromise = null
+            // Always clear the promise so subsequent calls can refetch after TTL expires
+            fetchPromise = null
         }
     })()
 

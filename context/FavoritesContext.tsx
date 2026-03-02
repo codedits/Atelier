@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from 'react'
 import { Product } from '@/lib/supabase'
 import { useUserAuth } from './UserAuthContext'
 
@@ -22,13 +22,13 @@ const FAVS_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
 function getClientToken(): string {
   if (typeof window === 'undefined') return ''
-  
+
   let token = localStorage.getItem(TOKEN_KEY)
   if (!token) {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       token = crypto.randomUUID()
     } else {
-      token = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      token = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0
         const v = c === 'x' ? r : (r & 0x3 | 0x8)
         return v.toString(16)
@@ -85,7 +85,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         const token = getClientToken()
         res = await fetch(`/api/favorites?client_token=${token}`)
       }
-      
+
       if (res.ok) {
         const data: Product[] = await res.json()
         setFavorites(data)
@@ -126,12 +126,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
   }, [authLoading, isAuthenticated, fetchFavorites])
 
-  const addFavorite = async (product: Product) => {
+  const addFavorite = useCallback(async (product: Product) => {
     // Optimistic update
-    const newFavs = [...favorites, product]
-    setFavorites(newFavs)
+    setFavorites(prev => {
+      const newFavs = [...prev, product]
+      setCachedFavorites(newFavs)
+      return newFavs
+    })
     setFavoriteIds((prev) => new Set(prev).add(product.id))
-    setCachedFavorites(newFavs)
 
     try {
       const body: Record<string, string> = { product_id: product.id }
@@ -147,41 +149,48 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       })
 
       if (!res.ok) {
-        // Revert on error
-        const reverted = favorites.filter((p) => p.id !== product.id)
-        setFavorites(reverted)
+        // Revert on error using functional update to avoid stale closures
+        setFavorites(prev => {
+          const reverted = prev.filter((p) => p.id !== product.id)
+          setCachedFavorites(reverted)
+          return reverted
+        })
         setFavoriteIds((prev) => {
           const newSet = new Set(prev)
           newSet.delete(product.id)
           return newSet
         })
-        setCachedFavorites(reverted)
       }
     } catch (error) {
       console.error('Failed to add favorite:', error)
-      const reverted = favorites.filter((p) => p.id !== product.id)
-      setFavorites(reverted)
+      setFavorites(prev => {
+        const reverted = prev.filter((p) => p.id !== product.id)
+        setCachedFavorites(reverted)
+        return reverted
+      })
       setFavoriteIds((prev) => {
         const newSet = new Set(prev)
         newSet.delete(product.id)
         return newSet
       })
-      setCachedFavorites(reverted)
     }
-  }
+  }, [isAuthenticated])
 
-  const removeFavorite = async (productId: string) => {
-    const removedProduct = favorites.find((p) => p.id === productId)
+  const removeFavorite = useCallback(async (productId: string) => {
+    let removedProduct: Product | undefined
 
-    // Optimistic update
-    const newFavs = favorites.filter((p) => p.id !== productId)
-    setFavorites(newFavs)
+    // Optimistic update using functional state to avoid stale closures
+    setFavorites(prev => {
+      removedProduct = prev.find((p) => p.id === productId)
+      const newFavs = prev.filter((p) => p.id !== productId)
+      setCachedFavorites(newFavs)
+      return newFavs
+    })
     setFavoriteIds((prev) => {
       const newSet = new Set(prev)
       newSet.delete(productId)
       return newSet
     })
-    setCachedFavorites(newFavs)
 
     try {
       const body: Record<string, string> = { product_id: productId }
@@ -198,21 +207,27 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
       if (!res.ok && removedProduct) {
         // Revert on error
-        const reverted = [...newFavs, removedProduct]
-        setFavorites(reverted)
+        const product = removedProduct
+        setFavorites(prev => {
+          const reverted = [...prev, product]
+          setCachedFavorites(reverted)
+          return reverted
+        })
         setFavoriteIds((prev) => new Set(prev).add(productId))
-        setCachedFavorites(reverted)
       }
     } catch (error) {
       console.error('Failed to remove favorite:', error)
       if (removedProduct) {
-        const reverted = [...newFavs, removedProduct]
-        setFavorites(reverted)
+        const product = removedProduct
+        setFavorites(prev => {
+          const reverted = [...prev, product]
+          setCachedFavorites(reverted)
+          return reverted
+        })
         setFavoriteIds((prev) => new Set(prev).add(productId))
-        setCachedFavorites(reverted)
       }
     }
-  }
+  }, [isAuthenticated])
 
   // Force-refetch clears cache so next call hits API
   const forceRefetch = useCallback(async () => {
@@ -223,18 +238,25 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const isFavorite = (productId: string) => favoriteIds.has(productId)
 
+  const contextValue = useMemo(() => ({
+    favorites,
+    favoriteIds,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    loading,
+    refetch: forceRefetch,
+  }), [
+    favorites,
+    favoriteIds,
+    addFavorite,
+    removeFavorite,
+    loading,
+    forceRefetch,
+  ])
+
   return (
-    <FavoritesContext.Provider
-      value={{
-        favorites,
-        favoriteIds,
-        addFavorite,
-        removeFavorite,
-        isFavorite,
-        loading,
-        refetch: forceRefetch,
-      }}
-    >
+    <FavoritesContext.Provider value={contextValue}>
       {children}
     </FavoritesContext.Provider>
   )

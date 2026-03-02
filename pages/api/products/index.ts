@@ -26,8 +26,12 @@ export default async function handler(
         // Apply filters
         if (search) {
           const searchTerm = String(search).trim()
-          const tsQuery = searchTerm.split(/\s+/).filter(Boolean).join(' & ')
-          query = query.or(`search_vector.fts.${tsQuery},name.ilike.%${searchTerm}%`)
+          // Sanitize input: remove characters that could break FTS or filter syntax
+          const sanitized = searchTerm.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim()
+          if (sanitized.length > 0) {
+            const tsQuery = sanitized.split(/\s+/).filter(Boolean).join(' & ')
+            query = query.or(`search_vector.fts.${tsQuery},name.ilike.%${sanitized}%`)
+          }
         }
         if (category) query = query.eq('category', category)
         if (gender) query = query.eq('gender', gender)

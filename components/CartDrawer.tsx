@@ -107,7 +107,7 @@ export default function CartDrawer() {
                                         </div>
                                         <p className="text-xs text-[#888] mt-1 capitalize">{item.product.category}</p>
                                         <p className="text-sm font-medium text-[#1A1A1A] mt-2">
-                                            ₹{item.product.price.toLocaleString()}
+                                            ₨{item.product.price.toLocaleString()}
                                         </p>
                                     </div>
 
@@ -143,7 +143,7 @@ export default function CartDrawer() {
                     <div className="border-t border-[#E5E5E5] p-6 bg-[#FAF9F6] shrink-0">
                         <div className="flex justify-between items-center mb-6">
                             <span className="text-sm text-[#4A4A4A] uppercase tracking-[0.1em]">Subtotal</span>
-                            <span className="text-base font-medium text-[#1A1A1A]">₹{totalPrice.toLocaleString()}</span>
+                            <span className="text-base font-medium text-[#1A1A1A]">₨{totalPrice.toLocaleString()}</span>
                         </div>
                         <p className="text-xs text-[#888] mb-6 text-center">
                             Shipping and taxes calculated at checkout.

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react'
 import Toast from '@/components/Toast'
 
 interface ToastMessage {
@@ -20,25 +20,32 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [isVisible, setIsVisible] = useState(false)
 
-  const showToast = ({ message, type, duration = 4000 }: ToastMessage) => {
+  const showToast = useCallback(({ message, type, duration = 4000 }: ToastMessage) => {
     setToast({ message, type, duration })
     setIsVisible(true)
-  }
+  }, [])
 
-  const success = (message: string, duration = 4000) => {
+  const success = useCallback((message: string, duration = 4000) => {
     showToast({ message, type: 'success', duration })
-  }
+  }, [showToast])
 
-  const error = (message: string, duration = 5000) => {
+  const error = useCallback((message: string, duration = 5000) => {
     showToast({ message, type: 'error', duration })
-  }
+  }, [showToast])
 
-  const info = (message: string, duration = 4000) => {
+  const info = useCallback((message: string, duration = 4000) => {
     showToast({ message, type: 'info', duration })
-  }
+  }, [showToast])
+
+  const contextValue = useMemo(() => ({
+    showToast,
+    success,
+    error,
+    info
+  }), [showToast, success, error, info])
 
   return (
-    <ToastContext.Provider value={{ showToast, success, error, info }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       {toast && (
         <Toast

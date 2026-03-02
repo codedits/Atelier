@@ -88,6 +88,7 @@ function SettingsContent() {
 
   const saveSettings = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (saving) return
     setSaving(true)
     setSaved(false)
 

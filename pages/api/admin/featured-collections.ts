@@ -1,43 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
-import { supabase as supabaseAnon } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-}
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const COLLECTIONS_TTL = 60_000
 
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
 // Helper function to delete file from Supabase Storage
-async function deleteStorageFile(imageUrl: string, folder: string = 'collections') {
-  if (!imageUrl || !supabaseAdmin) return
-
+async function deleteStorageFile(adminClient: SupabaseClient, imageUrl: string, folder: string = 'collections') {
+  if (!imageUrl) return
   try {
-    // Extract filename from URL
-    // URL format: https://[project-id].supabase.co/storage/v1/object/public/[bucket]/[path]/[filename]
     const urlParts = imageUrl.split('/')
     const filename = urlParts[urlParts.length - 1]
-    
     if (!filename) return
-
-    await supabaseAdmin.storage
-      .from('images')
-      .remove([`${folder}/${filename}`])
+    await adminClient.storage.from('images').remove([`${folder}/${filename}`])
   } catch (error) {
     console.warn('Failed to delete old image file:', error)
-    // Don't fail the request if file deletion fails
   }
 }
 
@@ -47,11 +25,10 @@ function invalidateCache() {
   invalidateSSGCache('featured_collections')
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
-      const client = supabaseAdmin ?? supabaseAnon
       const { data, hit } = await apiCache.getOrFetch(
         'api:admin:featured-collections',
         async () => {
@@ -87,15 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
   }
 
-  // All other methods require admin auth
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  if (!supabaseAdmin) {
-    return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
-  }
+  if (!adminClient) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
 
   if (req.method === 'POST') {
     const { title, description, image_url, link, display_order, is_active } = req.body
@@ -104,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('featured_collections')
       .insert([{
         title,
@@ -141,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (display_order !== undefined) updates.display_order = display_order
     if (is_active !== undefined) updates.is_active = is_active
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('featured_collections')
       // @ts-ignore - Supabase client without typed schema
       .update(updates)
@@ -156,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Delete old image if a new one was uploaded
     if (oldImageUrl && image_url !== oldImageUrl) {
-      await deleteStorageFile(oldImageUrl, 'collections')
+      await deleteStorageFile(adminClient, oldImageUrl, 'collections')
     }
 
     invalidateCache()
@@ -172,13 +141,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get the collection to retrieve the image URL before deletion
-    const { data: collection } = await supabaseAdmin
+    const { data: collection } = await adminClient
       .from('featured_collections')
       .select('image_url')
       .eq('id', String(id))
       .single() as any
 
-    const { error } = await supabaseAdmin
+    const { error } = await adminClient
       .from('featured_collections')
       .delete()
       .eq('id', String(id))
@@ -190,7 +159,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Delete the image file from storage
     if (collection?.image_url) {
-      await deleteStorageFile(collection.image_url, 'collections')
+      await deleteStorageFile(adminClient, collection.image_url, 'collections')
     }
 
     invalidateCache()
@@ -199,4 +168,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+}, { allowPublicMethods: ['GET'] })

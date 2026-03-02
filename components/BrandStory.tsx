@@ -72,20 +72,35 @@ export default function BrandStory({ data: propData }: BrandStoryProps) {
     return <>{parts[0]}<span className="italic text-[#C9A96E]">{highlightWord}</span>{parts[1]}</>
   }
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.15 })
-  const [scrollY, setScrollY] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const bgRef = useRef<HTMLDivElement>(null)
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([])
+  const rafRef = useRef<number>(0)
 
   useEffect(() => {
     if (!isIntersecting) return
     const handleScroll = () => {
-      if (!containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
-      const progress = Math.max(0, Math.min(1, -rect.top / rect.height))
-      setScrollY(progress)
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        if (!containerRef.current) return
+        const rect = containerRef.current.getBoundingClientRect()
+        const progress = Math.max(0, Math.min(1, -rect.top / rect.height))
+        // Write transforms directly to DOM — no setState re-renders
+        if (bgRef.current) {
+          bgRef.current.style.transform = `translateY(${progress * -40}px)`
+        }
+        imageRefs.current.forEach((el, i) => {
+          if (!el) return
+          el.style.transform = `translateY(${progress * (i % 2 === 0 ? 20 : -15)}px)`
+        })
+      })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      cancelAnimationFrame(rafRef.current)
+    }
   }, [isIntersecting])
 
   return (
@@ -99,8 +114,8 @@ export default function BrandStory({ data: propData }: BrandStoryProps) {
     >
       {/* Parallax background image */}
       <div
+        ref={bgRef}
         className="absolute inset-0"
-        style={{ transform: `translateY(${scrollY * -40}px)` }}
       >
         <Image
           src={d.image_url || defaultData.image_url!}
@@ -137,13 +152,13 @@ export default function BrandStory({ data: propData }: BrandStoryProps) {
             {images.map((img, i) => (
               <div
                 key={i}
+                ref={(el) => { imageRefs.current[i] = el }}
                 className={cn(
                   'relative h-[350px] md:h-[450px] overflow-hidden invisible-before-reveal',
                   isIntersecting && 'reveal-slide-up'
                 )}
                 style={{
                   animationDelay: `${200 + i * 200}ms`,
-                  transform: isIntersecting ? `translateY(${scrollY * (i % 2 === 0 ? 20 : -15)}px)` : undefined,
                 }}
               >
                 <Image

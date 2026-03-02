@@ -19,34 +19,32 @@ interface LookbookProps {
 
 // Generate column-based positions for images (4 columns)
 function generateGridPositions(count: number) {
-    const positions: { top: string; left: string; width: string; mobileWidth: string; speed: number; zIndex: number; opacity: number; blur: string }[] = []
+    const positions: { top: string; left: string; width: string; speed: number; zIndex: number; opacity: number; blur: string }[] = []
 
-    // Config for each column to create varied movement
+    // Config for each column to create varied movement and explicit sizes
     const columns = [
-        { left: '5%', speed: 0.6, zIndex: 1 },  // Col 1
-        { left: '30%', speed: 1.2, zIndex: 3 },  // Col 2 (Fast/Foreground)
-        { left: '55%', speed: 0.8, zIndex: 2 },  // Col 3
-        { left: '80%', speed: 0.4, zIndex: 0 },  // Col 4 (Slow/Background)
+        { left: '2%', width: '18vw', speed: 0.7, zIndex: 1 },   // Medium-Small
+        { left: '22%', width: '30vw', speed: 1.3, zIndex: 3 },  // Big
+        { left: '55%', width: '24vw', speed: 0.9, zIndex: 2 },  // Medium
+        { left: '82%', width: '15vw', speed: 0.5, zIndex: 0 },  // Smallest
     ]
 
     for (let i = 0; i < count; i++) {
         const colIndex = i % 4
         const col = columns[colIndex]
 
-        // Distribute images vertically with significant spacing
-        // Base top position plus a vertical offset within the 500vh container
+        // Distribute images vertically with significant spacing and high randomness
         const row = Math.floor(i / 4)
-        const topOffset = 5 + (row * 25) + (seededRandom(i) * 10)
+        const topOffset = 3 + (row * 24) + (seededRandom(i) * 15)
 
         positions.push({
             top: `${topOffset}%`,
             left: col.left,
-            width: colIndex === 1 ? '22vw' : colIndex === 3 ? '15vw' : '18vw',
-            mobileWidth: '42vw',
+            width: col.width,
             speed: col.speed,
             zIndex: col.zIndex,
-            opacity: col.zIndex === 0 ? 0.6 : 1,
-            blur: col.zIndex === 0 ? '2px' : '0px',
+            opacity: col.zIndex === 0 ? 0.8 : 1,
+            blur: col.zIndex === 0 ? '1px' : '0px',
         })
     }
     return positions
@@ -123,7 +121,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                 (sectionRef as React.MutableRefObject<HTMLElement | null>).current = node;
                 (containerRef as React.MutableRefObject<HTMLElement | null>).current = node;
             }}
-            className="relative w-full h-[500vh] bg-[#FAF9F6]"
+            className="relative w-full h-[450vh] md:h-[500vh] bg-[#FAF9F6]"
             aria-label={`${subtitle} — ${title}`}
         >
             {/* Sticky Text Container */}
@@ -150,11 +148,17 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                     if (!pos) return null
 
                     // Mobile adjustment: distribute into 2 columns instead of 4
+                    const isEven = index % 2 === 0
+                    const row = Math.floor(index / 2)
+                    // Mix sizes on mobile
+                    const mobileWidth = isEven ? (row % 2 === 0 ? '55vw' : '40vw') : (row % 2 === 0 ? '38vw' : '50vw')
+                    const mobileLeft = isEven ? '3%' : (row % 2 === 0 ? '58%' : '47%')
+
                     const mobileAdjustedPos = isMobile ? {
                         ...pos,
-                        left: (index % 2 === 0) ? '5%' : '53%',
-                        top: `${2 + (Math.floor(index / 2) * 20) + (seededRandom(index) * 5)}%`,
-                        width: '42vw'
+                        left: mobileLeft,
+                        top: `${4 + (row * 18) + (seededRandom(index) * 12)}%`,
+                        width: mobileWidth
                     } : pos
 
                     const imageContent = (

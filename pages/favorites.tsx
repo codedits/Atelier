@@ -2,25 +2,7 @@
 import Link from 'next/link'
 import { Header, Footer, ProductCard } from '@/components'
 import { useFavorites } from '@/context/FavoritesContext'
-import { verifyUserToken } from '@/lib/user-token'
-import type { GetServerSideProps } from 'next'
-
-interface FavoritesPageProps {
-  isAuthenticated: boolean
-}
-
-export const getServerSideProps: GetServerSideProps<FavoritesPageProps> = async (context) => {
-  const token = context.req.cookies['atelier_user_token']
-  const user = token ? verifyUserToken(token) : null
-
-  return {
-    props: {
-      isAuthenticated: !!user,
-    },
-  }
-}
-
-export default function FavoritesPage({ isAuthenticated }: FavoritesPageProps) {
+export default function FavoritesPage() {
   const { favorites, loading } = useFavorites()
 
   return (

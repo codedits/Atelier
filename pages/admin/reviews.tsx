@@ -10,40 +10,40 @@ import { useAdminApi } from '@/hooks/useAdminApi'
 const Icons = {
   star: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   ),
   starEmpty: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   ),
   trash: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
   ),
   check: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="20 6 9 17 4 12"/>
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   x: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="18" y1="6" x2="6" y2="18"/>
-      <line x1="6" y1="6" x2="18" y2="18"/>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   search: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8"/>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   ),
   chevronDown: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="6 9 12 15 18 9"/>
+      <polyline points="6 9 12 15 18 9" />
     </svg>
   )
 }
@@ -76,6 +76,8 @@ function ReviewsContent() {
   const [filterRating, setFilterRating] = useState<string>('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [selectedReview, setSelectedReview] = useState<Review | null>(null)
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadReviews()
@@ -94,18 +96,32 @@ function ReviewsContent() {
   }
 
   const toggleApproval = async (id: string, currentStatus: boolean) => {
+    if (processingIds.has(id)) return
+
+    setProcessingIds(prev => new Set(prev).add(id))
     try {
       await api.put(`/reviews/${id}`, { is_approved: !currentStatus })
       toast.success(currentStatus ? 'Review unapproved' : 'Review approved')
-      setReviews(prev => prev.map(r => 
+      setReviews(prev => prev.map(r =>
         r.id === id ? { ...r, is_approved: !currentStatus } : r
       ))
+      if (selectedReview?.id === id) {
+        setSelectedReview(prev => prev ? { ...prev, is_approved: !currentStatus } : null)
+      }
     } catch {
       toast.error('Failed to update review status')
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     }
   }
 
   const deleteReview = async (id: string) => {
+    if (deleting) return
+    setDeleting(true)
     try {
       await api.del(`/reviews/${id}`)
       toast.success('Review deleted successfully')
@@ -116,6 +132,8 @@ function ReviewsContent() {
       }
     } catch {
       toast.error('Failed to delete review')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -131,8 +149,8 @@ function ReviewsContent() {
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map(star => (
-          <span 
-            key={star} 
+          <span
+            key={star}
             className={star <= rating ? 'text-[#f5a623]' : 'text-[#333]'}
           >
             {Icons.star}
@@ -146,8 +164,8 @@ function ReviewsContent() {
     if (search) {
       const searchLower = search.toLowerCase()
       if (!r.user_name.toLowerCase().includes(searchLower) &&
-          !r.comment.toLowerCase().includes(searchLower) &&
-          !(r.products?.name || '').toLowerCase().includes(searchLower)) {
+        !r.comment.toLowerCase().includes(searchLower) &&
+        !(r.products?.name || '').toLowerCase().includes(searchLower)) {
         return false
       }
     }
@@ -161,8 +179,8 @@ function ReviewsContent() {
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-3 text-[#666]">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           <span className="text-sm">Loading reviews...</span>
         </div>
@@ -235,7 +253,7 @@ function ReviewsContent() {
         </div>
         <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 text-center">
           <p className="text-2xl font-bold text-white">
-            {reviews.length > 0 
+            {reviews.length > 0
               ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
               : '0.0'
             }
@@ -265,9 +283,8 @@ function ReviewsContent() {
           filteredReviews.map(review => (
             <div
               key={review.id}
-              className={`bg-[#0a0a0a] border rounded-2xl p-5 transition-colors ${
-                review.is_approved ? 'border-[#1a1a1a]' : 'border-[#f5a623]/30'
-              }`}
+              className={`bg-[#0a0a0a] border rounded-2xl p-5 transition-colors ${review.is_approved ? 'border-[#1a1a1a]' : 'border-[#f5a623]/30'
+                }`}
             >
               <div className="flex gap-4">
                 {/* Product Image */}
@@ -306,11 +323,7 @@ function ReviewsContent() {
                         </span>
                       </p>
                     </div>
-                    <span className="text-xs text-[#666] whitespace-nowrap">
-                      {formatDate(review.created_at)}
-                    </span>
                   </div>
-
                   {review.title && (
                     <p className="text-white font-medium text-sm mb-1">{review.title}</p>
                   )}
@@ -320,11 +333,10 @@ function ReviewsContent() {
                   <div className="flex items-center gap-2 mt-3">
                     <button
                       onClick={() => toggleApproval(review.id, review.is_approved)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        review.is_approved
-                          ? 'bg-[#f5a623]/10 text-[#f5a623] hover:bg-[#f5a623]/20'
-                          : 'bg-[#50e3c2]/10 text-[#50e3c2] hover:bg-[#50e3c2]/20'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${review.is_approved
+                        ? 'bg-[#f5a623]/10 text-[#f5a623] hover:bg-[#f5a623]/20'
+                        : 'bg-[#50e3c2]/10 text-[#50e3c2] hover:bg-[#50e3c2]/20'
+                        }`}
                     >
                       {review.is_approved ? Icons.x : Icons.check}
                       {review.is_approved ? 'Disapprove' : 'Approve'}
@@ -437,22 +449,15 @@ function ReviewsContent() {
               {/* Comment */}
               <div>
                 <p className="text-[#666] text-xs mb-1">Comment</p>
-                <p className="text-[#ccc] text-sm whitespace-pre-wrap">{selectedReview.comment}</p>
+                <div className="bg-[#111] border border-[#1a1a1a] rounded-lg p-4">
+                  <p className="text-white text-sm whitespace-pre-wrap">{selectedReview.comment}</p>
+                </div>
               </div>
-
-              {/* Meta */}
-              <div className="flex gap-4 text-xs text-[#666]">
-                <span>Order: {selectedReview.order_id.slice(0, 8)}...</span>
-                <span>Date: {formatDate(selectedReview.created_at)}</span>
-              </div>
-
-              {/* Status Badges */}
               <div className="flex gap-2">
-                <span className={`text-xs px-2 py-1 rounded ${
-                  selectedReview.is_approved 
-                    ? 'bg-[#50e3c2]/10 text-[#50e3c2]' 
-                    : 'bg-[#f5a623]/10 text-[#f5a623]'
-                }`}>
+                <span className={`text-xs px-2 py-1 rounded ${selectedReview.is_approved
+                  ? 'bg-[#50e3c2]/10 text-[#50e3c2]'
+                  : 'bg-[#f5a623]/10 text-[#f5a623]'
+                  }`}>
                   {selectedReview.is_approved ? 'Approved' : 'Pending Approval'}
                 </span>
                 {selectedReview.is_verified_purchase && (
@@ -472,11 +477,10 @@ function ReviewsContent() {
                       is_approved: !selectedReview.is_approved
                     })
                   }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedReview.is_approved
-                      ? 'bg-[#f5a623]/10 text-[#f5a623] hover:bg-[#f5a623]/20'
-                      : 'bg-[#50e3c2]/10 text-[#50e3c2] hover:bg-[#50e3c2]/20'
-                  }`}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${selectedReview.is_approved
+                    ? 'bg-[#f5a623]/10 text-[#f5a623] hover:bg-[#f5a623]/20'
+                    : 'bg-[#50e3c2]/10 text-[#50e3c2] hover:bg-[#50e3c2]/20'
+                    }`}
                 >
                   {selectedReview.is_approved ? 'Disapprove' : 'Approve'}
                 </button>

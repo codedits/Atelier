@@ -126,22 +126,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, isHydrated])
 
   // Check if can add more of a product (respects stock limits)
-  const canAddMore = (product: Product, additionalQty = 1): boolean => {
+  const canAddMore = useCallback((product: Product, additionalQty = 1): boolean => {
     // stock <= 0 means unlimited/not tracked
     if (!product.stock || product.stock <= 0) return true
 
     const existing = items.find((item) => item.product.id === product.id)
     const currentQty = existing?.quantity || 0
     return (currentQty + additionalQty) <= product.stock
-  }
+  }, [items])
 
-  const getItemQuantity = (productId: string): number => {
+  const getItemQuantity = useCallback((productId: string): number => {
     const item = items.find((i) => i.product.id === productId)
     return item?.quantity || 0
-  }
+  }, [items])
 
   // Returns true if added, false if blocked by stock
-  const addItem = (product: Product, quantity = 1): boolean => {
+  const addItem = useCallback((product: Product, quantity = 1): boolean => {
     // Check stock limit
     if (product.stock && product.stock > 0) {
       const existing = items.find((item) => item.product.id === product.id)
@@ -166,14 +166,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Automatically open the cart drawer when an item is added
     openCart()
     return true
-  }
+  }, [items, openCart])
 
-  const removeItem = (productId: string) => {
+  const removeItem = useCallback((productId: string) => {
     setItems((prev) => prev.filter((item) => item.product.id !== productId))
-  }
+  }, [])
 
   // Returns true if quantity set, false if blocked by stock
-  const updateQuantity = (productId: string, quantity: number): boolean => {
+  const updateQuantity = useCallback((productId: string, quantity: number): boolean => {
     if (quantity <= 0) {
       removeItem(productId)
       return true
@@ -193,7 +193,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       )
     )
     return true
-  }
+  }, [items, removeItem])
 
   const clearCart = useCallback(() => {
     setItems([])
@@ -210,23 +210,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   )
 
+  const contextValue = useMemo(() => ({
+    items,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    totalItems,
+    totalPrice,
+    getItemQuantity,
+    canAddMore,
+    isCartOpen,
+    openCart,
+    closeCart,
+  }), [
+    items,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    totalItems,
+    totalPrice,
+    getItemQuantity,
+    canAddMore,
+    isCartOpen,
+    openCart,
+    closeCart,
+  ])
+
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        totalPrice,
-        getItemQuantity,
-        canAddMore,
-        isCartOpen,
-        openCart,
-        closeCart,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   )

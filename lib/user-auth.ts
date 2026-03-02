@@ -1,10 +1,16 @@
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getSupabaseAdmin } from './admin-api-utils'
 import { verifyUserToken, type UserPayload } from './user-token'
 
 // Re-export from lightweight module (no admin dependencies)
 export { verifyUserToken, type UserPayload }
+
+const isProduction = process.env.NODE_ENV === 'production'
+if (isProduction && !process.env.USER_JWT_SECRET) {
+  throw new Error('USER_JWT_SECRET environment variable is required in production')
+}
 
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET || 'atelier-user-secret-key-change-in-production'
 const USER_TOKEN_EXPIRY = '7d' // Users stay logged in longer than admins
@@ -52,10 +58,10 @@ export function clearUserTokenCookie(res: NextApiResponse): void {
 }
 
 /**
- * Generate a 6-digit OTP code
+ * Generate a 6-digit OTP code using cryptographically secure randomness
  */
 export function generateOtpCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return crypto.randomInt(100000, 999999).toString()
 }
 
 /**
@@ -107,11 +113,19 @@ export async function deleteUserById(userId: string): Promise<boolean> {
       // Continue anyway
     }
 
-    const { error: otpError } = await supabase
-      .from('user_otps')
-      .delete()
-      .eq('email', '')
-      .neq('id', '0') // Delete all OTPs for this user by finding via user lookup
+    // Look up the user's email to clean up their OTPs
+    const { data: userData } = await supabase
+      .from('users')
+      .select('email')
+      .eq('id', userId)
+      .single()
+
+    if (userData?.email) {
+      const { error: otpError } = await supabase
+        .from('user_otps')
+        .delete()
+        .eq('email', userData.email)
+    }
 
     // Finally, delete the user record
     const { error } = await supabase.from('users').delete().eq('id', userId)

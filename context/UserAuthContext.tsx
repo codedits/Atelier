@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from 'react'
 
 interface User {
   id: string
@@ -155,18 +155,29 @@ export function UserAuthProvider({ children }: { children: ReactNode }) {
     await fetchAndCacheAuth()
   }
 
+  const isAuthenticated = !!user
+
+  const contextValue = useMemo(() => ({
+    user,
+    isLoading,
+    isAuthenticated,
+    generateOtp,
+    verifyOtp,
+    logout,
+    refreshUser,
+  }), [
+    user,
+    isLoading,
+    isAuthenticated,
+    // Note: functions below should ideally be wrapped in useCallback in the future as well
+    generateOtp,
+    verifyOtp,
+    logout,
+    refreshUser,
+  ])
+
   return (
-    <UserAuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        generateOtp,
-        verifyOtp,
-        logout,
-        refreshUser,
-      }}
-    >
+    <UserAuthContext.Provider value={contextValue}>
       {children}
     </UserAuthContext.Provider>
   )

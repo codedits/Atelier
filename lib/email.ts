@@ -24,14 +24,15 @@ interface SendOtpEmailOptions {
 export async function sendOtpEmail({ to, otp, storeName = SITE_NAME }: SendOtpEmailOptions): Promise<boolean> {
   // In development without SMTP configured, just log the OTP
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    // Only log in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`\n========================================`)
-      console.log(`📧 OTP Email (DEV MODE - No SMTP configured)`)
-      console.log(`To: ${to}`)
-      console.log(`OTP Code: ${otp}`)
-      console.log(`========================================\n`)
+    if (process.env.NODE_ENV === 'production') {
+      console.error('SMTP not configured in production — cannot send OTP email')
+      return false
     }
+    console.log(`\n========================================`)
+    console.log(`📧 OTP Email (DEV MODE - No SMTP configured)`)
+    console.log(`To: ${to}`)
+    console.log(`OTP Code: ${otp}`)
+    console.log(`========================================\n`)
     return true
   }
 
@@ -208,6 +209,124 @@ export async function sendOrderConfirmationEmail({
     return true
   } catch (error) {
     console.error('Failed to send order confirmation email:', error)
+    return false
+  }
+}
+
+interface SendShippingNotificationEmailOptions {
+  to: string
+  orderId: string
+  userName: string
+  items: OrderItem[]
+  totalPrice: number
+  storeName?: string
+}
+
+export async function sendShippingNotificationEmail({
+  to,
+  orderId,
+  userName,
+  items,
+  totalPrice,
+  storeName = 'Atelier',
+}: SendShippingNotificationEmailOptions): Promise<boolean> {
+  // In development without SMTP configured, just log
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.log(`\n========================================`)
+    console.log(`📧 SHIPPING NOTIFICATION EMAIL (DEV MODE - No SMTP configured)`)
+    console.log(`To: ${to}`)
+    console.log(`Order ID: ${orderId}`)
+    console.log(`Customer: ${userName}`)
+    console.log(`Total: ₨${totalPrice.toLocaleString()}`)
+    console.log(`Items: ${items.map(i => `${i.name} x${i.quantity}`).join(', ')}`)
+    console.log(`========================================\n`)
+    return true
+  }
+
+  const itemsHtml = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">x${item.quantity}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">₨${(item.price * item.quantity).toLocaleString()}</td>
+        </tr>
+      `
+    )
+    .join('')
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || `"${storeName}" <${CONTACT_EMAIL}>`,
+      to,
+      subject: `Your Order Has Shipped! - #${orderId.slice(0, 8).toUpperCase()}`,
+      text: `Great news, ${userName}!\n\nYour order #${orderId.slice(0, 8).toUpperCase()} has been shipped and is on its way to you.\n\nItems:\n${items.map(i => `- ${i.name} x${i.quantity}`).join('\n')}\n\nTotal: ₨${totalPrice.toLocaleString()}\n\nThank you for shopping with ${storeName}!`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #111827 0%, #1f2937 100%); padding: 40px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 2px;">${storeName.toUpperCase()}</h1>
+              <div style="margin-top: 24px;">
+                <div style="display: inline-block; background: #3b82f6; width: 60px; height: 60px; border-radius: 50%; line-height: 60px;">
+                  <span style="color: white; font-size: 28px;">📦</span>
+                </div>
+              </div>
+              <p style="color: #60a5fa; margin: 16px 0 0; font-size: 18px; font-weight: 500;">Order Shipped!</p>
+            </div>
+            
+            <div style="padding: 40px 32px;">
+              <h2 style="color: #111827; margin: 0 0 8px; font-size: 22px; font-weight: 500;">Hello ${userName}!</h2>
+              <p style="color: #6b7280; margin: 0 0 24px; font-size: 15px; line-height: 1.6;">Great news! Your order has been shipped and is on its way to you. You'll receive it soon!</p>
+              
+              <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #3b82f6;">
+                <p style="color: #6b7280; margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Order Number</p>
+                <p style="color: #111827; margin: 0; font-size: 24px; font-weight: 600;">#${orderId.slice(0, 8).toUpperCase()}</p>
+              </div>
+
+              <h3 style="color: #111827; margin: 0 0 16px; font-size: 16px; font-weight: 600;">Items in Your Shipment</h3>
+              <table style="width: 100%; margin-bottom: 32px; border-collapse: collapse;">
+                <thead>
+                  <tr style="background: #f9fafb;">
+                    <th style="padding: 12px; text-align: left; color: #6b7280; font-weight: 500; font-size: 12px;">Product</th>
+                    <th style="padding: 12px; text-align: center; color: #6b7280; font-weight: 500; font-size: 12px;">Qty</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-weight: 500; font-size: 12px;">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsHtml}
+                  <tr>
+                    <td colspan="2" style="padding: 16px 12px; text-align: right; font-weight: 600; color: #111827; border-top: 2px solid #e5e7eb;">Total</td>
+                    <td style="padding: 16px 12px; text-align: right; font-weight: 600; color: #111827; border-top: 2px solid #e5e7eb;">₨${totalPrice.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; border: 1px solid #bbf7d0;">
+                <p style="color: #166534; margin: 0; font-size: 14px; line-height: 1.6;">
+                  <strong>What's Next?</strong><br>
+                  Your package is on its way! You'll receive another email when it's delivered. If you have any questions, don't hesitate to contact us.
+                </p>
+              </div>
+            </div>
+
+            <div style="background: #111827; padding: 24px 32px; text-align: center;">
+              <p style="color: #9ca3af; margin: 0 0 8px; font-size: 13px;">Thank you for choosing ${storeName}</p>
+              <p style="color: #6b7280; margin: 0; font-size: 11px;">© ${new Date().getFullYear()} ${storeName}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+    return true
+  } catch (error) {
+    console.error('Failed to send shipping notification email:', error)
     return false
   }
 }

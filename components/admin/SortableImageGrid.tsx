@@ -78,8 +78,8 @@ function SortableImageItem({
         className="absolute inset-0 cursor-grab active:cursor-grabbing touch-manipulation"
         aria-label={`Drag to reorder image ${index + 1}`}
       >
-        {/* Grip indicator for desktop */}
-        <div className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white/80">
+        {/* Grip indicator — always visible on mobile, hover on desktop */}
+        <div className="absolute top-2 left-2 w-7 h-7 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-white/80">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="8" cy="4" r="2" /><circle cx="16" cy="4" r="2" />
             <circle cx="8" cy="12" r="2" /><circle cx="16" cy="12" r="2" />
@@ -88,11 +88,11 @@ function SortableImageItem({
         </div>
       </div>
 
-      {/* Remove button */}
+      {/* Remove button — always visible on mobile, hover on desktop */}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onRemove() }}
-        className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-[#ff4444]/90 hover:bg-[#ff4444] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white shadow-lg active:scale-90"
+        className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-[#ff4444]/90 hover:bg-[#ff4444] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all text-white shadow-lg active:scale-90"
         title="Remove image"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">

@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import { createReadStream } from 'fs'
 import { getSupabaseAdmin } from '@/lib/admin-api-utils'
+import { getUserFromRequest } from '@/lib/user-auth'
 
 export const config = {
   api: {
@@ -15,6 +16,12 @@ export default async function handler(
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  // Require authenticated user to upload payment proofs
+  const user = getUserFromRequest(req)
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication required' })
   }
 
   const supabase = getSupabaseAdmin()

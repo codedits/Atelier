@@ -1,5 +1,10 @@
 import jwt from 'jsonwebtoken'
 
+const isProduction = process.env.NODE_ENV === 'production'
+if (isProduction && !process.env.USER_JWT_SECRET) {
+  throw new Error('USER_JWT_SECRET environment variable is required in production')
+}
+
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET || 'atelier-user-secret-key-change-in-production'
 
 export interface UserPayload {

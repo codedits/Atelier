@@ -151,15 +151,15 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
       homepageSections: (homepageSectionsData || []) as any[],
       lookbookImages: lookbook_images || [],
     },
-    revalidate: 60, // ISR: Regenerate page every 1 minute
+    revalidate: 3600, // ISR: Regenerate page every 1 hour (Vercel optimization)
   }
 }
 
 export default function Home({ newArrivals, featuredProducts, featuredCollections, layout, heroImages, testimonials, announcements, homepageSections, siteConfig, lookbookImages }: HomeProps) {
-  // Memoize for stable reference
-  const products = useMemo(() => newArrivals, [newArrivals])
-  const featured = useMemo(() => featuredProducts, [featuredProducts])
-  const collections = useMemo(() => featuredCollections, [featuredCollections])
+  // Props from getStaticProps are already stable references per render — no wrapping needed
+  const products = newArrivals
+  const featured = featuredProducts
+  const collections = featuredCollections
 
   // Build a lookup map by section_key for homepage sections
   const sectionsByKey = useMemo(() => {

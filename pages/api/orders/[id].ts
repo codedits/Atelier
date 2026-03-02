@@ -20,7 +20,7 @@ export default async function handler(
 
   if (req.method === 'GET') {
     const user = getUserFromRequest(req)
-    
+
     // Get order by ID
     const { data: order, error } = await supabase
       .from('orders')
@@ -49,7 +49,15 @@ export default async function handler(
       .eq('order_id', id)
       .order('created_at', { ascending: true })
 
-    return res.status(200).json({ ...order, status_history: history || [] } as Order & { status_history: any[] })
+    // Compute cancel eligibility server-side (Issue 5: single source of truth)
+    let can_cancel = false
+    if (order.status === 'pending') {
+      const orderDate = new Date(order.created_at)
+      const daysDiff = (Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24)
+      can_cancel = daysDiff < 2
+    }
+
+    return res.status(200).json({ ...order, status_history: history || [], can_cancel } as Order & { status_history: any[], can_cancel: boolean })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })

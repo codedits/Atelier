@@ -105,6 +105,8 @@ function HomepageContent() {
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('hero')
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // Hero Images
   const [heroImages, setHeroImages] = useState<HeroImage[]>([])
@@ -247,6 +249,8 @@ function HomepageContent() {
 
   const handleHeroSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       if (editingHero) {
         // If image URL changed, pass old URL so it can be deleted from storage
@@ -266,11 +270,15 @@ function HomepageContent() {
       revalidateFrontend('hero_images')
     } catch (error) {
       toast.error('Failed to save hero image')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleHeroDelete = async (id: string) => {
+    if (deletingId) return
     if (!confirm('Delete this hero image?')) return
+    setDeletingId(id)
     try {
       await api.del(`/hero-images?id=${id}`)
       toast.success('Hero image deleted successfully')
@@ -278,6 +286,8 @@ function HomepageContent() {
       revalidateFrontend('hero_images')
     } catch {
       toast.error('Failed to delete hero image')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -324,6 +334,8 @@ function HomepageContent() {
 
   const handleCollectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       if (editingCollection) {
         // If image URL changed, pass old URL so it can be deleted from storage
@@ -343,11 +355,15 @@ function HomepageContent() {
       revalidateFrontend('featured_collections')
     } catch (error) {
       toast.error('Failed to save collection')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleCollectionDelete = async (id: string) => {
+    if (deletingId) return
     if (!confirm('Delete this collection?')) return
+    setDeletingId(id)
     try {
       await api.del(`/featured-collections?id=${id}`)
       toast.success('Collection deleted successfully')
@@ -355,6 +371,8 @@ function HomepageContent() {
       revalidateFrontend('featured_collections')
     } catch {
       toast.error('Failed to delete collection')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -385,6 +403,8 @@ function HomepageContent() {
 
   const handleTestimonialSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       if (editingTestimonial) {
         await api.put('/testimonials', { id: editingTestimonial.id, ...testimonialForm })
@@ -398,11 +418,15 @@ function HomepageContent() {
       revalidateFrontend('testimonials')
     } catch (error) {
       toast.error('Failed to save testimonial')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleTestimonialDelete = async (id: string) => {
+    if (deletingId) return
     if (!confirm('Delete this testimonial?')) return
+    setDeletingId(id)
     try {
       await api.del(`/testimonials?id=${id}`)
       toast.success('Testimonial deleted successfully')
@@ -410,6 +434,8 @@ function HomepageContent() {
       revalidateFrontend('testimonials')
     } catch {
       toast.error('Failed to delete testimonial')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -427,21 +453,23 @@ function HomepageContent() {
     setAnnouncementModal(true)
   }
 
-  const openAnnouncementEdit = (a: Announcement) => {
-    setEditingAnnouncement(a)
+  const openAnnouncementEdit = (announcement: Announcement) => {
+    setEditingAnnouncement(announcement)
     setAnnouncementForm({
-      text: a.text,
-      link: a.link || '',
-      link_text: a.link_text || '',
-      icon: a.icon || 'sparkle',
-      display_order: a.display_order,
-      is_active: a.is_active
+      text: announcement.text,
+      link: announcement.link,
+      link_text: announcement.link_text,
+      icon: announcement.icon,
+      display_order: announcement.display_order,
+      is_active: announcement.is_active
     })
     setAnnouncementModal(true)
   }
 
   const handleAnnouncementSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       if (editingAnnouncement) {
         await api.put('/announcements', { id: editingAnnouncement.id, ...announcementForm })
@@ -454,17 +482,23 @@ function HomepageContent() {
       loadData()
     } catch {
       toast.error('Failed to save announcement')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleAnnouncementDelete = async (id: string) => {
+    if (deletingId) return
     if (!confirm('Delete this announcement?')) return
+    setDeletingId(id)
     try {
       await api.del(`/announcements?id=${id}`)
       toast.success('Announcement deleted')
       loadData()
     } catch {
       toast.error('Failed to delete announcement')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -512,26 +546,28 @@ function HomepageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-[#1a1a1a]">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-[13px] font-medium transition-colors relative ${activeTab === tab.id
-              ? 'text-white'
-              : 'text-[#666] hover:text-white'
-              }`}
-          >
-            {tab.label}
-            {'count' in tab && typeof tab.count === 'number' && (
-              <span className="ml-2 text-[11px] text-[#666]">({tab.count})</span>
-            )}
-            {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
-            )}
-          </button>
-        ))}
+      {/* Tabs — scrollable on mobile */}
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 admin-scrollbar">
+        <div className="flex gap-1 border-b border-[#1a1a1a] min-w-max">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 sm:px-4 py-2.5 text-[13px] font-medium transition-colors relative whitespace-nowrap ${activeTab === tab.id
+                ? 'text-white'
+                : 'text-[#666] hover:text-white'
+                }`}
+            >
+              {tab.label}
+              {'count' in tab && typeof tab.count === 'number' && (
+                <span className="ml-1.5 text-[11px] text-[#666]">({tab.count})</span>
+              )}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Hero Images Tab */}
@@ -550,9 +586,9 @@ function HomepageContent() {
             {heroImages.map(hero => (
               <div
                 key={hero.id}
-                className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 flex gap-4 hover:border-[#333] transition-colors"
+                className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:border-[#333] transition-colors"
               >
-                <div className="relative w-48 h-28 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0 border border-[#1a1a1a]">
+                <div className="relative w-full sm:w-48 h-40 sm:h-28 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0 border border-[#1a1a1a]">
                   <Image src={hero.image_url} alt={hero.title} fill className="object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -598,11 +634,11 @@ function HomepageContent() {
           </div>
 
           {/* Hero Overlay Settings */}
-          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-6 space-y-5 mt-6">
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 sm:p-6 space-y-5 mt-6">
             <h3 className="text-white text-sm font-semibold">Dark Overlay Settings</h3>
             <p className="text-[#666] text-xs">Controls the dark overlay on top of hero images to ensure text readability.</p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Overlay Color</label>
                 <div className="flex items-center gap-3">
@@ -652,7 +688,7 @@ function HomepageContent() {
               </label>
 
               {heroOverlay.gradient_enabled && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">
                       Bottom (from): <span className="text-white">{heroOverlay.gradient_from}%</span>
@@ -689,8 +725,8 @@ function HomepageContent() {
               <div className="absolute inset-0" style={{ backgroundColor: heroOverlay.color, opacity: heroOverlay.opacity / 100 }} />
               {heroOverlay.gradient_enabled && (() => {
                 const hex = heroOverlay.color || '#000000'
-                const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
-                return <div className="absolute inset-0" style={{ background: `linear-gradient(to top, rgba(${r},${g},${b},${heroOverlay.gradient_from/100}), transparent, rgba(${r},${g},${b},${heroOverlay.gradient_to/100}))` }} />
+                const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16)
+                return <div className="absolute inset-0" style={{ background: `linear-gradient(to top, rgba(${r},${g},${b},${heroOverlay.gradient_from / 100}), transparent, rgba(${r},${g},${b},${heroOverlay.gradient_to / 100}))` }} />
               })()}
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-white text-xs font-medium drop-shadow-lg">Preview — Text Readability Check</span>

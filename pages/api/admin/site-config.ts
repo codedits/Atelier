@@ -1,31 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  const client = supabaseAdmin ?? supabase
-
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   if (req.method === 'GET') {
     const { data, error } = await client
       .from('site_config')
@@ -37,14 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'PUT') {
-    if (!supabaseAdmin) {
+    if (!adminClient) {
       return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
     }
 
     const { homepage_layout, nav_menu, theme_colors, features } = req.body
 
     // Find the existing config row ID dynamically instead of using a hardcoded UUID
-    const { data: existing, error: fetchError } = await supabaseAdmin
+    const { data: existing, error: fetchError } = await adminClient
       .from('site_config')
       .select('id')
       .single() as { data: any, error: any }
@@ -59,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (theme_colors !== undefined) updatePayload.theme_colors = theme_colors
     if (features !== undefined) updatePayload.features = features
 
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await (adminClient as any)
       .from('site_config')
       .update(updatePayload)
       .eq('id', existing.id)
@@ -74,4 +52,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+})

@@ -136,13 +136,14 @@ export default function AdminImageUpload({
 
       {/* Preview */}
       {preview && (
-        <div className="mb-3 relative w-full h-40 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1a1a1a]">
+        <div className="mb-3 relative w-full h-40 sm:h-48 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#1a1a1a]">
           <Image src={preview} alt="Preview" fill className="object-cover" unoptimized />
           <button
             type="button"
             onClick={() => { onChange(''); setPreview(''); }}
-            className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-black/60 hover:bg-black/80 rounded-full text-white/70 hover:text-white transition-colors text-xs"
+            className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-[#ff4444]/90 hover:bg-[#ff4444] rounded-full text-white transition-colors text-sm shadow-lg active:scale-90"
             title="Remove image"
+            aria-label="Remove image"
           >
             ✕
           </button>
@@ -160,7 +161,7 @@ export default function AdminImageUpload({
             : 'border-[#333] hover:border-[#555]'
         }`}
       >
-        <label className="flex items-center justify-center gap-2 cursor-pointer py-3 px-4">
+        <label className="flex items-center justify-center gap-2 cursor-pointer py-4 sm:py-3 px-4">
           <input
             ref={fileInputRef}
             type="file"

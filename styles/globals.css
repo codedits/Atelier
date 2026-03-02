@@ -61,7 +61,7 @@
   width: 100%;
   overflow: visible;
   white-space: normal;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-cormorant, 'Cormorant Garamond'), serif;
   font-size: clamp(4rem, 12vw, 10rem);
   font-weight: 50;
   letter-spacing: -0.02em;
@@ -235,7 +235,7 @@ html {
 body {
   background: #FFFFFF;
   color: #111827;
-  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: var(--font-poppins, 'Poppins'), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -284,14 +284,14 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Cormorant Garamond', 'Poppins', serif;
+  font-family: var(--font-cormorant, 'Cormorant Garamond'), 'Poppins', serif;
   font-weight: 500;
   color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
 .font-display {
-  font-family: 'Cormorant Garamond', 'Poppins', serif;
+  font-family: var(--font-cormorant, 'Cormorant Garamond'), 'Poppins', serif;
   font-weight: 500;
   letter-spacing: 0.04em;
 }
@@ -299,7 +299,7 @@ h6 {
 /* Scoped utility to force Poppins on a specific page/component */
 .poppins-only,
 .poppins-only * {
-  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
+  font-family: var(--font-poppins, 'Poppins'), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
 }
 
 .poppins-only h1,
@@ -308,7 +308,7 @@ h6 {
 .poppins-only h4,
 .poppins-only h5,
 .poppins-only h6 {
-  font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
+  font-family: var(--font-poppins, 'Poppins'), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial !important;
   font-weight: 600 !important;
   letter-spacing: 0 !important;
 }
@@ -520,10 +520,30 @@ h6 {
 
   /* Compact table cells on mobile */
   .admin-table th {
-    padding: 10px 12px;
+    padding: 8px 10px;
+    font-size: 10px;
   }
 
   .admin-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  /* Buttons — slightly taller for touch targets */
+  .admin-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* Inputs — taller for touch targets (iOS zoom prevention at 16px) */
+  .admin-input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Cards — tighter padding on phone */
+  .admin-card {
+    border-radius: 12px;
     padding: 12px;
   }
 }

@@ -166,7 +166,7 @@ export const getStaticProps: GetStaticProps<ProductsPageProps> = async () => {
     props: {
       initialProducts: products,
     },
-    revalidate: 900, // ISR: Revalidate every 15 minutes (Vercel free plan optimization)
+    revalidate: 3600, // ISR: Revalidate every 1 hour (Vercel free plan optimization)
   }
 }
 

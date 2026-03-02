@@ -1,40 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { supabase } from '@/lib/supabase'
-import { createClient } from '@supabase/supabase-js'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
+export default withAdminAuth(async (req, res, { adminClient }) => {
   const { id } = req.query
   const reviewId = String(id)
 
-  if (!supabaseAdmin) {
+  if (!adminClient) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
   }
 
   if (req.method === 'GET') {
     try {
-      const { data: review, error } = await supabaseAdmin
+      const { data: review, error } = await adminClient
         .from('product_reviews')
         .select('*')
         .eq('id', reviewId)
@@ -61,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      const { data: review, error } = await supabaseAdmin
+      const { data: review, error } = await adminClient
         .from('product_reviews')
         // @ts-ignore - Supabase client without typed schema
         .update({ is_approved: is_approved as boolean })
@@ -82,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'DELETE') {
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await adminClient
         .from('product_reviews')
         .delete()
         .eq('id', reviewId)
@@ -99,4 +78,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+})

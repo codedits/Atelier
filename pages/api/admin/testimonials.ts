@@ -1,16 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
-import { supabase as supabaseAnon } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
-}
 
 const TESTIMONIALS_TTL = 60_000
 
@@ -19,17 +10,10 @@ function invalidateCache() {
   invalidateSSGCache('testimonials')
 }
 
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   // GET is public (for frontend)
   if (req.method === 'GET') {
     try {
-      const client = supabaseAdmin ?? supabaseAnon
       const { data, hit } = await apiCache.getOrFetch(
         'api:admin:testimonials',
         async () => {
@@ -53,15 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // All other methods require admin auth
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  if (!supabaseAdmin) {
-    return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
-  }
+  if (!adminClient) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
 
   if (req.method === 'POST') {
     const { customer_name, content, rating, display_order, is_active } = req.body
@@ -70,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('testimonials')
       .insert([{
         customer_name,
@@ -87,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: error.message })
     }
     
-    invalidateCache() // Clear cache on update
+    invalidateCache()
     return res.status(201).json(data)
   }
 
@@ -105,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (display_order !== undefined) updates.display_order = display_order
     if (is_active !== undefined) updates.is_active = is_active
 
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await (adminClient as any)
       .from('testimonials')
       .update(updates)
       .eq('id', id)
@@ -117,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: error.message })
     }
     
-    invalidateCache() // Clear cache on update
+    invalidateCache()
     return res.status(200).json(data)
   }
 
@@ -128,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing testimonial ID' })
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await adminClient
       .from('testimonials')
       .delete()
       .eq('id', String(id))
@@ -138,9 +114,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: error.message })
     }
     
-    invalidateCache() // Clear cache on update
+    invalidateCache()
     return res.status(200).json({ message: 'Testimonial deleted' })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+}, { allowPublicMethods: ['GET'] })

@@ -1,34 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { verifyAdminToken } from '@/lib/admin-auth'
-import { supabase } from '@/lib/supabase'
-import { createClient } from '@supabase/supabase-js'
-import { sendDeliveryNotificationEmail } from '@/lib/email'
+import { withAdminAuth } from '@/lib/admin-api-utils'
+import { sendDeliveryNotificationEmail, sendShippingNotificationEmail } from '@/lib/email'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   const { id } = req.query
   const orderId = String(id)
-  const client = supabaseAdmin ?? supabase
 
   if (req.method === 'GET') {
     const { data, error } = await client
@@ -41,8 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json(data)
   }
 
-  // Require service role for writes
-  if (!supabaseAdmin) {
+  if (!adminClient) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
   }
 
@@ -53,8 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (status) updates.status = status
     if (payment_status) updates.payment_status = payment_status
 
-    // First get the current order to check if status is changing to 'delivered'
-    const { data: currentOrder, error: fetchError } = await supabaseAdmin
+    // First get the current order to check status transitions
+    const { data: currentOrder, error: fetchError } = await adminClient
       .from('orders')
       .select('*')
       .eq('id', orderId)
@@ -64,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Order not found' })
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('orders')
       // @ts-ignore - Supabase client without typed schema
       .update(updates)
@@ -74,12 +51,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) return res.status(500).json({ error: error.message })
 
+    // Record status change in history (Issue 4)
+    if (status && status !== currentOrder.status) {
+      try {
+        await adminClient
+          .from('order_status_history')
+          .insert({
+            order_id: orderId,
+            old_status: currentOrder.status,
+            new_status: status,
+            changed_by: 'admin',
+          })
+      } catch (historyErr) {
+        console.error('Failed to record status history:', historyErr)
+      }
+    }
+
+    if (payment_status && payment_status !== currentOrder.payment_status) {
+      try {
+        await adminClient
+          .from('order_status_history')
+          .insert({
+            order_id: orderId,
+            old_status: `payment:${currentOrder.payment_status}`,
+            new_status: `payment:${payment_status}`,
+            changed_by: 'admin',
+          })
+      } catch (historyErr) {
+        console.error('Failed to record payment status history:', historyErr)
+      }
+    }
+
+    // Send shipping notification email if status changed to 'shipped' (Issue 3)
+    if (status === 'shipped' && currentOrder.status !== 'shipped') {
+      const customerEmail = currentOrder.email
+      console.log(`Order ${orderId} marked as shipped. Sending shipping notification...`)
+
+      if (customerEmail) {
+        try {
+          await sendShippingNotificationEmail({
+            to: customerEmail,
+            orderId: currentOrder.id,
+            userName: currentOrder.user_name,
+            items: currentOrder.items || [],
+            totalPrice: currentOrder.total_price,
+          })
+          console.log(`✅ Shipping notification email sent to ${customerEmail} for order ${orderId}`)
+        } catch (emailError) {
+          console.error('❌ Failed to send shipping notification email:', emailError)
+        }
+      } else {
+        console.log(`⚠️ No email address found for order ${orderId}, skipping shipping notification`)
+      }
+    }
+
     // Send delivery notification email if status changed to 'delivered'
     if (status === 'delivered' && currentOrder.status !== 'delivered') {
       const customerEmail = currentOrder.email
       console.log(`Order ${orderId} marked as delivered. Sending delivery notification...`)
       console.log(`Customer email: ${customerEmail || 'NOT PROVIDED'}`)
-      
+
       if (customerEmail) {
         try {
           await sendDeliveryNotificationEmail({
@@ -107,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'DELETE') {
     try {
       // First get the order to restore inventory before deleting
-      const { data: order, error: fetchError } = await supabaseAdmin
+      const { data: order, error: fetchError } = await adminClient
         .from('orders')
         .select('*')
         .eq('id', orderId)
@@ -118,30 +149,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'Order not found' })
       }
 
-      // Restore inventory for all items in the order
+      // Restore inventory using atomic RPC (Issue 1: race-condition safe)
       if (order?.items && Array.isArray(order.items)) {
         for (const item of order.items) {
           if (item.product_id && item.quantity > 0) {
-            // Get current stock and increment it
-            const { data: product, error: productError } = await supabaseAdmin
-              .from('products')
-              .select('stock')
-              .eq('id', item.product_id)
-              .single() as { data: any, error: any }
-              
-            if (product && !productError) {
-              await supabaseAdmin
-                .from('products')
-                // @ts-ignore - Supabase client without typed schema
-                .update({ stock: (product.stock || 0) + item.quantity })
-                .eq('id', item.product_id)
-            }
+            await adminClient.rpc('increment_stock_safe', {
+              p_id: item.product_id,
+              qty: item.quantity,
+            })
           }
         }
       }
 
       // Delete the order
-      const { error: deleteError } = await supabaseAdmin
+      const { error: deleteError } = await adminClient
         .from('orders')
         .delete()
         .eq('id', orderId)
@@ -156,7 +177,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       apiCache.invalidateByTag('orders')
       invalidateSSGCache('products')
       invalidateSSGCache('orders')
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Order removed successfully',
         order_id: orderId
       })
@@ -168,4 +189,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+})

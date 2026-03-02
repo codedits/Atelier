@@ -128,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title: title || null,
           comment,
           is_verified_purchase: true,
-          is_approved: true // Auto-approve for now, can add moderation later
+          is_approved: false // Requires admin moderation before display
         })
         .select()
         .single()

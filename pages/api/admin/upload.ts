@@ -1,22 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import { verifyAdminToken } from '../../../lib/admin-auth'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: { persistSession: false }
-  })
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
+import { withAdminAuth } from '@/lib/admin-api-utils'
 
 export const config = {
   api: {
@@ -26,18 +9,12 @@ export const config = {
   },
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default withAdminAuth(async (req, res, { adminClient }) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // Verify admin authentication
-  const admin = getAdminFromRequest(req)
-  if (!admin) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  if (!supabaseAdmin) {
+  if (!adminClient) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' })
   }
 
@@ -62,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     else if (folder === 'collections') bucket = 'collection-images'
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+    const { data: uploadData, error: uploadError } = await adminClient.storage
       .from(bucket)
       .upload(key, buffer, {
         contentType: contentType || 'image/jpeg',
@@ -75,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get public URL
-    const { data: urlData } = supabaseAdmin.storage
+    const { data: urlData } = adminClient.storage
       .from(bucket)
       .getPublicUrl(key)
 
@@ -94,4 +71,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Upload error:', err)
     return res.status(500).json({ error: err.message || 'Upload failed' })
   }
-}
+})

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react'
 import { SiteConfig, getSiteConfig } from '@/lib/siteConfig'
 
 interface SiteConfigContextType {
@@ -24,21 +24,21 @@ export function SiteConfigProvider({ children, initialConfig }: { children: Reac
     const [config, setConfig] = useState<SiteConfig | null>(initialConfig || null)
     const [isLoading, setIsLoading] = useState(!initialConfig)
 
-    const fetchConfig = async () => {
+    const fetchConfig = useCallback(async () => {
         setIsLoading(true)
         const data = await getSiteConfig()
         if (data) {
             setConfig(data)
         }
         setIsLoading(false)
-    }
+    }, [])
 
     // Effect to fetch config on mount if no initial config provided
     useEffect(() => {
         if (!initialConfig) {
             fetchConfig()
         }
-    }, [initialConfig])
+    }, [initialConfig, fetchConfig])
 
     // Effect to inject CSS variables
     useEffect(() => {
@@ -55,8 +55,12 @@ export function SiteConfigProvider({ children, initialConfig }: { children: Reac
 
     }, [config])
 
+    const contextValue = useMemo(() => ({
+        config, isLoading, refreshConfig: fetchConfig
+    }), [config, isLoading, fetchConfig])
+
     return (
-        <SiteConfigContext.Provider value={{ config, isLoading, refreshConfig: fetchConfig }}>
+        <SiteConfigContext.Provider value={contextValue}>
             {children}
         </SiteConfigContext.Provider>
     )

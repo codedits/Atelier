@@ -28,7 +28,7 @@ export function sanitizeHtml(html: string): string {
 
 export function validatePositiveNumber(value: any): number | null {
   const num = Number(value)
-  if (isNaN(num) || num < 0) return null
+  if (isNaN(num) || num <= 0) return null
   return num
 }
 

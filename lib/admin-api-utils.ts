@@ -1,6 +1,6 @@
-import type { NextApiRequest } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { verifyAdminToken } from './admin-auth'
+import { verifyAdminToken, AdminUser } from './admin-auth'
 import { supabase as supabaseAnon } from './supabase'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -48,4 +48,63 @@ export function getAdminFromRequest(req: NextApiRequest) {
  */
 export function isServiceRoleConfigured(): boolean {
   return !!supabaseServiceRoleKey
+}
+
+/**
+ * Higher-order handler that centralizes admin auth + Supabase client setup.
+ * Eliminates the need for each admin API route to create its own client/auth check.
+ * 
+ * Usage:
+ * ```ts
+ * export default withAdminAuth(async (req, res, { admin, client }) => {
+ *   // `admin` is verified, `client` is the best available Supabase client
+ *   const { data, error } = await client.from('products').select('*')
+ *   return res.status(200).json(data)
+ * })
+ * ```
+ */
+export function withAdminAuth(
+  handler: (
+    req: NextApiRequest,
+    res: NextApiResponse,
+    ctx: { admin: AdminUser; client: SupabaseClient; adminClient: SupabaseClient | null }
+  ) => Promise<void | NextApiResponse>,
+  options?: {
+    /** Return 500 if service role key is missing */
+    requireServiceRole?: boolean
+    /** HTTP methods that bypass auth (e.g. ['GET'] for public reads) */
+    allowPublicMethods?: string[]
+  }
+) {
+  return async (req: NextApiRequest, res: NextApiResponse) => {
+    // Allow certain methods without auth (public reads)
+    if (
+      options?.allowPublicMethods &&
+      req.method &&
+      options.allowPublicMethods.includes(req.method)
+    ) {
+      const adminClient = getSupabaseAdmin()
+      const client = adminClient ?? supabaseAnon
+      // Pass a stub admin — handler can check if admin is null-ish for public path
+      return handler(req, res, {
+        admin: { id: '__public__', username: '__public__' } as AdminUser,
+        client,
+        adminClient,
+      })
+    }
+
+    const admin = getAdminFromRequest(req)
+    if (!admin) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
+
+    const adminClient = getSupabaseAdmin()
+    const client = adminClient ?? supabaseAnon
+
+    if (options?.requireServiceRole && !adminClient) {
+      return res.status(500).json({ error: 'Service role key not configured — write operations unavailable' })
+    }
+
+    return handler(req, res, { admin, client, adminClient })
+  }
 }

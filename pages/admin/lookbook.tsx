@@ -18,33 +18,10 @@ interface LookbookImage {
     link?: string
 }
 
-interface AdminDashboardProps {
-    images: LookbookImage[]
-    lookbookSection: { title: string, subtitle: string }
-}
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 
-export const getServerSideProps: GetServerSideProps<AdminDashboardProps> = async (context) => {
-    const { data: images } = await supabase
-        .from('lookbook_images')
-        .select('*')
-        .order('display_order', { ascending: true })
-
-    const { data: sectionData } = await supabase
-        .from('homepage_sections')
-        .select('*')
-        .eq('section_key', 'lookbook')
-        .single()
-
-    return {
-        props: {
-            images: images || [],
-            lookbookSection: sectionData || { title: 'THE LOOK', subtitle: 'Discover' }
-        },
-    }
-}
+// Removed getServerSideProps to convert this to a static page
 
 async function revalidateHomepage() {
     try {
@@ -54,22 +31,50 @@ async function revalidateHomepage() {
     }
 }
 
-function LookbookContent({ images: initialImages, lookbookSection }: { images: LookbookImage[], lookbookSection: { title: string, subtitle: string } }) {
+function LookbookContent() {
     const { token } = useAdminAuth()
     const toast = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // ── Reactive state instead of window.location.reload() ──
-    const [images, setImages] = useState<LookbookImage[]>(initialImages)
+    const [images, setImages] = useState<LookbookImage[]>([])
+    const [isLoadingData, setIsLoadingData] = useState(true)
     const [uploading, setUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState('')
     const [editingImage, setEditingImage] = useState<LookbookImage | null>(null)
     const [shuffling, setShuffling] = useState(false)
     const [savingDetails, setSavingDetails] = useState(false)
 
-    const [sectionTitle, setSectionTitle] = useState(lookbookSection?.title || '')
-    const [sectionSubtitle, setSectionSubtitle] = useState(lookbookSection?.subtitle || '')
+    const [sectionTitle, setSectionTitle] = useState('')
+    const [sectionSubtitle, setSectionSubtitle] = useState('')
     const [savingSection, setSavingSection] = useState(false)
+
+    // Fetch initial data client-side for SSG benefits
+    useEffect(() => {
+        if (!token) return
+
+        async function fetchLookbookData() {
+            try {
+                const [imagesRes, sectionRes] = await Promise.all([
+                    supabase.from('lookbook_images').select('*').order('display_order', { ascending: true }),
+                    supabase.from('homepage_sections').select('*').eq('section_key', 'lookbook').single()
+                ])
+
+                if (imagesRes.data) setImages(imagesRes.data)
+
+                const sectionData = sectionRes.data || { title: 'THE LOOK', subtitle: 'Discover' }
+                setSectionTitle(sectionData.title)
+                setSectionSubtitle(sectionData.subtitle)
+            } catch (err) {
+                console.error('Failed to load lookbook data', err)
+                toast.error('Failed to load Lookbook data')
+            } finally {
+                setIsLoadingData(false)
+            }
+        }
+
+        fetchLookbookData()
+    }, [token])
 
     // ── Confirm-delete modal state ──
     const [deletingImage, setDeletingImage] = useState<LookbookImage | null>(null)
@@ -86,6 +91,7 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
             toast.error('Title cannot be empty')
             return
         }
+        if (savingSection) return
         setSavingSection(true)
         try {
             const res = await fetch('/api/admin/save-lookbook', {
@@ -107,6 +113,7 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
     // ── Upload images ──
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || [])
+        if (uploading) return
         if (!files.length) return
 
         // Validate file types and sizes
@@ -191,6 +198,7 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
 
     // ── Shuffle order ──
     const handleShuffle = async () => {
+        if (shuffling) return
         setShuffling(true)
         try {
             const updates = images.map(img => ({
@@ -243,6 +251,7 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
     // ── Delete image ──
     const handleDelete = async () => {
         if (!deletingImage) return
+        if (deleting) return
         setDeleting(true)
         try {
             const res = await fetch(`/api/admin/lookbook-images?id=${deletingImage.id}`, {
@@ -265,6 +274,7 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
     // ── Save detail edits ──
     const handleSaveDetails = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        if (savingDetails) return
         if (!editingImage) return
         setSavingDetails(true)
         const formData = new FormData(e.currentTarget)
@@ -294,6 +304,16 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
 
     const activeCount = images.filter(i => i.is_active).length
 
+    if (isLoadingData) {
+        return (
+            <AdminLayout title="Manage Lookbook" subtitle="Upload and reorder gallery images">
+                <div className="flex justify-center items-center py-20 min-h-[50vh]">
+                    <div className="animate-spin h-8 w-8 border-2 border-[#fff] border-t-transparent rounded-full" />
+                </div>
+            </AdminLayout>
+        )
+    }
+
     return (
         <AdminLayout title="Manage Lookbook" subtitle="Upload and reorder gallery images">
             <Head>
@@ -302,8 +322,8 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
 
             <div className="space-y-6">
                 {/* Section Settings */}
-                <div className="bg-[#111] p-6 rounded-2xl border border-[#222]">
-                    <h2 className="text-xl font-medium text-white mb-4">Lookbook Settings</h2>
+                <div className="bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
+                    <h2 className="text-lg sm:text-xl font-medium text-white mb-4">Lookbook Settings</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-[#888] mb-1">Section Title</label>
@@ -338,27 +358,27 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
                 </div>
 
                 {/* Gallery Header */}
-                <div className="flex justify-between items-center bg-[#111] p-6 rounded-2xl border border-[#222]">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
                     <div>
-                        <h2 className="text-xl font-medium text-white">Lookbook Gallery</h2>
+                        <h2 className="text-lg sm:text-xl font-medium text-white">Lookbook Gallery</h2>
                         <p className="text-sm text-[#888] mt-1">
                             {images.length} image{images.length !== 1 ? 's' : ''} total &middot; {activeCount} active
                         </p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                         <button
                             onClick={handleShuffle}
                             disabled={shuffling || images.length < 2}
-                            className="bg-[#222] text-white px-6 py-2.5 text-sm font-medium rounded-xl hover:bg-[#333] border border-[#333] transition-colors whitespace-nowrap disabled:opacity-50"
+                            className="bg-[#222] text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-xl hover:bg-[#333] border border-[#333] transition-colors whitespace-nowrap disabled:opacity-50"
                         >
-                            {shuffling ? 'Shuffling...' : 'Shuffle Order'}
+                            {shuffling ? 'Shuffling...' : 'Shuffle'}
                         </button>
                         <button
                             disabled={uploading}
                             onClick={() => fileInputRef.current?.click()}
-                            className="bg-white text-black px-6 py-2.5 text-sm font-medium rounded-xl hover:bg-white/90 disabled:opacity-50 transition-colors whitespace-nowrap"
+                            className="bg-white text-black px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-xl hover:bg-white/90 disabled:opacity-50 transition-colors whitespace-nowrap"
                         >
-                            {uploading ? uploadProgress : 'Upload Images'}
+                            {uploading ? uploadProgress : 'Upload'}
                         </button>
                         <input
                             type="file"
@@ -372,13 +392,13 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
                 </div>
 
                 {/* Image Grid */}
-                <div className="bg-[#111] p-6 rounded-2xl border border-[#222]">
+                <div className="bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
                     {images.length === 0 ? (
                         <div className="py-12 text-center text-[#888] text-sm font-medium">
                             No lookbook images yet. Upload one above.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
                             {images.map((img) => (
                                 <div key={img.id} className="relative group rounded-xl overflow-hidden aspect-[3/4] bg-[#1a1a1a] border border-[#222]">
                                     <Image
@@ -396,23 +416,23 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
                                         </span>
                                     </div>
 
-                                    {/* Hover Actions */}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                                    {/* Actions — always visible on mobile, hover on desktop */}
+                                    <div className="absolute inset-x-0 bottom-0 sm:inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent sm:bg-black/60 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-row sm:flex-col items-end sm:items-center justify-center gap-1.5 sm:gap-3 p-2 sm:p-0">
                                         <button
                                             onClick={() => setEditingImage(img)}
-                                            className="bg-white text-black px-4 py-1.5 text-xs font-medium rounded-lg hover:bg-white/90"
+                                            className="bg-white text-black px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-white/90"
                                         >
-                                            Edit Details
+                                            Edit
                                         </button>
                                         <button
                                             onClick={() => handleToggleActive(img)}
-                                            className="bg-[#222] text-white px-4 py-1.5 text-xs font-medium rounded-lg hover:bg-[#333] border border-[#444]"
+                                            className="bg-[#222] text-white px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-[#333] border border-[#444]"
                                         >
-                                            {img.is_active ? 'Deactivate' : 'Activate'}
+                                            {img.is_active ? 'Hide' : 'Show'}
                                         </button>
                                         <button
                                             onClick={() => setDeletingImage(img)}
-                                            className="bg-red-500/20 text-red-500 px-4 py-1.5 text-xs font-medium rounded-lg hover:bg-red-500/30 border border-red-500/30"
+                                            className="bg-red-500/20 text-red-400 px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-red-500/30 border border-red-500/30"
                                         >
                                             Delete
                                         </button>
@@ -499,11 +519,11 @@ function LookbookContent({ images: initialImages, lookbookSection }: { images: L
     )
 }
 
-export default function AdminLookbook({ images, lookbookSection }: AdminDashboardProps) {
+export default function AdminLookbook() {
     return (
         <AdminAuthProvider>
             <ToastProvider>
-                <LookbookContent images={images} lookbookSection={lookbookSection} />
+                <LookbookContent />
             </ToastProvider>
         </AdminAuthProvider>
     )

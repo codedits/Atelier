@@ -1,4 +1,37 @@
 /** @type {import('next').NextConfig} */
+
+// ── Content-Security-Policy ──────────────────────────────────────────
+// Tuned for Next.js Pages Router (inline scripts for __NEXT_DATA__),
+// React inline styles, Supabase, image CDNs, and self-hosted fonts via
+// next/font/google.  In production you can tighten script-src once you
+// verify no inline scripts remain beyond Next.js hydration.
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : '*.supabase.co'
+
+const cspDirectives = [
+  // Only allow scripts from own origin + Next.js inline hydration
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval'`,
+  // Inline styles are used heavily (React style={} props)
+  `style-src 'self' 'unsafe-inline'`,
+  // Images: self + Supabase storage + Unsplash + Pexels + data URIs
+  `img-src 'self' data: blob: https://${supabaseHost} https://images.unsplash.com https://images.pexels.com`,
+  // Fonts: self only (next/font/google self-hosts them)
+  `font-src 'self'`,
+  // API / WebSocket connections to own origin + Supabase
+  `connect-src 'self' https://${supabaseHost} wss://${supabaseHost}`,
+  // No <object>, <embed>, <applet>
+  `object-src 'none'`,
+  // Restrict <base> to own origin
+  `base-uri 'self'`,
+  // Forms only submit to own origin
+  `form-action 'self'`,
+  // Framing controlled by X-Frame-Options too; mirror it here
+  `frame-ancestors 'self'`,
+  // Block mixed content
+  `upgrade-insecure-requests`,
+].join('; ')
+
 const nextConfig = {
   reactStrictMode: true,
   // Enable gzip/brotli compression
@@ -42,6 +75,10 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives
           }
         ]
       },
@@ -67,7 +104,7 @@ const nextConfig = {
   },
   // Reduce unused JavaScript
   experimental: {
-    optimizePackageImports: ['framer-motion', '@supabase/supabase-js'],
+    optimizePackageImports: ['@supabase/supabase-js'],
   },
   images: {
     remotePatterns: [
@@ -86,11 +123,11 @@ const nextConfig = {
       // Dynamic Supabase hostname from env var
       ...(process.env.NEXT_PUBLIC_SUPABASE_URL
         ? [{
-            protocol: 'https',
-            hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
-            port: '',
-            pathname: '/storage/**',
-          }]
+          protocol: 'https',
+          hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
+          port: '',
+          pathname: '/storage/**',
+        }]
         : []),
       {
         protocol: 'https',

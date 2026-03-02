@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/router'
 
@@ -31,7 +31,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (password: string): Promise<boolean> => {
+  const login = useCallback(async (password: string): Promise<boolean> => {
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
@@ -41,7 +41,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
       if (res.ok) {
         const data = await res.json()
-        Cookies.set(TOKEN_KEY, data.token, { expires: 1 })
+        Cookies.set(TOKEN_KEY, data.token, {
+          expires: 1,
+          secure: window.location.protocol === 'https:',
+          sameSite: 'strict',
+        })
         setToken(data.token)
         setIsAuthenticated(true)
         return true
@@ -50,17 +54,25 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       return false
     }
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     Cookies.remove(TOKEN_KEY)
     setToken(null)
     setIsAuthenticated(false)
     router.push('/admin')
-  }
+  }, [router])
+
+  const contextValue = useMemo(() => ({
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    token
+  }), [isAuthenticated, isLoading, login, logout, token])
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, isLoading, login, logout, token }}>
+    <AdminAuthContext.Provider value={contextValue}>
       {children}
     </AdminAuthContext.Provider>
   )

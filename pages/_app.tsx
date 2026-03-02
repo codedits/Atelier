@@ -7,10 +7,27 @@ import { FavoritesProvider } from '@/context/FavoritesContext'
 import { UserAuthProvider } from '@/context/UserAuthContext'
 import { SiteConfigProvider } from '@/context/SiteConfigContext'
 import CartDrawer from '@/components/CartDrawer'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Lenis from 'lenis'
+import { Cormorant_Garamond, Poppins } from 'next/font/google'
 import '../styles/globals.css'
 
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, DEFAULT_OG, KEYWORDS } from '@/lib/constants'
+
+// ── Self-hosted Google Fonts via next/font ──
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-cormorant',
+})
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-poppins',
+})
 
 // Memoized page component wrapper for performance
 const MemoizedComponent = memo(function MemoizedComponent({ Component, pageProps }: { Component: AppProps['Component'], pageProps: AppProps['pageProps'] }) {
@@ -28,9 +45,13 @@ export default function App({ Component, pageProps }: AppProps) {
       infinite: false,
     })
 
+    let destroyed = false
+
     function raf(time: number) {
       lenis.raf(time)
-      requestAnimationFrame(raf)
+      if (!destroyed) {
+        requestAnimationFrame(raf)
+      }
     }
 
     requestAnimationFrame(raf)
@@ -43,6 +64,7 @@ export default function App({ Component, pageProps }: AppProps) {
     router.events.on('routeChangeComplete', handleRouteChange)
 
     return () => {
+      destroyed = true
       lenis.destroy()
       router.events.off('routeChangeComplete', handleRouteChange)
     }
@@ -66,6 +88,8 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [router])
 
   return (
+    <div className={`${cormorant.variable} ${poppins.variable}`}>
+    <ErrorBoundary>
     <SiteConfigProvider initialConfig={pageProps.siteConfig}>
       <UserAuthProvider>
         <CartProvider>
@@ -109,5 +133,7 @@ export default function App({ Component, pageProps }: AppProps) {
         </CartProvider>
       </UserAuthProvider>
     </SiteConfigProvider>
+    </ErrorBoundary>
+    </div>
   )
 }

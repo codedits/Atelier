@@ -1,28 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import { verifyAdminToken } from '../../../lib/admin-auth'
-import { supabase as supabaseAnon } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/admin-api-utils'
 import { invalidateSSGCache } from '@/lib/cache'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-let supabaseAdmin: ReturnType<typeof createClient> | null = null
-if (supabaseUrl && supabaseServiceRoleKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey)
-}
-
-function getAdminFromRequest(req: NextApiRequest) {
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return null
-  return verifyAdminToken(authHeader.substring(7))
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default withAdminAuth(async (req, res, { client, adminClient }) => {
   // GET - public
   if (req.method === 'GET') {
     try {
-      const client = (supabaseAdmin ?? supabaseAnon) as any
       const { data, error } = await client
         .from('announcements')
         .select('*')
@@ -35,12 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  // Auth required for mutations
-  const admin = getAdminFromRequest(req)
-  if (!admin) return res.status(401).json({ error: 'Unauthorized' })
-  if (!supabaseAdmin) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
+  // Mutations require service role
+  if (!adminClient) return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' })
 
-  const db = supabaseAdmin as any
+  const db = adminClient as any
 
   if (req.method === 'POST') {
     try {
@@ -103,4 +84,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
-}
+}, { allowPublicMethods: ['GET'] })
