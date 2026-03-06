@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { CommandPalette } from './CommandPalette'
 
@@ -147,15 +147,14 @@ const navGroups = [
 export default function AdminLayout({ children, title, subtitle, actions }: AdminLayoutProps) {
   const { isAuthenticated, logout, isLoading } = useAdminAuth()
   const router = useRouter()
+  const pathname = usePathname()
+  const currentPath = pathname || ''
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
-  // Close sidebar on route change (mobile)
   useEffect(() => {
-    const handleRouteChange = () => setSidebarOpen(false)
-    router.events.on('routeChangeComplete', handleRouteChange)
-    return () => router.events.off('routeChangeComplete', handleRouteChange)
-  }, [router])
+    setSidebarOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -235,7 +234,7 @@ export default function AdminLayout({ children, title, subtitle, actions }: Admi
                 </p>
                 <div className="space-y-0.5">
                   {group.items.map(item => {
-                    const isActive = router.pathname === item.href
+                    const isActive = currentPath === item.href
                     return (
                       <Link
                         key={item.href}

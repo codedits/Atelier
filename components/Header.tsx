@@ -1,5 +1,7 @@
+"use client"
+
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
@@ -8,6 +10,8 @@ import { useSiteConfig } from '@/context/SiteConfigContext'
 
 const Header = memo(function Header() {
   const router = useRouter()
+  const pathname = usePathname()
+  const currentPath = pathname || '/'
   const [open, setOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,16 +34,20 @@ const Header = memo(function Header() {
 
   // Check if current page matches the link - memoized
   const isActive = useCallback((path: string) => {
-    if (path === '/products' && router.pathname === '/products' && !router.query.gender) return true
+    const currentGender = typeof window !== 'undefined'
+      ? new URL(window.location.href).searchParams.get('gender')
+      : null
+
+    if (path === '/products' && currentPath === '/products' && !currentGender) return true
     if (path.includes('?gender=')) {
       const gender = path.split('gender=')[1]
-      return router.pathname === '/products' && router.query.gender === gender
+      return currentPath === '/products' && currentGender === gender
     }
-    return router.pathname === path
-  }, [router.pathname, router.query.gender])
+    return currentPath === path
+  }, [currentPath])
 
   // Determine if we're on homepage and should show transparent header - memoized
-  const isHomepage = router.pathname === '/'
+  const isHomepage = currentPath === '/'
   const shouldBeTransparent = useMemo(() => isHomepage && !hasScrolled, [isHomepage, hasScrolled])
 
   // Memoized toggle handler
@@ -49,7 +57,8 @@ const Header = memo(function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+      const target = `/products?search=${encodeURIComponent(searchQuery.trim())}`
+      router.push(target)
       setIsSearchOpen(false)
       setSearchQuery('')
     }
@@ -121,7 +130,8 @@ const Header = memo(function Header() {
                       key={link}
                       onClick={() => {
                         setSearchQuery(link)
-                        router.push(`/products?search=${encodeURIComponent(link)}`)
+                        const target = `/products?search=${encodeURIComponent(link)}`
+                        router.push(target)
                         setIsSearchOpen(false)
                         setSearchQuery('')
                       }}
@@ -138,13 +148,13 @@ const Header = memo(function Header() {
       )}
 
       {/* Promotional Banner - Only visible on non-homepage */}
-      {router.pathname !== '/' && (
+      {currentPath !== '/' && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-[#1A1A1A] text-white text-center py-2 px-4 shadow-sm h-8 flex items-center justify-center">
           <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-medium text-[#FAF9F6]"><span className="text-[#C9A96E] mr-2">✦</span> Complimentary shipping on orders over ₨5,000 <span className="text-[#C9A96E] ml-2">✦</span></p>
         </div>
       )}
 
-      <header className={`fixed ${router.pathname === '/' ? 'top-0' : 'top-8 md:top-8'} left-0 right-0 z-40 transition-all duration-500 ease-out ${shouldBeTransparent
+      <header className={`fixed ${currentPath === '/' ? 'top-0' : 'top-8 md:top-8'} left-0 right-0 z-40 transition-all duration-500 ease-out ${shouldBeTransparent
         ? 'bg-transparent border-b-0 py-2'
         : 'bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm py-0'
         }`}>

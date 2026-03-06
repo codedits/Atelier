@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 import { Command } from 'cmdk'
 import { supabase } from '@/lib/supabase'
 
@@ -67,6 +67,10 @@ export function CommandPalette() {
         command()
     }
 
+    const navigate = (href: string) => {
+        router.push(href)
+    }
+
     // Workaround for hydration errors with Command.Dialog in some Next.js setups
     const [mounted, setMounted] = useState(false)
     useEffect(() => setMounted(true), [])
@@ -104,16 +108,16 @@ export function CommandPalette() {
                     <Command.Empty className="p-6 text-sm text-[#666] text-center">No results found for &quot;{search}&quot;</Command.Empty>
 
                     <Command.Group heading="Pages" className="px-2 py-2 text-xs font-semibold text-[#888] mb-2 [&_[cmdk-item]]:mt-1 [&_[cmdk-group-heading]]:mb-2 [&_[cmdk-group-heading]]:px-2">
-                        <Command.Item onSelect={() => runCommand(() => router.push('/admin/dashboard'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
+                        <Command.Item onSelect={() => runCommand(() => navigate('/admin/dashboard'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
                             Dashboard Overview
                         </Command.Item>
-                        <Command.Item onSelect={() => runCommand(() => router.push('/admin/products'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
+                        <Command.Item onSelect={() => runCommand(() => navigate('/admin/products'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
                             Manage Products
                         </Command.Item>
-                        <Command.Item onSelect={() => runCommand(() => router.push('/admin/orders'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
+                        <Command.Item onSelect={() => runCommand(() => navigate('/admin/orders'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
                             View Orders
                         </Command.Item>
-                        <Command.Item onSelect={() => runCommand(() => router.push('/admin/builder'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
+                        <Command.Item onSelect={() => runCommand(() => navigate('/admin/builder'))} className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer outline-none transition-colors">
                             Visual Layout Builder
                         </Command.Item>
                     </Command.Group>
@@ -123,7 +127,7 @@ export function CommandPalette() {
                             {products.map(p => (
                                 <Command.Item
                                     key={p.id}
-                                    onSelect={() => runCommand(() => router.push(`/admin/products?edit=${p.id}`))}
+                                    onSelect={() => runCommand(() => navigate(`/admin/products?edit=${p.id}`))}
                                     className="px-3 py-2 text-sm text-white hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer flex justify-between items-center outline-none transition-colors"
                                 >
                                     <span>{p.name}</span>
@@ -138,7 +142,7 @@ export function CommandPalette() {
                             {orders.map(o => (
                                 <Command.Item
                                     key={o.id}
-                                    onSelect={() => runCommand(() => router.push(`/admin/orders?id=${o.id}`))}
+                                    onSelect={() => runCommand(() => navigate(`/admin/orders?id=${o.id}`))}
                                     className="px-3 py-2 text-sm text-[#ddd] hover:bg-[#262626] aria-selected:bg-[#262626] rounded cursor-pointer flex justify-between items-center outline-none transition-colors"
                                 >
                                     <span>Order {o.id.split('-')[0]} • <span className="text-white">{o.user_name}</span></span>

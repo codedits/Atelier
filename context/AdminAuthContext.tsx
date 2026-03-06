@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react'
 import Cookies from 'js-cookie'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 
 interface AdminAuthContextType {
   isAuthenticated: boolean

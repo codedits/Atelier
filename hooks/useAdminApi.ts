@@ -12,7 +12,7 @@ export function useAdminApi() {
     const res = await fetch(`/api/admin${endpoint}`, { headers })
     if (!res.ok) {
       let body: any = null
-      try { body = await res.json() } catch {}
+      try { body = await res.json() } catch { }
       const msg = body?.error || body?.message || res.statusText || 'API request failed'
       throw new Error(`${res.status} ${msg}`)
     }
@@ -27,7 +27,7 @@ export function useAdminApi() {
     })
     if (!res.ok) {
       let body: any = null
-      try { body = await res.json() } catch {}
+      try { body = await res.json() } catch { }
       const msg = body?.error || body?.message || res.statusText || 'API request failed'
       throw new Error(`${res.status} ${msg}`)
     }
@@ -42,7 +42,7 @@ export function useAdminApi() {
     })
     if (!res.ok) {
       let body: any = null
-      try { body = await res.json() } catch {}
+      try { body = await res.json() } catch { }
       const msg = body?.error || body?.message || res.statusText || 'API request failed'
       throw new Error(`${res.status} ${msg}`)
     }
@@ -56,7 +56,7 @@ export function useAdminApi() {
     })
     if (!res.ok) {
       let body: any = null
-      try { body = await res.json() } catch {}
+      try { body = await res.json() } catch { }
       const msg = body?.error || body?.message || res.statusText || 'API request failed'
       throw new Error(`${res.status} ${msg}`)
     }

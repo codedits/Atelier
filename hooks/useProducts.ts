@@ -16,7 +16,7 @@ interface UseProductsOptions {
  * forever, but within the TTL window, navigation between pages is instant.
  */
 const CLIENT_CACHE_TTL = 60_000 // 1 minute
-const clientCache = new Map<string, { data: any; ts: number }>()
+const clientCache = new Map<string, { data: unknown; ts: number }>()
 
 function getCached<T>(key: string): T | undefined {
   const entry = clientCache.get(key)

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 // ── Content-Security-Policy ──────────────────────────────────────────
-// Tuned for Next.js Pages Router (inline scripts for __NEXT_DATA__),
+// Tuned for Next.js App Router,
 // React inline styles, Supabase, image CDNs, and self-hosted fonts via
 // next/font/google.  In production you can tighten script-src once you
 // verify no inline scripts remain beyond Next.js hydration.

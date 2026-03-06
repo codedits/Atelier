@@ -17,7 +17,7 @@ export interface NavMenuItem {
 export interface SiteConfig {
     id: string
     theme_colors: ThemeColors
-    typography: any
+    typography: unknown
     features: any
     homepage_layout: string[]
     nav_menu: NavMenuItem[]

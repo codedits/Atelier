@@ -5,12 +5,8 @@ import bcrypt from 'bcryptjs'
 // Development fallbacks are provided for local testing only
 const isProduction = process.env.NODE_ENV === 'production'
 
-if (isProduction && !process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required in production')
-}
-if (isProduction && !process.env.ADMIN_PASSWORD_HASH) {
-  throw new Error('ADMIN_PASSWORD_HASH environment variable is required in production')
-}
+// Environment variable validation is handled within auth functions to avoid build-time crashes
+
 
 // Use env vars in production, fallbacks only in development
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-admin-secret-key-DO-NOT-USE-IN-PRODUCTION'

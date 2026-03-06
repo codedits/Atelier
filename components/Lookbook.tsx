@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/immutability */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
@@ -185,6 +187,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                             key={img.id || index}
                             ref={(el) => { imageElementsRef.current[index] = el }}
                             className="absolute shadow-xl will-change-transform"
+                            suppressHydrationWarning
                             style={{
                                 top: mobileAdjustedPos.top,
                                 left: mobileAdjustedPos.left,

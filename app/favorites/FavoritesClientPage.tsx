@@ -1,0 +1,81 @@
+'use client'
+
+import Link from 'next/link'
+import { Header, Footer, ProductCard } from '@/components'
+import { useFavorites } from '@/context/FavoritesContext'
+
+export default function FavoritesClientPage() {
+  const { favorites, loading } = useFavorites()
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Header />
+
+      <main className="pt-24 pb-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div
+            className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <h1 className="text-4xl md:text-5xl font-medium text-[#111827] mb-4">
+              My Favorites
+            </h1>
+            <p className="text-base text-[#6B7280] max-w-2xl mx-auto">
+              Your curated collection of pieces you love
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
+            </div>
+          ) : favorites.length === 0 ? (
+            <div
+              className="text-center py-20 animate-in fade-in slide-in-from-bottom-4 duration-500"
+            >
+              <div className="w-20 h-20 mx-auto mb-6 bg-pink-50 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-[#1A1A1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-medium text-[#111827] mb-4">No favorites yet</h2>
+              <p className="text-[#6B7280] mb-8 max-w-md mx-auto">
+                Start building your collection by clicking the heart icon on products you love.
+              </p>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-[#1A1A1A] text-white font-medium rounded hover:bg-[#333] transition-colors"
+              >
+                Browse Products
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8">
+              {favorites.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <ProductCard
+                    id={product.id}
+                    slug={product.slug}
+                    name={product.name}
+                    price={product.price}
+                    oldPrice={product.old_price}
+                    img={product.image_url}
+                    category={product.category}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}

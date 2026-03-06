@@ -4,12 +4,13 @@ import { useCallback, useRef } from 'react'
  * Custom hook for debouncing function calls
  * Delays the execution of a function until after the specified delay has elapsed since the last call
  */
-export function useDebounce<T extends (...args: any[]) => Promise<any>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useDebounce<T extends (...args: any[]) => Promise<unknown>>(
   callback: T,
   delay: number = 500
 ) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const lastCallRef = useRef<{ args: any[], timestamp: number } | null>(null)
+  const lastCallRef = useRef<{ args: unknown[], timestamp: number } | null>(null)
 
   const debounced = useCallback(
     (...args: Parameters<T>) => {
@@ -59,7 +60,7 @@ export function useDebounce<T extends (...args: any[]) => Promise<any>>(
  * Custom hook for throttling function calls
  * Limits the function to execute at most once per delay period
  */
-export function useThrottle<T extends (...args: any[]) => Promise<any>>(
+export function useThrottle<T extends (...args: unknown[]) => Promise<unknown>>(
   callback: T,
   delay: number = 500
 ) {

@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextRequest } from 'next/server'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { verifyAdminToken, AdminUser } from './admin-auth'
 import { supabase as supabaseAnon } from './supabase'
+
+export interface AdminUser {
+  id: string
+  username: string
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -37,9 +42,17 @@ export function getSupabaseClient(): SupabaseClient {
  * Extract and verify admin token from request headers.
  * Returns the admin payload if valid, null otherwise.
  */
-export function getAdminFromRequest(req: NextApiRequest) {
+export async function getAdminFromRequest(req: NextApiRequest): Promise<AdminUser | null> {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return null
+  const { verifyAdminToken } = await import('./admin-auth')
+  return verifyAdminToken(authHeader.substring(7))
+}
+
+export async function getAdminFromNextRequest(req: NextRequest): Promise<AdminUser | null> {
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) return null
+  const { verifyAdminToken } = await import('./admin-auth')
   return verifyAdminToken(authHeader.substring(7))
 }
 
@@ -93,7 +106,7 @@ export function withAdminAuth(
       })
     }
 
-    const admin = getAdminFromRequest(req)
+    const admin = await getAdminFromRequest(req)
     if (!admin) {
       return res.status(401).json({ error: 'Unauthorized' })
     }

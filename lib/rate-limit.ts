@@ -62,7 +62,7 @@ function makeInMemoryRedis() {
     async sadd(_key: string, ..._members: string[]) { return 0 },
     async multi() {
       const ops: (() => Promise<unknown>)[] = []
-      const chain: any = {
+      const chain: unknown = {
         hset: (key: string, values: Record<string, unknown>) => { ops.push(() => self.hset(key, values)); return chain },
         expire: (key: string, s: number) => { ops.push(() => self.expire(key, s)); return chain },
         exec: async () => { const r = []; for (const fn of ops) r.push(await fn()); return r },
@@ -123,9 +123,15 @@ export function rateLimit(options: RateLimitOptions) {
 
 // Helper to get client IP
 export function getClientIp(req: any): string {
+  if (req.headers && typeof req.headers.get === 'function') {
+    return req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      req.headers.get('x-real-ip') ||
+      'unknown'
+  }
   return (
-    req.headers['x-forwarded-for']?.split(',')[0].trim() ||
-    req.headers['x-real-ip'] ||
+    req.headers?.['x-forwarded-for']?.split(',')[0].trim() ||
+    req.headers?.['x-real-ip'] ||
+    req.socket?.remoteAddress ||
     req.connection?.remoteAddress ||
     'unknown'
   )

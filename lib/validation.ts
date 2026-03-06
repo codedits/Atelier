@@ -26,14 +26,14 @@ export function sanitizeHtml(html: string): string {
     .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
 }
 
-export function validatePositiveNumber(value: any): number | null {
+export function validatePositiveNumber(value: unknown): number | null {
   const num = Number(value)
   if (isNaN(num) || num <= 0) return null
   return num
 }
 
-export function validateInteger(value: any, min?: number, max?: number): number | null {
-  const num = parseInt(value, 10)
+export function validateInteger(value: unknown, min?: number, max?: number): number | null {
+  const num = parseInt(String(value), 10)
   if (isNaN(num)) return null
   if (min !== undefined && num < min) return null
   if (max !== undefined && num > max) return null

@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextRequest } from 'next/server'
 import { getSupabaseAdmin } from './admin-api-utils'
 import { verifyUserToken, type UserPayload } from './user-token'
 
@@ -35,6 +36,12 @@ export function getUserFromRequest(req: NextApiRequest): UserPayload | null {
   return verifyUserToken(token)
 }
 
+export function getUserFromNextRequest(req: NextRequest): UserPayload | null {
+  const token = req.cookies.get('atelier_user_token')?.value
+  if (!token) return null
+  return verifyUserToken(token)
+}
+
 /**
  * Set user token as HTTP-only cookie
  */
@@ -47,6 +54,11 @@ export function setUserTokenCookie(res: NextApiResponse, token: string): void {
   )
 }
 
+export function buildUserTokenSetCookieHeader(token: string): string {
+  const maxAge = 7 * 24 * 60 * 60
+  return `atelier_user_token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+}
+
 /**
  * Clear user token cookie (logout)
  */
@@ -55,6 +67,10 @@ export function clearUserTokenCookie(res: NextApiResponse): void {
     'Set-Cookie',
     `atelier_user_token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`
   )
+}
+
+export function buildUserTokenClearCookieHeader(): string {
+  return 'atelier_user_token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'
 }
 
 /**

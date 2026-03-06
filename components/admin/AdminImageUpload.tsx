@@ -155,11 +155,10 @@ export default function AdminImageUpload({
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        className={`relative border border-dashed rounded-lg transition-colors ${
-          dragOver
+        className={`relative border border-dashed rounded-lg transition-colors ${dragOver
             ? 'border-white/50 bg-white/5'
             : 'border-[#333] hover:border-[#555]'
-        }`}
+          }`}
       >
         <label className="flex items-center justify-center gap-2 cursor-pointer py-4 sm:py-3 px-4">
           <input
