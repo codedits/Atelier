@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
-import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
-import { revalidateForTag } from '@/lib/revalidation'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function GET(req: NextRequest) {
   const admin = await getAdminFromNextRequest(req)
@@ -51,9 +49,7 @@ export async function PUT(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  apiCache.invalidateByTag('site_config')
-  invalidateSSGCache('site_config')
-  revalidateForTag('site_config')
+  invalidateAll('site_config')
 
   return NextResponse.json({ message: 'Site config updated' }, { status: 200 })
 }

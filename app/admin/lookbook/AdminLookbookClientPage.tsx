@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { AdminLayout } from '@/components'
-import AdminImageUpload from '@/components/admin/AdminImageUpload'
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 import { ToastProvider, useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
@@ -21,26 +20,17 @@ interface LookbookImage {
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 
-// Removed getServerSideProps to convert this to a static page
-
-async function revalidateHomepage() {
-    try {
-        await fetch('/api/admin/revalidate?secret=' + process.env.NEXT_PUBLIC_REVALIDATION_TOKEN + '&path=/')
-    } catch (e) {
-        console.error('Revalidation failed', e)
-    }
-}
-
 function LookbookContent() {
     const { token } = useAdminAuth()
     const toast = useToast()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // â”€â”€ Reactive state instead of window.location.reload() â”€â”€
+    // ── Reactive state instead of window.location.reload() ──
     const [images, setImages] = useState<LookbookImage[]>([])
     const [isLoadingData, setIsLoadingData] = useState(true)
     const [uploading, setUploading] = useState(false)
     const [uploadProgress, setUploadProgress] = useState('')
+    const [pendingFiles, setPendingFiles] = useState<File[]>([])
     const [editingImage, setEditingImage] = useState<LookbookImage | null>(null)
     const [shuffling, setShuffling] = useState(false)
     const [savingDetails, setSavingDetails] = useState(false)
@@ -48,6 +38,31 @@ function LookbookContent() {
     const [sectionTitle, setSectionTitle] = useState('')
     const [sectionSubtitle, setSectionSubtitle] = useState('')
     const [savingSection, setSavingSection] = useState(false)
+
+    // â"€â"€ Batch selection â"€â"€
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+    const [batchDeleting, setBatchDeleting] = useState(false)
+    const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
+
+    const selectionMode = selectedIds.size > 0
+    const allSelected = images.length > 0 && selectedIds.size === images.length
+
+    const toggleSelect = useCallback((id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }, [])
+
+    const toggleSelectAll = useCallback(() => {
+        if (allSelected) {
+            setSelectedIds(new Set())
+        } else {
+            setSelectedIds(new Set(images.map(i => i.id)))
+        }
+    }, [allSelected, images])
 
     // Fetch initial data client-side for SSG benefits
     useEffect(() => {
@@ -76,7 +91,7 @@ function LookbookContent() {
         fetchLookbookData()
     }, [token])
 
-    // â”€â”€ Confirm-delete modal state â”€â”€
+    // ── Confirm-delete modal state ──
     const [deletingImage, setDeletingImage] = useState<LookbookImage | null>(null)
     const [deleting, setDeleting] = useState(false)
 
@@ -85,7 +100,8 @@ function LookbookContent() {
         ...(token ? { Authorization: `Bearer ${token}` } : {})
     }), [token])
 
-    // â”€â”€ Save section title / subtitle â”€â”€
+
+    // ── Save section title / subtitle ──
     const saveSectionSettings = async () => {
         if (!sectionTitle.trim()) {
             toast.error('Title cannot be empty')
@@ -101,7 +117,6 @@ function LookbookContent() {
             })
             if (!res.ok) throw new Error('Failed to save settings')
             toast.success('Lookbook settings saved')
-            await revalidateHomepage()
         } catch (err) {
             console.error('Failed to save settings:', err)
             toast.error('Failed to save settings')
@@ -110,23 +125,35 @@ function LookbookContent() {
         }
     }
 
-    // â”€â”€ Upload images â”€â”€
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // ── Pick files (no auto upload) ──
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || [])
-        if (uploading) return
         if (!files.length) return
 
-        // Validate file types and sizes
         const invalid = files.filter(f => !ALLOWED_TYPES.includes(f.type))
         if (invalid.length) {
             toast.error(`Invalid file type: ${invalid.map(f => f.name).join(', ')}. Use JPEG, PNG, WebP or AVIF.`)
+            if (fileInputRef.current) fileInputRef.current.value = ''
             return
         }
+
         const oversized = files.filter(f => f.size > MAX_FILE_SIZE)
         if (oversized.length) {
             toast.error(`Files too large (>10 MB): ${oversized.map(f => f.name).join(', ')}`)
+            if (fileInputRef.current) fileInputRef.current.value = ''
             return
         }
+
+        setPendingFiles(files)
+        toast.success(`${files.length} image(s) selected. Click Save & Upload to continue.`)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+
+    // ── Upload selected images ──
+    const handleUpload = async () => {
+        const files = pendingFiles
+        if (uploading) return
+        if (!files.length) return
 
         setUploading(true)
         setUploadProgress(`Uploading 0/${files.length}...`)
@@ -184,19 +211,19 @@ function LookbookContent() {
             }
 
             toast.success(`${uploadedUrls.length} image(s) uploaded`)
-            await revalidateHomepage()
         } catch (error) {
             console.error('Upload error:', error)
             toast.error('Error uploading images')
         } finally {
             setUploading(false)
             setUploadProgress('')
+            setPendingFiles([])
             // Reset file input
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
 
-    // â”€â”€ Shuffle order â”€â”€
+    // ── Shuffle order ──
     const handleShuffle = async () => {
         if (shuffling) return
         setShuffling(true)
@@ -217,7 +244,6 @@ function LookbookContent() {
             const sorted = [...updates].sort((a, b) => a.display_order - b.display_order)
             setImages(sorted)
             toast.success('Order shuffled')
-            await revalidateHomepage()
         } catch (e) {
             console.error(e)
             toast.error('Failed to shuffle order')
@@ -226,7 +252,7 @@ function LookbookContent() {
         }
     }
 
-    // â”€â”€ Toggle active/inactive â”€â”€
+    // ── Toggle active/inactive ──
     const handleToggleActive = async (img: LookbookImage) => {
         const newStatus = !img.is_active
         // Optimistic update
@@ -239,7 +265,6 @@ function LookbookContent() {
             })
             if (!res.ok) throw new Error('Toggle failed')
             toast.success(newStatus ? 'Image activated' : 'Image hidden')
-            await revalidateHomepage()
         } catch (e) {
             console.error(e)
             // Revert optimistic update
@@ -248,7 +273,7 @@ function LookbookContent() {
         }
     }
 
-    // â”€â”€ Delete image â”€â”€
+    // ── Delete image ──
     const handleDelete = async () => {
         if (!deletingImage) return
         if (deleting) return
@@ -261,7 +286,6 @@ function LookbookContent() {
             if (!res.ok) throw new Error('Delete failed')
             setImages(prev => prev.filter(i => i.id !== deletingImage.id))
             toast.success('Image deleted')
-            await revalidateHomepage()
         } catch (e) {
             console.error(e)
             toast.error('Failed to delete image')
@@ -270,8 +294,54 @@ function LookbookContent() {
             setDeleting(false)
         }
     }
+    // â"€â"€ Batch delete â"€â"€
+    const handleBatchDelete = async () => {
+        if (batchDeleting || selectedIds.size === 0) return
+        setBatchDeleting(true)
+        try {
+            const idsParam = Array.from(selectedIds).join(',')
+            const res = await fetch(`/api/admin/lookbook-images?ids=${encodeURIComponent(idsParam)}`, {
+                method: 'DELETE',
+                headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+            })
+            if (!res.ok) throw new Error('Batch delete failed')
+            setImages(prev => prev.filter(i => !selectedIds.has(i.id)))
+            toast.success(`${selectedIds.size} image(s) deleted`)
+            setSelectedIds(new Set())
+        } catch (e) {
+            console.error(e)
+            toast.error('Failed to delete selected images')
+        } finally {
+            setBatchDeleting(false)
+            setShowBatchDeleteConfirm(false)
+        }
+    }
 
-    // â”€â”€ Save detail edits â”€â”€
+    // â"€â"€ Batch toggle visibility â"€â"€
+    const handleBatchToggle = async (active: boolean) => {
+        const ids = Array.from(selectedIds)
+        // Optimistic
+        setImages(prev => prev.map(i => selectedIds.has(i.id) ? { ...i, is_active: active } : i))
+        try {
+            for (const id of ids) {
+                const res = await fetch('/api/admin/lookbook-images', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id, updates: { is_active: active } })
+                })
+                if (!res.ok) throw new Error('Toggle failed')
+            }
+            toast.success(`${ids.length} image(s) ${active ? 'activated' : 'hidden'}`)
+            setSelectedIds(new Set())
+        } catch (e) {
+            console.error(e)
+            toast.error('Failed to update images')
+            // Refetch on error
+            const { data } = await supabase.from('lookbook_images').select('*').order('display_order', { ascending: true })
+            if (data) setImages(data)
+        }
+    }
+    // ── Save detail edits ──
     const handleSaveDetails = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (savingDetails) return
@@ -293,7 +363,6 @@ function LookbookContent() {
             setImages(prev => prev.map(i => i.id === editingImage.id ? { ...i, ...updates } : i))
             setEditingImage(null)
             toast.success('Image details saved')
-            await revalidateHomepage()
         } catch (err) {
             console.error(err)
             toast.error('Failed to save details')
@@ -316,139 +385,239 @@ function LookbookContent() {
 
     return (
         <AdminLayout title="Manage Lookbook" subtitle="Upload and reorder gallery images">
-<div className="space-y-6">
-                {/* Section Settings */}
-                <div className="bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
-                    <h2 className="text-lg sm:text-xl font-medium text-white mb-4">Lookbook Settings</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-[#888] mb-1">Section Title</label>
-                            <input
-                                type="text"
-                                value={sectionTitle}
-                                onChange={(e) => setSectionTitle(e.target.value)}
-                                className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-white"
-                                placeholder="e.g. THE LOOK"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-[#888] mb-1">Section Subtitle</label>
-                            <input
-                                type="text"
-                                value={sectionSubtitle}
-                                onChange={(e) => setSectionSubtitle(e.target.value)}
-                                className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-white"
-                                placeholder="e.g. Discover"
-                            />
-                        </div>
+            <div className="space-y-6">
+                {/* Section Settings Card */}
+                <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+                    <div className="px-5 sm:px-6 py-4 border-b border-[#1a1a1a]">
+                        <h2 className="text-white text-base font-semibold">Lookbook Settings</h2>
+                        <p className="text-[#666] text-xs mt-0.5">Configure section title and subtitle displayed on the homepage</p>
                     </div>
-                    <div className="mt-4 flex justify-end">
-                        <button
-                            onClick={saveSectionSettings}
-                            disabled={savingSection}
-                            className="bg-white text-black px-6 py-2.5 text-sm font-medium rounded-xl hover:bg-white/90 disabled:opacity-50 transition-colors"
-                        >
-                            {savingSection ? 'Saving...' : 'Save Settings'}
-                        </button>
+                    <div className="p-5 sm:p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Section Title</label>
+                                <input
+                                    type="text"
+                                    value={sectionTitle}
+                                    onChange={(e) => setSectionTitle(e.target.value)}
+                                    className="admin-input w-full"
+                                    placeholder="e.g. THE LOOK"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Section Subtitle</label>
+                                <input
+                                    type="text"
+                                    value={sectionSubtitle}
+                                    onChange={(e) => setSectionSubtitle(e.target.value)}
+                                    className="admin-input w-full"
+                                    placeholder="e.g. Discover"
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-5 flex justify-end">
+                            <button
+                                onClick={saveSectionSettings}
+                                disabled={savingSection}
+                                className="admin-btn admin-btn-primary disabled:opacity-50"
+                            >
+                                {savingSection ? 'Saving...' : 'Save Settings'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Gallery Header */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
-                    <div>
-                        <h2 className="text-lg sm:text-xl font-medium text-white">Lookbook Gallery</h2>
-                        <p className="text-sm text-[#888] mt-1">
-                            {images.length} image{images.length !== 1 ? 's' : ''} total &middot; {activeCount} active
-                        </p>
+                <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
+                    <div className="px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                        <div>
+                            <h2 className="text-white text-base font-semibold">Lookbook Gallery</h2>
+                            <p className="text-[#666] text-xs mt-0.5">
+                                {images.length} image{images.length !== 1 ? 's' : ''} total &middot; {activeCount} active
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={handleShuffle}
+                                disabled={shuffling || images.length < 2}
+                                className="admin-btn admin-btn-secondary text-[13px] disabled:opacity-50"
+                            >
+                                {shuffling ? 'Shuffling...' : 'Shuffle Order'}
+                            </button>
+                            <button
+                                disabled={uploading}
+                                onClick={() => fileInputRef.current?.click()}
+                                className="admin-btn admin-btn-primary text-[13px] disabled:opacity-50"
+                            >
+                                {pendingFiles.length > 0 ? `Selected (${pendingFiles.length})` : 'Select Images'}
+                            </button>
+                            {pendingFiles.length > 0 && (
+                                <button
+                                    disabled={uploading}
+                                    onClick={handleUpload}
+                                    className="admin-btn admin-btn-secondary text-[13px] disabled:opacity-50"
+                                >
+                                    {uploading ? uploadProgress : 'Save & Upload'}
+                                </button>
+                            )}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                className="hidden"
+                                multiple
+                                accept="image/jpeg,image/png,image/webp,image/avif"
+                            />
+                        </div>
                     </div>
-                    <div className="flex gap-2 sm:gap-3">
-                        <button
-                            onClick={handleShuffle}
-                            disabled={shuffling || images.length < 2}
-                            className="bg-[#222] text-white px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-xl hover:bg-[#333] border border-[#333] transition-colors whitespace-nowrap disabled:opacity-50"
-                        >
-                            {shuffling ? 'Shuffling...' : 'Shuffle'}
-                        </button>
-                        <button
-                            disabled={uploading}
-                            onClick={() => fileInputRef.current?.click()}
-                            className="bg-white text-black px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-xl hover:bg-white/90 disabled:opacity-50 transition-colors whitespace-nowrap"
-                        >
-                            {uploading ? uploadProgress : 'Upload'}
-                        </button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleUpload}
-                            className="hidden"
-                            multiple
-                            accept="image/jpeg,image/png,image/webp,image/avif"
-                        />
-                    </div>
+
+                    {/* Selection toolbar — shown when images exist */}
+                    {images.length > 0 && (
+                        <div className="px-5 sm:px-6 py-3 border-t border-[#1a1a1a] flex flex-wrap items-center gap-3">
+                            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={allSelected}
+                                    onChange={toggleSelectAll}
+                                    className="w-4 h-4 rounded border-[#444] bg-[#0a0a0a] accent-white cursor-pointer"
+                                />
+                                <span className="text-[13px] text-[#a1a1a1] font-medium">
+                                    {allSelected ? 'Deselect All' : 'Select All'}
+                                </span>
+                            </label>
+
+                            {selectionMode && (
+                                <>
+                                    <span className="text-[12px] text-[#666]">|</span>
+                                    <span className="text-[13px] text-white font-medium">
+                                        {selectedIds.size} selected
+                                    </span>
+                                    <span className="text-[12px] text-[#666]">|</span>
+                                    <button
+                                        onClick={() => handleBatchToggle(true)}
+                                        className="text-[13px] text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                                    >
+                                        Show All
+                                    </button>
+                                    <button
+                                        onClick={() => handleBatchToggle(false)}
+                                        className="text-[13px] text-orange-400 hover:text-orange-300 font-medium transition-colors"
+                                    >
+                                        Hide All
+                                    </button>
+                                    <button
+                                        onClick={() => setShowBatchDeleteConfirm(true)}
+                                        className="text-[13px] text-red-400 hover:text-red-300 font-medium transition-colors"
+                                    >
+                                        Delete Selected
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedIds(new Set())}
+                                        className="text-[13px] text-[#666] hover:text-white font-medium transition-colors ml-auto"
+                                    >
+                                        Clear
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Image Grid */}
-                <div className="bg-[#111] p-4 sm:p-6 rounded-2xl border border-[#222]">
+                <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 sm:p-6">
                     {images.length === 0 ? (
-                        <div className="py-12 text-center text-[#888] text-sm font-medium">
-                            No lookbook images yet. Upload one above.
+                        <div className="py-16 text-center">
+                            <div className="text-[#444] mb-3">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <path d="m21 15-5-5L5 21" />
+                                </svg>
+                            </div>
+                            <p className="text-[#666] text-sm font-medium">No lookbook images yet</p>
+                            <p className="text-[#444] text-xs mt-1">Upload images above to build your lookbook gallery</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
-                            {images.map((img) => (
-                                <div key={img.id} className="relative group rounded-xl overflow-hidden aspect-[3/4] bg-[#1a1a1a] border border-[#222]">
-                                    <Image
-                                        src={img.image_url}
-                                        alt={img.title || 'Lookbook reference'}
-                                        fill
-                                        className={`object-cover transition-opacity ${!img.is_active && 'opacity-30'}`}
-                                        sizes="(max-width: 768px) 50vw, 25vw"
-                                    />
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                            {images.map((img) => {
+                                const isSelected = selectedIds.has(img.id)
+                                return (
+                                    <div
+                                        key={img.id}
+                                        className={`relative group rounded-xl overflow-hidden aspect-[3/4] bg-[#1a1a1a] border-2 transition-all cursor-pointer
+                                            ${isSelected ? 'border-white ring-2 ring-white/20 scale-[0.97]' : 'border-[#1a1a1a] hover:border-[#333]'}`}
+                                        onClick={() => toggleSelect(img.id)}
+                                    >
+                                        <Image
+                                            src={img.image_url}
+                                            alt={img.title || 'Lookbook'}
+                                            fill
+                                            className={`object-cover transition-all ${!img.is_active ? 'opacity-30 grayscale' : ''} ${isSelected ? 'brightness-75' : ''}`}
+                                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                                        />
 
-                                    {/* Order badge */}
-                                    <div className="absolute top-2 right-2">
-                                        <span className="bg-black/60 backdrop-blur-sm text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
-                                            #{img.display_order}
-                                        </span>
-                                    </div>
+                                        {/* Checkbox */}
+                                        <div className={`absolute top-2.5 left-2.5 z-10 transition-opacity ${isSelected || selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors
+                                                ${isSelected ? 'bg-white border-white' : 'bg-black/40 border-white/60 backdrop-blur-sm'}`}
+                                            >
+                                                {isSelected && (
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                        <polyline points="20 6 9 17 4 12" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        </div>
 
-                                    {/* Actions -- always visible on mobile, hover on desktop */}
-                                    <div className="absolute inset-x-0 bottom-0 sm:inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent sm:bg-black/60 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-row sm:flex-col items-end sm:items-center justify-center gap-1.5 sm:gap-3 p-2 sm:p-0">
-                                        <button
-                                            onClick={() => setEditingImage(img)}
-                                            className="bg-white text-black px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-white/90"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleToggleActive(img)}
-                                            className="bg-[#222] text-white px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-[#333] border border-[#444]"
-                                        >
-                                            {img.is_active ? 'Hide' : 'Show'}
-                                        </button>
-                                        <button
-                                            onClick={() => setDeletingImage(img)}
-                                            className="bg-red-500/20 text-red-400 px-3 sm:px-4 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-red-500/30 border border-red-500/30"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-
-                                    {/* Status Badges */}
-                                    <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                        {!img.is_active && (
-                                            <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] font-semibold rounded-md w-fit">
-                                                Hidden
+                                        {/* Order badge */}
+                                        <div className="absolute top-2.5 right-2.5">
+                                            <span className="bg-black/50 backdrop-blur-sm text-white text-[10px] font-mono px-1.5 py-0.5 rounded">
+                                                #{img.display_order}
                                             </span>
-                                        )}
-                                        {img.title && (
-                                            <span className="bg-black/50 backdrop-blur-sm text-white border border-white/10 px-2 py-0.5 text-[10px] font-semibold rounded-md max-w-[100px] truncate" title={img.title}>
-                                                {img.title}
-                                            </span>
+                                        </div>
+
+                                        {/* Actions — stop propagation so clicks don't toggle selection */}
+                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2.5 flex gap-1.5 justify-center"
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <button
+                                                onClick={() => setEditingImage(img)}
+                                                className="bg-white text-black px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-white/90 transition-colors"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleToggleActive(img)}
+                                                className="bg-[#222] text-white px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-[#333] border border-[#444] transition-colors"
+                                            >
+                                                {img.is_active ? 'Hide' : 'Show'}
+                                            </button>
+                                            <button
+                                                onClick={() => setDeletingImage(img)}
+                                                className="bg-red-500/20 text-red-400 px-3 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg hover:bg-red-500/30 border border-red-500/30 transition-colors"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+
+                                        {/* Status Badges */}
+                                        {(!img.is_active || img.title) && (
+                                            <div className="absolute bottom-10 sm:bottom-2 left-2 flex flex-col gap-1 pointer-events-none sm:group-hover:opacity-0 transition-opacity">
+                                                {!img.is_active && (
+                                                    <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 text-[10px] font-semibold rounded-md w-fit">
+                                                        Hidden
+                                                    </span>
+                                                )}
+                                                {img.title && (
+                                                    <span className="bg-black/50 backdrop-blur-sm text-white border border-white/10 px-2 py-0.5 text-[10px] font-semibold rounded-md max-w-[100px] truncate" title={img.title}>
+                                                        {img.title}
+                                                    </span>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </div>
@@ -456,25 +625,30 @@ function LookbookContent() {
 
             {/* Edit Modal */}
             {editingImage && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setEditingImage(null)}>
-                    <div className="bg-[#111] border border-[#222] rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-xl font-medium text-white mb-4">Edit Image Details</h3>
-                        <form onSubmit={handleSaveDetails} className="space-y-4">
+                <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setEditingImage(null)}>
+                    <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
+                            <h3 className="text-white text-base font-semibold">Edit Image Details</h3>
+                            <button onClick={() => setEditingImage(null)} className="w-9 h-9 flex items-center justify-center text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                            </button>
+                        </div>
+                        <form onSubmit={handleSaveDetails} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-[#888] mb-1">Title</label>
-                                <input type="text" name="title" defaultValue={editingImage.title || ''} className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-white" />
+                                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Title</label>
+                                <input type="text" name="title" defaultValue={editingImage.title || ''} className="admin-input w-full" placeholder="Image title" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#888] mb-1">Subtitle</label>
-                                <input type="text" name="subtitle" defaultValue={editingImage.subtitle || ''} className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-white" />
+                                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Subtitle</label>
+                                <input type="text" name="subtitle" defaultValue={editingImage.subtitle || ''} className="admin-input w-full" placeholder="Image subtitle" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-[#888] mb-1">Link URL</label>
-                                <input type="text" name="link" defaultValue={editingImage.link || ''} className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-white" placeholder="/products/some-slug" />
+                                <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Link URL</label>
+                                <input type="text" name="link" defaultValue={editingImage.link || ''} className="admin-input w-full" placeholder="/products/some-slug" />
                             </div>
-                            <div className="flex gap-3 justify-end mt-6">
-                                <button type="button" onClick={() => setEditingImage(null)} className="px-4 py-2 text-sm font-medium text-[#888] hover:text-white transition-colors">Cancel</button>
-                                <button type="submit" disabled={savingDetails} className="bg-white text-black px-4 py-2 text-sm font-medium rounded-xl hover:bg-white/90 disabled:opacity-50 transition-colors">
+                            <div className="flex gap-3 justify-end pt-2">
+                                <button type="button" onClick={() => setEditingImage(null)} className="admin-btn admin-btn-secondary">Cancel</button>
+                                <button type="submit" disabled={savingDetails} className="admin-btn admin-btn-primary disabled:opacity-50">
                                     {savingDetails ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
@@ -483,29 +657,68 @@ function LookbookContent() {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
+            {/* Single Delete Confirmation Modal */}
             {deletingImage && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => !deleting && setDeletingImage(null)}>
-                    <div className="bg-[#111] border border-[#222] rounded-2xl w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-medium text-white mb-2">Delete Image</h3>
-                        <p className="text-sm text-[#888] mb-6">
-                            Are you sure you want to permanently delete this lookbook image{deletingImage.title ? ` "${deletingImage.title}"` : ''}? This cannot be undone.
-                        </p>
-                        <div className="flex gap-3 justify-end">
+                <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => !deleting && setDeletingImage(null)}>
+                    <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 text-center">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                            </div>
+                            <h3 className="text-white text-base font-semibold mb-2">Delete Image</h3>
+                            <p className="text-[#888] text-sm">
+                                Are you sure you want to permanently delete this lookbook image{deletingImage.title ? ` "${deletingImage.title}"` : ''}? This cannot be undone.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3 justify-end">
                             <button
                                 type="button"
                                 onClick={() => setDeletingImage(null)}
                                 disabled={deleting}
-                                className="px-4 py-2 text-sm font-medium text-[#888] hover:text-white transition-colors disabled:opacity-50"
+                                className="admin-btn admin-btn-secondary disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleDelete}
                                 disabled={deleting}
-                                className="bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors"
+                                className="admin-btn admin-btn-danger disabled:opacity-50"
                             >
                                 {deleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Batch Delete Confirmation Modal */}
+            {showBatchDeleteConfirm && (
+                <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => !batchDeleting && setShowBatchDeleteConfirm(false)}>
+                    <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 text-center">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                            </div>
+                            <h3 className="text-white text-base font-semibold mb-2">Delete {selectedIds.size} Images</h3>
+                            <p className="text-[#888] text-sm">
+                                This will permanently delete {selectedIds.size} selected image{selectedIds.size !== 1 ? 's' : ''} and remove them from storage. This cannot be undone.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowBatchDeleteConfirm(false)}
+                                disabled={batchDeleting}
+                                className="admin-btn admin-btn-secondary disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBatchDelete}
+                                disabled={batchDeleting}
+                                className="admin-btn admin-btn-danger disabled:opacity-50"
+                            >
+                                {batchDeleting ? 'Deleting...' : `Delete ${selectedIds.size} Images`}
                             </button>
                         </div>
                     </div>

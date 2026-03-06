@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
-import { revalidatePath } from 'next/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function GET() {
   try {
@@ -55,9 +55,7 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error
 
-    const { invalidateSSGCache } = await import('@/lib/cache')
-    invalidateSSGCache('homepage_sections')
-    revalidatePath('/')
+    invalidateAll('homepage_sections')
 
     return NextResponse.json(data, { status: 200 })
   } catch (err: any) {

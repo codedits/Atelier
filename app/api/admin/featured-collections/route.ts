@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { revalidatePath } from 'next/cache'
 
 const COLLECTIONS_TTL = 60_000
 
@@ -23,8 +22,7 @@ async function deleteStorageFile(adminClient: SupabaseClient, imageUrl: string, 
 
 // Invalidate cache when data changes
 function invalidateCache() {
-  apiCache.invalidateByTag('featured_collections')
-  invalidateSSGCache('featured_collections')
+  invalidateAll('featured_collections')
 }
 
 export async function GET() {
@@ -86,7 +84,6 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   invalidateCache()
-  revalidatePath('/')
   return NextResponse.json(data, { status: 201 })
 }
 
@@ -122,7 +119,6 @@ export async function PUT(req: NextRequest) {
   }
 
   invalidateCache()
-  revalidatePath('/')
   return NextResponse.json(data, { status: 200 })
 }
 
@@ -154,6 +150,5 @@ export async function DELETE(req: NextRequest) {
   }
 
   invalidateCache()
-  revalidatePath('/')
   return NextResponse.json({ message: 'Collection deleted' }, { status: 200 })
 }

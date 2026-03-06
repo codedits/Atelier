@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-﻿/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
@@ -152,7 +152,7 @@ function CategoriesContent() {
           When adding or editing a product, you&apos;ll assign it to one of these categories.
         </p>
         <p className="text-blue-400/70 text-xs mt-3 leading-relaxed">
-          ðŸ’¡ To display categories on the homepage, go to <a href="/admin/homepage" className="underline hover:text-blue-300">Homepage â†’ Collections</a> and add a collection card for each category you want to feature.
+          💡 To display categories on the homepage, go to <a href="/admin/homepage" className="underline hover:text-blue-300">Homepage → Collections</a> and add a collection card for each category you want to feature.
         </p>
       </div>
 

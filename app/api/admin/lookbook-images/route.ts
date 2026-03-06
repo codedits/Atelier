@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
+import { invalidateAll } from '@/lib/revalidation'
 
 // Whitelist of fields allowed in single-image updates
 const ALLOWED_UPDATE_FIELDS = ['title', 'subtitle', 'link', 'is_active', 'display_order'] as const
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
 
         const { data, error } = await adminClient.from('lookbook_images').insert(sanitized as any).select()
         if (error) throw error
+        invalidateAll('lookbook_images')
         return NextResponse.json({ success: true, data }, { status: 200 })
     } catch (err: any) {
         console.error('Lookbook images API error:', err)
@@ -84,6 +86,7 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Provide id with updates, or an updates array' }, { status: 400 })
         }
 
+        invalidateAll('lookbook_images')
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (err: any) {
         console.error('Lookbook images API error:', err)
@@ -101,36 +104,48 @@ export async function DELETE(req: NextRequest) {
     }
 
     try {
-        const id = new URL(req.url).searchParams.get('id')
-        if (!id) {
-            return NextResponse.json({ error: 'id query parameter required' }, { status: 400 })
+        const url = new URL(req.url)
+        const id = url.searchParams.get('id')
+        const idsParam = url.searchParams.get('ids')
+
+        // Support batch delete: ?ids=id1,id2,id3
+        const deleteIds: string[] = idsParam
+            ? idsParam.split(',').map(s => s.trim()).filter(Boolean)
+            : id ? [id] : []
+
+        if (deleteIds.length === 0) {
+            return NextResponse.json({ error: 'id or ids query parameter required' }, { status: 400 })
         }
 
-        const { data: imageRow } = await adminClient
+        // Fetch image URLs for storage cleanup
+        const { data: imageRows } = await adminClient
             .from('lookbook_images')
-            .select('image_url')
-            .eq('id', id)
-            .single()
+            .select('id, image_url')
+            .in('id', deleteIds)
 
-        const row = imageRow as { image_url?: string } | null
+        const rows = (imageRows || []) as { id: string; image_url?: string }[]
 
-        const { error } = await adminClient.from('lookbook_images').delete().eq('id', id)
+        const { error } = await adminClient.from('lookbook_images').delete().in('id', deleteIds)
         if (error) throw error
 
-        if (row?.image_url) {
-            try {
-                const url = new URL(row.image_url)
-                const match = url.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/)
-                if (match) {
-                    const [, bucket, filePath] = match
-                    await adminClient.storage.from(bucket).remove([filePath])
+        // Clean up storage files
+        for (const row of rows) {
+            if (row.image_url) {
+                try {
+                    const parsedUrl = new URL(row.image_url)
+                    const match = parsedUrl.pathname.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/)
+                    if (match) {
+                        const [, bucket, filePath] = match
+                        await adminClient.storage.from(bucket).remove([filePath])
+                    }
+                } catch (cleanupErr) {
+                    console.warn('Storage cleanup failed (non-fatal):', cleanupErr)
                 }
-            } catch (cleanupErr) {
-                console.warn('Storage cleanup failed (non-fatal):', cleanupErr)
             }
         }
 
-        return NextResponse.json({ success: true }, { status: 200 })
+        invalidateAll('lookbook_images')
+        return NextResponse.json({ success: true, deleted: deleteIds.length }, { status: 200 })
     } catch (err: any) {
         console.error('Lookbook images API error:', err)
         return NextResponse.json({ error: err.message || 'Failed to update lookbook images' }, { status: 500 })

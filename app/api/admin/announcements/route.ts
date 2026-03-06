@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function GET() {
   try {
@@ -36,8 +35,7 @@ export async function POST(req: NextRequest) {
       .single()
     if (error) throw error
 
-    invalidateSSGCache('announcements')
-    revalidatePath('/')
+    invalidateAll('announcements')
     return NextResponse.json(data, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -63,8 +61,7 @@ export async function PUT(req: NextRequest) {
       .single()
     if (error) throw error
 
-    invalidateSSGCache('announcements')
-    revalidatePath('/')
+    invalidateAll('announcements')
     return NextResponse.json(data, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -88,8 +85,7 @@ export async function DELETE(req: NextRequest) {
       .eq('id', id)
     if (error) throw error
 
-    invalidateSSGCache('announcements')
-    revalidatePath('/')
+    invalidateAll('announcements')
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })

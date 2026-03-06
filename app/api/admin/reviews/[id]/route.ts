@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFromNextRequest, getSupabaseAdmin } from '@/lib/admin-api-utils'
-import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 type IdContext = { params: Promise<{ id: string }> }
 
@@ -60,8 +59,7 @@ export async function PUT(req: NextRequest, context: IdContext) {
 
     if (error) throw error
 
-    apiCache.invalidateByTag('reviews')
-    invalidateSSGCache('reviews')
+    invalidateAll('reviews')
     return NextResponse.json(review, { status: 200 })
   } catch (error) {
     console.error('Error updating review:', error)
@@ -87,8 +85,7 @@ export async function DELETE(req: NextRequest, context: IdContext) {
 
     if (error) throw error
 
-    apiCache.invalidateByTag('reviews')
-    invalidateSSGCache('reviews')
+    invalidateAll('reviews')
     return NextResponse.json({ message: 'Review deleted successfully' }, { status: 200 })
   } catch (error) {
     console.error('Error deleting review:', error)

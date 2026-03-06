@@ -458,9 +458,9 @@ function ProductsContent() {
                         </td>
                         <td>
                           <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-                            <span className="text-white text-sm font-medium">â‚¨{product.price.toLocaleString()}</span>
+                            <span className="text-white text-sm font-medium">₨{product.price.toLocaleString()}</span>
                             {product.old_price && (
-                              <span className="text-[#555] line-through text-xs">â‚¨{product.old_price.toLocaleString()}</span>
+                              <span className="text-[#555] line-through text-xs">₨{product.old_price.toLocaleString()}</span>
                             )}
                           </div>
                         </td>
@@ -470,7 +470,7 @@ function ProductsContent() {
                               onClick={() => updateStock(product.id, -1)}
                               className="w-8 h-8 rounded-lg bg-[#111] hover:bg-[#1a1a1a] text-[#888] hover:text-white text-sm transition-all active:scale-90 border border-[#222]"
                             >
-                              âˆ’
+                              −
                             </button>
                             <span className={`w-8 text-center text-sm font-medium ${product.stock === 0 ? 'text-[#ff6166]' :
                               product.stock <= 5 ? 'text-[#f5a623]' : 'text-white'
@@ -896,7 +896,7 @@ export default function AdminProductsClientPage() {
   return (
     <AdminAuthProvider>
       <ToastProvider>
-<AdminLayout title="Products">
+        <AdminLayout title="Products">
           <ProductsContent />
         </AdminLayout>
       </ToastProvider>

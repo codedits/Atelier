@@ -134,12 +134,6 @@ function BuilderContent() {
         setSaving(true)
         try {
             await api.put('/site-config', { homepage_layout: layout, nav_menu: navMenu, theme_colors: themeColors, features })
-            // Bust the ISR cache so the frontend regenerates
-            try {
-                await api.post('/revalidate', { tag: 'site_config' })
-            } catch (e) {
-                console.warn('Revalidation failed, cache may be stale:', e)
-            }
             success('Configuration saved — frontend will update shortly')
         } catch {
             toastError('Failed to save configuration')

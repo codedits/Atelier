@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import Image from 'next/image'
 
@@ -27,11 +27,32 @@ export default function AdminImageUpload({
 }: AdminImageUploadProps) {
   const { token } = useAdminAuth()
   const [preview, setPreview] = useState(value || '')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const objectUrlRef = useRef<string | null>(null)
+
+  // Revoke any previous object URL to prevent memory leaks
+  const revokePreview = useCallback(() => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current)
+      objectUrlRef.current = null
+    }
+  }, [])
+
+  // Clean up object URL on unmount
+  useEffect(() => {
+    return () => { revokePreview() }
+  }, [revokePreview])
+
+  useEffect(() => {
+    if (!pendingFile) {
+      setPreview(value || '')
+    }
+  }, [value, pendingFile])
 
   const uploadFile = useCallback(async (file: File) => {
     // Validate
@@ -49,6 +70,7 @@ export default function AdminImageUpload({
     setProgress(0)
 
     // Show local preview immediately
+    revokePreview() // revoke any pending file preview
     const localPreview = URL.createObjectURL(file)
     setPreview(localPreview)
 
@@ -107,11 +129,24 @@ export default function AdminImageUpload({
       setUploading(false)
       URL.revokeObjectURL(localPreview)
     }
-  }, [token, folder, onChange, value])
+  }, [token, folder, onChange, value, revokePreview])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) uploadFile(file)
+    if (file) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setError('Unsupported format. Use JPEG, PNG, WebP, or AVIF.')
+      } else if (file.size > MAX_FILE_SIZE) {
+        setError(`File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max 8 MB.`)
+      } else {
+        setError('')
+        setPendingFile(file)
+        revokePreview()
+        const url = URL.createObjectURL(file)
+        objectUrlRef.current = url
+        setPreview(url)
+      }
+    }
     // Reset so same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -120,13 +155,36 @@ export default function AdminImageUpload({
     e.preventDefault()
     setDragOver(false)
     const file = e.dataTransfer.files?.[0]
-    if (file) uploadFile(file)
-  }, [uploadFile])
+    if (!file) return
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('Unsupported format. Use JPEG, PNG, WebP, or AVIF.')
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Max 8 MB.`)
+      return
+    }
+
+    setError('')
+    setPendingFile(file)
+    revokePreview()
+    const url = URL.createObjectURL(file)
+    objectUrlRef.current = url
+    setPreview(url)
+  }, [revokePreview])
+
+  const handleStartUpload = async () => {
+    if (!pendingFile || uploading) return
+    await uploadFile(pendingFile)
+    setPendingFile(null)
+  }
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value
     onChange(url)
     setPreview(url)
+    setPendingFile(null)
     setError('')
   }
 
@@ -189,6 +247,20 @@ export default function AdminImageUpload({
           </div>
         )}
       </div>
+
+      {pendingFile && (
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-[#333] bg-[#111] px-3 py-2">
+          <span className="text-[12px] text-[#aaa] truncate">Selected: {pendingFile.name}</span>
+          <button
+            type="button"
+            onClick={handleStartUpload}
+            disabled={uploading}
+            className="admin-btn admin-btn-primary text-[12px] px-3 py-1.5 disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : 'Save & Upload'}
+          </button>
+        </div>
+      )}
 
       {/* URL fallback */}
       <input

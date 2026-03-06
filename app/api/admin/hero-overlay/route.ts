@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
-import { invalidateSSGCache } from '@/lib/cache'
-import { revalidatePath } from 'next/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function GET() {
   try {
@@ -56,8 +55,7 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error
 
-    invalidateSSGCache('site_config')
-    revalidatePath('/')
+    invalidateAll(['site_config', 'hero_images'])
     return NextResponse.json(features.hero.overlay, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })

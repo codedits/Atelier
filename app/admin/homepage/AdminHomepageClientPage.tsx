@@ -112,6 +112,9 @@ function HomepageContent() {
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  // Delete confirmation modal
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; type: string; label: string } | null>(null)
+
   // Hero Images
   const [heroImages, setHeroImages] = useState<HeroImage[]>([])
   const [heroModal, setHeroModal] = useState(false)
@@ -212,7 +215,9 @@ function HomepageContent() {
     }
   }
 
-  // Busts the frontend ISR cache for the given tags
+  // Busts the frontend ISR cache for the given tags — only needed
+  // for operations that don't go through a server API route.
+  // Most admin mutations now invalidate server-side via invalidateAll().
   const revalidateFrontend = async (tags: string | string[]) => {
     try {
       await api.post('/revalidate', { tag: tags })
@@ -271,7 +276,6 @@ function HomepageContent() {
       }
       setHeroModal(false)
       loadData()
-      revalidateFrontend('hero_images')
     } catch (error) {
       toast.error('Failed to save hero image')
     } finally {
@@ -281,18 +285,8 @@ function HomepageContent() {
 
   const handleHeroDelete = async (id: string) => {
     if (deletingId) return
-    if (!confirm('Delete this hero image?')) return
-    setDeletingId(id)
-    try {
-      await api.del(`/hero-images?id=${id}`)
-      toast.success('Hero image deleted successfully')
-      loadData()
-      revalidateFrontend('hero_images')
-    } catch {
-      toast.error('Failed to delete hero image')
-    } finally {
-      setDeletingId(null)
-    }
+    const hero = heroImages.find(h => h.id === id)
+    setDeleteConfirm({ id, type: 'hero', label: hero?.title || 'this hero image' })
   }
 
   const handleOverlaySave = async () => {
@@ -356,7 +350,6 @@ function HomepageContent() {
       }
       setCollectionModal(false)
       loadData()
-      revalidateFrontend('featured_collections')
     } catch (error) {
       toast.error('Failed to save collection')
     } finally {
@@ -366,18 +359,8 @@ function HomepageContent() {
 
   const handleCollectionDelete = async (id: string) => {
     if (deletingId) return
-    if (!confirm('Delete this collection?')) return
-    setDeletingId(id)
-    try {
-      await api.del(`/featured-collections?id=${id}`)
-      toast.success('Collection deleted successfully')
-      loadData()
-      revalidateFrontend('featured_collections')
-    } catch {
-      toast.error('Failed to delete collection')
-    } finally {
-      setDeletingId(null)
-    }
+    const c = collections.find(c => c.id === id)
+    setDeleteConfirm({ id, type: 'collection', label: c?.title || 'this collection' })
   }
 
   // Testimonial Handlers
@@ -419,7 +402,6 @@ function HomepageContent() {
       }
       setTestimonialModal(false)
       loadData()
-      revalidateFrontend('testimonials')
     } catch (error) {
       toast.error('Failed to save testimonial')
     } finally {
@@ -429,18 +411,8 @@ function HomepageContent() {
 
   const handleTestimonialDelete = async (id: string) => {
     if (deletingId) return
-    if (!confirm('Delete this testimonial?')) return
-    setDeletingId(id)
-    try {
-      await api.del(`/testimonials?id=${id}`)
-      toast.success('Testimonial deleted successfully')
-      loadData()
-      revalidateFrontend('testimonials')
-    } catch {
-      toast.error('Failed to delete testimonial')
-    } finally {
-      setDeletingId(null)
-    }
+    const t = testimonials.find(t => t.id === id)
+    setDeleteConfirm({ id, type: 'testimonial', label: t?.customer_name || 'this testimonial' })
   }
 
   // Announcement Handlers
@@ -493,17 +465,7 @@ function HomepageContent() {
 
   const handleAnnouncementDelete = async (id: string) => {
     if (deletingId) return
-    if (!confirm('Delete this announcement?')) return
-    setDeletingId(id)
-    try {
-      await api.del(`/announcements?id=${id}`)
-      toast.success('Announcement deleted')
-      loadData()
-    } catch {
-      toast.error('Failed to delete announcement')
-    } finally {
-      setDeletingId(null)
-    }
+    setDeleteConfirm({ id, type: 'announcement', label: 'this announcement' })
   }
 
   // Homepage Section Helpers
@@ -520,6 +482,28 @@ function HomepageContent() {
       toast.error('Failed to save section')
     } finally {
       setSectionSaving(false)
+    }
+  }
+
+  const executeDelete = async () => {
+    if (!deleteConfirm || deletingId) return
+    const { id, type } = deleteConfirm
+    setDeletingId(id)
+    try {
+      const endpointMap: Record<string, string> = {
+        hero: '/hero-images',
+        collection: '/featured-collections',
+        testimonial: '/testimonials',
+        announcement: '/announcements',
+      }
+      await api.del(`${endpointMap[type]}?id=${id}`)
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted`)
+      setDeleteConfirm(null)
+      loadData()
+    } catch {
+      toast.error(`Failed to delete ${type}`)
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -1326,6 +1310,29 @@ function HomepageContent() {
               </button>
               <button type="submit" onClick={handleAnnouncementSubmit} className="admin-btn admin-btn-primary">
                 {editingAnnouncement ? 'Save Changes' : 'Add Announcement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 admin-modal-overlay z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => !deletingId && setDeleteConfirm(null)}>
+          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </div>
+              <h3 className="text-white text-base font-semibold mb-2">Delete {deleteConfirm.type}</h3>
+              <p className="text-[#888] text-sm">
+                Are you sure you want to delete &ldquo;{deleteConfirm.label}&rdquo;? This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-3 justify-end">
+              <button type="button" onClick={() => setDeleteConfirm(null)} disabled={!!deletingId} className="admin-btn admin-btn-secondary disabled:opacity-50">Cancel</button>
+              <button onClick={executeDelete} disabled={!!deletingId} className="admin-btn admin-btn-danger disabled:opacity-50">
+                {deletingId ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

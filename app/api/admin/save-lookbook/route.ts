@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFromNextRequest, getSupabaseAdmin } from '@/lib/admin-api-utils'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function POST(req: NextRequest) {
     const admin = await getAdminFromNextRequest(req)
@@ -34,6 +35,8 @@ export async function POST(req: NextRequest) {
             }, { onConflict: 'section_key' })
 
         if (error) throw error
+
+        invalidateAll(['homepage_sections', 'lookbook_images'])
 
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (err: any) {

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
-import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function GET(req: NextRequest) {
   const admin = await getAdminFromNextRequest(req)
@@ -43,9 +41,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: `Failed to update: ${errors.join(', ')}` }, { status: 500 })
   }
 
-  apiCache.invalidateByTag('store_settings')
-  invalidateSSGCache('site_config')
-  revalidatePath('/')
+  invalidateAll(['store_settings', 'site_config'])
 
   return NextResponse.json({ message: 'Settings updated' }, { status: 200 })
 }

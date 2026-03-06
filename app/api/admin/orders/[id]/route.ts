@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { sendDeliveryNotificationEmail, sendShippingNotificationEmail } from '@/lib/email'
-import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -120,8 +119,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
     }
   }
 
-  apiCache.invalidateByTag('orders')
-  invalidateSSGCache('orders')
+  invalidateAll('orders')
   return NextResponse.json(data, { status: 200 })
 }
 
@@ -166,10 +164,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
     }
 
-    apiCache.invalidateByTag('products')
-    apiCache.invalidateByTag('orders')
-    invalidateSSGCache('products')
-    invalidateSSGCache('orders')
+    invalidateAll(['products', 'orders'])
 
     return NextResponse.json({ message: 'Order removed successfully', order_id: orderId }, { status: 200 })
   } catch {

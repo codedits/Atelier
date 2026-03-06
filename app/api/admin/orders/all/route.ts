@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
-import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
-import { revalidatePath } from 'next/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin(req)
@@ -50,11 +48,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete orders' }, { status: 500 })
     }
 
-    apiCache.invalidateByTag('products')
-    apiCache.invalidateByTag('orders')
-    invalidateSSGCache('products')
-    invalidateSSGCache('orders')
-    revalidatePath('/')
+    invalidateAll(['products', 'orders'])
 
     return NextResponse.json({
       message: 'All orders deleted successfully',

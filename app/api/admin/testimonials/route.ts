@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 
 const TESTIMONIALS_TTL = 60_000
 
 function invalidateCache() {
-  apiCache.invalidateByTag('testimonials')
-  invalidateSSGCache('testimonials')
+  invalidateAll('testimonials')
 }
 
 export async function GET() {

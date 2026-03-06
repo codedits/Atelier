@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
-import { invalidateSSGCache } from '@/lib/cache'
+import { invalidateAll } from '@/lib/revalidation'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Helper function to delete file from Supabase Storage
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
     if (error) throw error
-    invalidateSSGCache('hero_images')
+    invalidateAll('hero_images')
     return NextResponse.json(data, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -77,7 +77,7 @@ export async function PUT(req: NextRequest) {
       await deleteStorageFile(adminClient, oldImageUrl, 'hero')
     }
 
-    invalidateSSGCache('hero_images')
+    invalidateAll('hero_images')
     return NextResponse.json(data, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -111,7 +111,7 @@ export async function DELETE(req: NextRequest) {
       await deleteStorageFile(adminClient, heroImage.image_url, 'hero')
     }
 
-    invalidateSSGCache('hero_images')
+    invalidateAll('hero_images')
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
