@@ -4,7 +4,7 @@ import { supabase, Product, ProductReview, ProductReviewStats } from '@/lib/supa
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
 import ProductDetailClientPage from './ProductDetailClientPage'
 
-export const revalidate = 3600
+export const revalidate = 21600
 export const dynamicParams = true
 
 interface ProductDetailPageData {

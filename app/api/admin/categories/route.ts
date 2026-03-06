@@ -3,7 +3,7 @@ import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
-import { revalidatePath } from 'next/cache'
+import { revalidateForTag } from '@/lib/revalidation'
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req)
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   apiCache.invalidateByTag('categories')
   invalidateSSGCache('categories')
-  revalidatePath('/')
+  revalidateForTag('categories')
 
   return NextResponse.json(data, { status: 201 })
 }

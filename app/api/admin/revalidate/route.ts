@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
+import { revalidateForTag } from '@/lib/revalidation'
 
 export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
@@ -24,9 +24,7 @@ export async function POST(req: NextRequest) {
     try {
         const apiCleared = apiCache.invalidateByTag(tag)
         invalidateSSGCache(tag)
-
-        revalidatePath('/')
-        revalidatePath('/products')
+        revalidateForTag(tag)
 
         return NextResponse.json({ revalidated: true, tag, cacheEntriesCleared: apiCleared }, { status: 200 })
     } catch (err: any) {

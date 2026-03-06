@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
+import { revalidateForTag } from '@/lib/revalidation'
 
 type IdContext = { params: Promise<{ id: string }> }
 
@@ -58,8 +58,7 @@ export async function PUT(req: NextRequest, context: IdContext) {
   }
   apiCache.invalidateByTag('products')
   invalidateSSGCache('products')
-  revalidatePath('/')
-  revalidatePath('/products')
+  revalidateForTag('products')
   return NextResponse.json(data, { status: 200 })
 }
 
@@ -83,7 +82,6 @@ export async function DELETE(req: NextRequest, context: IdContext) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   apiCache.invalidateByTag('products')
   invalidateSSGCache('products')
-  revalidatePath('/')
-  revalidatePath('/products')
+  revalidateForTag('products')
   return NextResponse.json({ message: 'Product deleted' }, { status: 200 })
 }

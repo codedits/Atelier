@@ -13,7 +13,7 @@ import {
 } from '@/lib/cache'
 import { SITE_URL, SITE_NAME, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL } from '@/lib/constants'
 
-export const revalidate = 3600
+export const revalidate = 21600
 
 interface Product {
   id: string

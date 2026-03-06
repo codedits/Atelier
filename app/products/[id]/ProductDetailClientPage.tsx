@@ -1,11 +1,12 @@
 /* eslint-disable react-hooks/purity */
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { Header, Footer, ProductCarousel } from '../../../components'
+import { ProductLightbox } from '@/components/ProductLightbox'
 import { useCart } from '@/context/CartContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { Product, ProductReview, ProductReviewStats } from '@/lib/supabase'
@@ -26,10 +27,17 @@ interface ProductDetailClientPageProps {
 export default function ProductDetailClientPage({ product, relatedProducts, reviews, reviewStats }: ProductDetailClientPageProps) {
   const { addItem, getItemQuantity } = useCart()
   const { addFavorite, removeFavorite, isFavorite } = useFavorites()
+  const galleryImages = useMemo(
+    () => (product.images && product.images.length > 0 ? product.images : [product.image_url]),
+    [product.images, product.image_url]
+  )
 
   const [quantity, setQuantity] = useState(1)
   const [addedToCart, setAddedToCart] = useState(false)
   const [stockError, setStockError] = useState(false)
+  const [isGalleryLoaded, setIsGalleryLoaded] = useState(false)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
 
   const isInFavorites = isFavorite(product.id)
   const currentInCart = getItemQuantity(product.id)
@@ -88,6 +96,83 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
     } else {
       addFavorite(productData)
     }
+  }
+
+  const closeLightbox = useCallback(() => setIsLightboxOpen(false), [])
+
+  const openLightbox = useCallback((index: number) => {
+    setLightboxIndex(index)
+    setIsLightboxOpen(true)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    const timeoutId = globalThis.setTimeout(() => {
+      if (active) setIsGalleryLoaded(true)
+    }, 1500)
+
+    const first = new window.Image()
+    first.onload = () => {
+      if (active) setIsGalleryLoaded(true)
+    }
+    first.onerror = () => {
+      if (active) setIsGalleryLoaded(true)
+    }
+    first.src = galleryImages[0]
+
+    // Warm remaining images in the background without blocking first render.
+    for (let i = 1; i < galleryImages.length; i += 1) {
+      const img = new window.Image()
+      img.src = galleryImages[i]
+    }
+
+    return () => {
+      active = false
+      globalThis.clearTimeout(timeoutId)
+    }
+  }, [galleryImages])
+
+  if (!isGalleryLoaded) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#FDFBF7] z-50 selection:bg-transparent">
+        <div className="flex flex-col items-center justify-center space-y-8">
+          <h1
+            className="text-2xl md:text-3xl font-thin tracking-[0.2em] text-[#1A1A1A] uppercase ml-[0.5em]"
+            style={{
+              fontFamily: '"Cormorant Garamond", "EB Garamond", Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", serif',
+              animation: 'gentlePulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }}
+          >
+            Atelier
+          </h1>
+
+          <div className="w-16 h-[1px] bg-black/10 overflow-hidden relative">
+            <div
+              className="absolute top-0 left-0 w-full h-full bg-[#1A1A1A]"
+              style={{
+                animation: 'slideRight 2s ease-in-out infinite',
+              }}
+            />
+          </div>
+        </div>
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @keyframes gentlePulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.3; }
+              }
+              @keyframes slideRight {
+                0% { transform: translateX(-101%); }
+                50% { transform: translateX(0); }
+                100% { transform: translateX(101%); }
+              }
+            `,
+          }}
+        />
+      </div>
+    )
   }
 
   return (
@@ -150,9 +235,11 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16 items-start">
               <div className="lg:col-span-7 space-y-6 animate-fadeIn">
                 <div className="hidden lg:flex flex-col gap-6">
-                  {(product.images || [product.image_url]).map((img, idx) => (
-                    <div
+                  {galleryImages.map((img, idx) => (
+                    <button
                       key={idx}
+                      type="button"
+                      onClick={() => openLightbox(idx)}
                       className="relative w-full bg-[#F8F7F5] rounded-lg overflow-hidden shadow-sm"
                       style={{ aspectRatio: '4 / 5' }}
                     >
@@ -169,16 +256,23 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
                           Sale
                         </div>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
 
                 <div className="lg:hidden">
                   <ProductCarousel
-                    images={product.images || [product.image_url]}
+                    images={galleryImages}
                     productName={product.name}
                     saleBadge={product.old_price ? 'Sale' : undefined}
                   />
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(0)}
+                    className="mt-4 w-full border border-[#E8E4DF] h-12 text-[11px] uppercase tracking-[0.18em] font-medium text-[#1A1A1A] hover:bg-[#FAF9F6] transition-colors"
+                  >
+                    Open Fullscreen Gallery
+                  </button>
                 </div>
               </div>
 
@@ -383,6 +477,14 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
 
         <Footer />
       </div>
+
+      <ProductLightbox
+        images={galleryImages}
+        initialIndex={lightboxIndex}
+        alt={product.name}
+        isOpen={isLightboxOpen}
+        onClose={closeLightbox}
+      />
     </>
   )
 }

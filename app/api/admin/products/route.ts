@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
 import { getAdminFromNextRequest, getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
+import { revalidateForTag } from '@/lib/revalidation'
 
 export async function GET(req: NextRequest) {
   const admin = await getAdminFromNextRequest(req)
@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
 
   apiCache.invalidateByTag('products')
   invalidateSSGCache('products')
-  revalidatePath('/')
-  revalidatePath('/products')
+  revalidateForTag('products')
   return NextResponse.json(data, { status: 201 })
 }

@@ -3,7 +3,7 @@ import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { apiCache } from '@/lib/server-cache'
 import { invalidateSSGCache } from '@/lib/cache'
-import { revalidatePath } from 'next/cache'
+import { revalidateForTag } from '@/lib/revalidation'
 
 export async function GET(
   req: NextRequest,
@@ -51,7 +51,7 @@ export async function PUT(
 
   apiCache.invalidateByTag('categories')
   invalidateSSGCache('categories')
-  revalidatePath('/')
+  revalidateForTag('categories')
 
   return NextResponse.json(data, { status: 200 })
 }
@@ -79,7 +79,7 @@ export async function DELETE(
 
   apiCache.invalidateByTag('categories')
   invalidateSSGCache('categories')
-  revalidatePath('/')
+  revalidateForTag('categories')
 
   return NextResponse.json({ message: 'Category deleted' }, { status: 200 })
 }

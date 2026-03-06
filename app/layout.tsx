@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Poppins } from 'next/font/google'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_URL, DEFAULT_OG, KEYWORDS } from '@/lib/constants'
+import { getCachedSiteConfig } from '@/lib/cache'
 import AppProviders from './providers'
 import '@/styles/globals.css'
 
@@ -68,11 +69,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const initialSiteConfig = await getCachedSiteConfig()
+
   return (
     <html lang="en">
       <body className={`${cormorant.variable} ${poppins.variable}`}>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders initialSiteConfig={initialSiteConfig}>{children}</AppProviders>
       </body>
     </html>
   )

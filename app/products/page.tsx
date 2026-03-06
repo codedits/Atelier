@@ -3,7 +3,7 @@ import { supabase, Product } from '@/lib/supabase'
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
 import ProductsClientPage from './ProductsClientPage'
 
-export const revalidate = 3600
+export const revalidate = 21600
 
 export const metadata: Metadata = {
   title: 'Shop All Jewelry — Rings, Necklaces, Bracelets & Earrings | Atelier',
