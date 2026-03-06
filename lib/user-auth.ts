@@ -8,11 +8,6 @@ import { verifyUserToken, type UserPayload } from './user-token'
 // Re-export from lightweight module (no admin dependencies)
 export { verifyUserToken, type UserPayload }
 
-const isProduction = process.env.NODE_ENV === 'production'
-if (isProduction && !process.env.USER_JWT_SECRET) {
-  throw new Error('USER_JWT_SECRET environment variable is required in production')
-}
-
 const USER_JWT_SECRET = process.env.USER_JWT_SECRET || 'atelier-user-secret-key-change-in-production'
 const USER_TOKEN_EXPIRY = '7d' // Users stay logged in longer than admins
 
@@ -20,6 +15,9 @@ const USER_TOKEN_EXPIRY = '7d' // Users stay logged in longer than admins
  * Generate a JWT token for a user
  */
 export function generateUserToken(user: UserPayload): string {
+  if (process.env.NODE_ENV === 'production' && !process.env.USER_JWT_SECRET) {
+    throw new Error('USER_JWT_SECRET environment variable is required in production')
+  }
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name, role: 'user' },
     USER_JWT_SECRET,
@@ -149,7 +147,7 @@ export async function deleteUserById(userId: string): Promise<boolean> {
       console.error('Failed to delete user:', error.message)
       return false
     }
-    
+
     console.log(`User ${userId} deleted successfully. Orders preserved with user_id set to NULL.`)
     return true
   } catch (err) {
