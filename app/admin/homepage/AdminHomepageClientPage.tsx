@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
@@ -12,6 +12,22 @@ import Announcement from '@/components/AnnouncementBanner'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import Image from 'next/image'
 import AdminImageUpload from '@/components/admin/AdminImageUpload'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface HeroImage {
   id: string
@@ -104,6 +120,110 @@ const Icons = {
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   )
+}
+
+// ── Section meta for layout preview ──────────────────────────────────
+const SECTION_META: Record<string, { icon: string; label: string; description: string }> = {
+  hero: { icon: '🖼️', label: 'Hero Carousel', description: 'Full-width hero images' },
+  feature_video: { icon: '🎬', label: 'Feature Video', description: 'Full-screen background video' },
+  limited_drop: { icon: '⏱️', label: 'Limited Drop', description: 'Countdown and exclusive drop' },
+  announcement_banner: { icon: '📢', label: 'Announcements', description: 'Scrolling announcement bar' },
+  value_proposition: { icon: '💎', label: 'Value Proposition', description: 'Brand value cards' },
+  featured_collections: { icon: '📦', label: 'Collections', description: 'Category cards grid' },
+  logo_marquee: { icon: '🏷️', label: 'Logo Marquee', description: 'Scrolling brand logos' },
+  collections_highlight: { icon: '✨', label: 'Collections Highlight', description: 'Highlighted collections' },
+  process_steps: { icon: '🔧', label: 'Process Steps', description: 'Step-by-step process' },
+  lookbook: { icon: '📷', label: 'Lookbook', description: 'Photo gallery grid' },
+  trending_now: { icon: '🔥', label: 'Trending Now', description: 'Featured products carousel' },
+  craftsmanship: { icon: '🛠️', label: 'Craftsmanship', description: 'Artisan craftsmanship section' },
+  brand_story: { icon: '📖', label: 'Brand Story', description: 'Our story section' },
+  new_arrivals: { icon: '🆕', label: 'New Arrivals', description: 'Latest products grid' },
+  testimonials: { icon: '⭐', label: 'Testimonials', description: 'Customer reviews carousel' },
+  instagram_gallery: { icon: '📸', label: 'Instagram', description: 'Instagram feed grid' },
+  newsletter: { icon: '✉️', label: 'Newsletter', description: 'Email signup section' },
+}
+
+const ALL_HOMEPAGE_SECTIONS = [
+  'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections',
+  'logo_marquee', 'collections_highlight', 'process_steps', 'lookbook', 'trending_now', 'craftsmanship',
+  'brand_story', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter'
+]
+
+// ── Sortable layout card ─────────────────────────────────────────────
+function SortableLayoutCard({ id, isPinned, onRemove }: { id: string; isPinned?: boolean; onRemove?: (id: string) => void }) {
+  const baseKey = id.startsWith('feature_video') ? 'feature_video' : id
+  const meta = SECTION_META[baseKey] || { icon: '📄', label: id.replace(/_/g, ' '), description: '' }
+  const isVideo = id.startsWith('feature_video')
+  const videoIndex = isVideo && id.includes(':') ? id.split(':')[1] : '0'
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id, disabled: isPinned });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-4 mb-2 rounded-xl border transition-colors ${isPinned
+        ? 'bg-[#0d0d0d] border-[#C9A96E]/30'
+        : 'bg-[#0a0a0a] border-[#1a1a1a] hover:border-[#333]'
+        }`}
+    >
+      {/* Drag handle or pin */}
+      {isPinned ? (
+        <div className="text-[#C9A96E]" title="Pinned — cannot be moved">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
+          </svg>
+        </div>
+      ) : (
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-[#555] hover:text-white">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+        </div>
+      )}
+
+      {/* Icon */}
+      <span className="text-xl flex-shrink-0">{meta.icon}</span>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-white text-sm font-medium truncate">
+          {meta.label}{isVideo && id.includes(':') ? ` #${parseInt(videoIndex) + 1}` : ''}
+        </p>
+        <p className="text-[#666] text-xs truncate">{meta.description}</p>
+      </div>
+
+      {/* Pinned badge or remove */}
+      {isPinned ? (
+        <span className="text-[10px] text-[#C9A96E] uppercase tracking-wider font-medium">Pinned</span>
+      ) : onRemove ? (
+        <button
+          onClick={() => onRemove(id)}
+          className="p-1.5 text-[#555] hover:text-[#ff6166] hover:bg-[#ff616610] rounded-md transition-colors"
+          title="Remove from layout"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 // ── Feature Video Tab (local state + explicit Save) ──────────────────
@@ -327,7 +447,7 @@ function FeatureVideoTab({ data, sectionSaving, saveSection }: {
 function HomepageContent() {
   const api = useAdminApi()
   const toast = useToast()
-  const [activeTab, setActiveTab] = useState<'hero' | 'feature_video' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('hero')
+  const [activeTab, setActiveTab] = useState<'layout' | 'hero' | 'feature_video' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('layout')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -405,6 +525,15 @@ function HomepageContent() {
   const [homepageSections, setHomepageSections] = useState<HomepageSection[]>([])
   const [sectionSaving, setSectionSaving] = useState(false)
 
+  // ── Layout state ──────────────────────────────────────────────────
+  const [layout, setLayout] = useState<string[]>([])
+  const [layoutSaving, setLayoutSaving] = useState(false)
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   useEffect(() => {
     loadData()
   }, [])
@@ -412,13 +541,14 @@ function HomepageContent() {
   const loadData = async (silent = false) => {
     if (!silent) setLoading(true)
     try {
-      const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes, overlayRes] = await Promise.all([
+      const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes, overlayRes, cfgRes] = await Promise.all([
         api.get<HeroImage[]>('/hero-images'),
         api.get<FeaturedCollection[]>('/featured-collections'),
         api.get<Testimonial[]>('/testimonials'),
         api.get<Announcement[]>('/announcements'),
         api.get<HomepageSection[]>('/homepage-sections'),
         api.get<any>('/hero-overlay'),
+        api.get<any>('/site-config'),
       ])
       setHeroImages(heroRes || [])
       setCollections(collectionsRes || [])
@@ -427,6 +557,16 @@ function HomepageContent() {
       setHomepageSections(sectionsRes || [])
       if (overlayRes) {
         setHeroOverlay(prev => ({ ...prev, ...overlayRes }))
+      }
+      // Load layout from site_config
+      if (cfgRes?.homepage_layout) {
+        setLayout(cfgRes.homepage_layout)
+      } else {
+        setLayout([
+          'hero', 'feature_video', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections',
+          'logo_marquee', 'process_steps', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials',
+          'instagram_gallery', 'newsletter'
+        ])
       }
     } catch (error) {
       console.error('Failed to load homepage content:', error)
@@ -731,6 +871,20 @@ function HomepageContent() {
     }
   }
 
+  // ── Layout helpers ─────────────────────────────────────────────────
+  // Video sections in the DB
+  const videoSections = useMemo(() => {
+    return (homepageSections || []).filter(s => s.section_key === 'feature_video').sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+  }, [homepageSections])
+
+  // Build the sortable layout items — hero is always first but not in sortable context
+  const sortableLayout = useMemo(() => layout.filter(id => id !== 'hero'), [layout])
+
+  // Available sections not currently in the layout (excluding feature_video which has special handling)
+  const hiddenSections = useMemo(() => {
+    return ALL_HOMEPAGE_SECTIONS.filter(s => s !== 'hero' && s !== 'feature_video' && !layout.includes(s))
+  }, [layout])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -745,9 +899,84 @@ function HomepageContent() {
     )
   }
 
+
+
+  const handleDragEndLayout = (event: any) => {
+    const { active, over } = event;
+    if (active && over && active.id !== over.id) {
+      setLayout(prev => {
+        const withoutHero = prev.filter(id => id !== 'hero')
+        const oldIndex = withoutHero.indexOf(active.id)
+        const newIndex = withoutHero.indexOf(over.id)
+        if (oldIndex === -1 || newIndex === -1) return prev
+        const reordered = arrayMove(withoutHero, oldIndex, newIndex)
+        return ['hero', ...reordered]
+      })
+    }
+  }
+
+  const addSectionToLayout = (sectionId: string) => {
+    if (!layout.includes(sectionId)) {
+      setLayout(prev => [...prev, sectionId])
+    }
+  }
+
+  const removeSectionFromLayout = (sectionId: string) => {
+    if (sectionId === 'hero') return // can't remove hero
+    setLayout(prev => prev.filter(id => id !== sectionId))
+  }
+
+  const addVideoSection = async () => {
+    const maxOrder = videoSections.length > 0
+      ? Math.max(...videoSections.map((s: any) => s.display_order ?? 0))
+      : -1
+    const nextOrder = maxOrder + 1
+    try {
+      await api.post('/homepage-sections', {
+        section_key: 'feature_video',
+        title: 'ATELIER',
+        cta_text: 'Shop Collection',
+        cta_link: '/products',
+        display_order: nextOrder,
+        is_active: true,
+        metadata: { text_color: '#FFFFFF', cta_color: '#FFFFFF' },
+      })
+      // Add to layout
+      const videoId = nextOrder === 0 ? 'feature_video' : `feature_video:${nextOrder}`
+      setLayout(prev => [...prev, videoId])
+      toast.success('Video section added')
+      await loadData(true)
+    } catch {
+      toast.error('Failed to add video section')
+    }
+  }
+
+  const deleteVideoSection = async (sectionId: string, layoutKey: string) => {
+    try {
+      await api.del(`/homepage-sections?id=${sectionId}`)
+      setLayout(prev => prev.filter(id => id !== layoutKey))
+      toast.success('Video section removed')
+      await loadData(true)
+    } catch {
+      toast.error('Failed to remove video section')
+    }
+  }
+
+  const saveLayout = async () => {
+    setLayoutSaving(true)
+    try {
+      await api.put('/site-config', { homepage_layout: layout })
+      toast.success('Layout saved — frontend will update shortly')
+    } catch {
+      toast.error('Failed to save layout')
+    }
+    setLayoutSaving(false)
+  }
+
   const tabs = [
+    { id: 'layout' as const, label: 'Layout' },
     { id: 'hero' as const, label: 'Hero Images', count: heroImages.length },
-    { id: 'feature_video' as const, label: 'Feature Video' },
+    { id: 'feature_video' as const, label: 'Feature Video', count: videoSections.length },
     { id: 'collections' as const, label: 'Collections', count: collections.length },
     { id: 'testimonials' as const, label: 'Testimonials', count: testimonials.length },
     { id: 'announcements' as const, label: 'Announcements', count: announcements.length },
@@ -782,6 +1011,112 @@ function HomepageContent() {
           ))}
         </div>
       </div>
+
+      {/* Layout Tab */}
+      {activeTab === 'layout' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[#888] text-sm">Drag sections to reorder how they appear on the homepage. Hero is always first.</p>
+            </div>
+            <button
+              onClick={saveLayout}
+              disabled={layoutSaving}
+              className="admin-btn admin-btn-primary disabled:opacity-50"
+            >
+              {layoutSaving ? 'Saving...' : 'Save Layout'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Active Layout — left side */}
+            <div className="lg:col-span-3">
+              <h3 className="text-white text-sm font-semibold mb-3">Active Layout Order</h3>
+
+              {/* Pinned hero card */}
+              <SortableLayoutCard id="hero" isPinned />
+
+              {/* Sortable sections */}
+              <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEndLayout}>
+                <SortableContext items={sortableLayout} strategy={verticalListSortingStrategy}>
+                  {sortableLayout.map((id) => (
+                    <SortableLayoutCard key={id} id={id} onRemove={removeSectionFromLayout} />
+                  ))}
+                </SortableContext>
+              </DndContext>
+
+              {sortableLayout.length === 0 && (
+                <div className="text-center text-[#555] border border-dashed border-[#1a1a1a] rounded-xl p-8 mt-2">
+                  No sections added yet. Add sections from the right.
+                </div>
+              )}
+            </div>
+
+            {/* Hidden sections + Add video — right side */}
+            <div className="lg:col-span-2">
+              <h3 className="text-white text-sm font-semibold mb-3">Available Sections</h3>
+              <div className="space-y-2">
+                {hiddenSections.map(id => {
+                  const meta = SECTION_META[id] || { icon: '📄', label: id.replace(/_/g, ' '), description: '' }
+                  return (
+                    <div key={id} className="flex items-center gap-3 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+                      <span className="text-lg">{meta.icon}</span>
+                      <span className="text-[#888] text-sm flex-1">{meta.label}</span>
+                      <button
+                        onClick={() => addSectionToLayout(id)}
+                        className="px-3 py-1 bg-[#262626] text-white text-xs rounded hover:bg-[#333] transition-colors"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Feature Video — special add button */}
+              <div className="mt-6">
+                <h3 className="text-white text-sm font-semibold mb-3">Video Sections</h3>
+                <p className="text-[#666] text-xs mb-3">Add multiple full-screen video sections and place them anywhere in the layout.</p>
+                <div className="space-y-2">
+                  {videoSections.map((vs: any, idx: number) => {
+                    const layoutKey = idx === 0 ? 'feature_video' : `feature_video:${vs.display_order}`
+                    const isInLayout = layout.includes(layoutKey)
+                    return (
+                      <div key={vs.id} className="flex items-center gap-3 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+                        <span className="text-lg">🎬</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm truncate">{vs.title || `Video #${idx + 1}`}</p>
+                          <p className="text-[#555] text-xs">{isInLayout ? 'In layout' : 'Not in layout'}</p>
+                        </div>
+                        {!isInLayout ? (
+                          <button
+                            onClick={() => addSectionToLayout(layoutKey)}
+                            className="px-3 py-1 bg-[#262626] text-white text-xs rounded hover:bg-[#333]"
+                          >
+                            + Add
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-green-500 uppercase tracking-wider">Active</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <button
+                  onClick={addVideoSection}
+                  className="mt-3 w-full px-4 py-2.5 border border-dashed border-[#333] rounded-xl text-[#888] text-sm hover:border-[#555] hover:text-white transition-colors"
+                >
+                  + Add Another Video Section
+                </button>
+              </div>
+
+              {hiddenSections.length === 0 && videoSections.length === 0 && (
+                <p className="text-[#555] text-sm">All sections are in the active layout.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Images Tab */}
       {activeTab === 'hero' && (
@@ -955,28 +1290,54 @@ function HomepageContent() {
         </div>
       )}
 
-      {/* Feature Video Tab */}
-      {activeTab === 'feature_video' && (() => {
-        const data = getSection('feature_video') || {
-          section_key: 'feature_video',
-          title: 'ATELIER',
-          subtitle: '',
-          image_url: '',
-          cta_text: 'Shop Collection',
-          cta_link: '/products',
-          content: '',
-          metadata: {},
-          is_active: true
-        }
+      {/* Feature Video Tab — now supports multiple video sections */}
+      {activeTab === 'feature_video' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <p className="text-[#888] text-sm">Manage full-screen background video sections. You can add multiple and place them anywhere in the layout.</p>
+            <button
+              onClick={addVideoSection}
+              className="admin-btn admin-btn-primary"
+            >
+              {Icons.plus}
+              <span>Add Video Section</span>
+            </button>
+          </div>
 
-        return (
-          <FeatureVideoTab
-            data={data}
-            sectionSaving={sectionSaving}
-            saveSection={saveSection}
-          />
-        )
-      })()}
+          {videoSections.length === 0 && (
+            <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-12 text-center text-[#666]">
+              No video sections yet. Add one to get started.
+            </div>
+          )}
+
+          {videoSections.map((vs: any, idx: number) => {
+            const layoutKey = idx === 0 ? 'feature_video' : `feature_video:${vs.display_order}`
+            return (
+              <div key={vs.id} className="relative">
+                <div className="absolute -top-2 -right-2 z-10 flex gap-1">
+                  {videoSections.length > 1 && (
+                    <button
+                      onClick={() => deleteVideoSection(vs.id, layoutKey)}
+                      className="w-7 h-7 flex items-center justify-center bg-red-900/80 hover:bg-red-800 rounded-full text-white text-xs transition-colors shadow-lg"
+                      title="Delete this video section"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="mb-2">
+                  <span className="text-[#C9A96E] text-[11px] uppercase tracking-wider font-medium">Video Section #{idx + 1}</span>
+                </div>
+                <FeatureVideoTab
+                  data={vs}
+                  sectionSaving={sectionSaving}
+                  saveSection={saveSection}
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Collections Tab */}
       {activeTab === 'collections' && (

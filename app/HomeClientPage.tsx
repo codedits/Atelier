@@ -79,9 +79,12 @@ export default function HomeClientPage({
   const collections = featuredCollections
 
   const sectionsByKey = useMemo(() => {
-    const map: Record<string, any> = {}
+    const map: Record<string, any[]> = {}
     for (const section of homepageSections || []) {
-      if (section.section_key) map[section.section_key] = section
+      if (section.section_key) {
+        if (!map[section.section_key]) map[section.section_key] = []
+        map[section.section_key].push(section)
+      }
     }
     return map
   }, [homepageSections])
@@ -109,11 +112,17 @@ export default function HomeClientPage({
   }, [layout])
 
   const renderSection = (sectionId: string) => {
-    switch (sectionId) {
+    const isVideo = sectionId.startsWith('feature_video')
+    const baseKey = isVideo ? 'feature_video' : sectionId
+    const videoIndex = isVideo && sectionId.includes(':') ? parseInt(sectionId.split(':')[1]) : 0
+
+    switch (baseKey) {
       case 'hero':
         return <Hero key={sectionId} heroImages={heroImages} overlay={siteConfig?.features?.hero?.overlay} />
-      case 'feature_video':
-        return <FeatureVideo key={sectionId} data={sectionsByKey['feature_video']} />
+      case 'feature_video': {
+        const videoData = sectionsByKey['feature_video']?.find(s => s.display_order === videoIndex) || sectionsByKey['feature_video']?.[0]
+        return videoData ? <FeatureVideo key={sectionId} data={videoData} /> : null
+      }
       case 'announcement_banner':
         return <AnnouncementBanner key={sectionId} announcements={announcements?.length ? announcements : undefined} />
       case 'value_proposition':
@@ -123,17 +132,17 @@ export default function HomeClientPage({
       case 'logo_marquee':
         return <LogoMarquee key={sectionId} />
       case 'process_steps':
-        return <ProcessSteps key={sectionId} data={sectionsByKey['process_steps']} />
+        return <ProcessSteps key={sectionId} data={sectionsByKey['process_steps']?.[0]} />
       case 'lookbook':
-        return <Lookbook key={sectionId} images={lookbookImages} title={sectionsByKey['lookbook']?.title} subtitle={sectionsByKey['lookbook']?.subtitle} />
+        return <Lookbook key={sectionId} images={lookbookImages} title={sectionsByKey['lookbook']?.[0]?.title} subtitle={sectionsByKey['lookbook']?.[0]?.subtitle} />
       case 'trending_now':
         return featured.length > 0 ? <TrendingNow key={sectionId} products={featured} /> : null
       case 'craftsmanship':
-        return <Craftsmanship key={sectionId} data={sectionsByKey['craftsmanship']} />
+        return <Craftsmanship key={sectionId} data={sectionsByKey['craftsmanship']?.[0]} />
       case 'brand_story':
-        return <BrandStory key={sectionId} data={sectionsByKey['brand_story']} />
+        return <BrandStory key={sectionId} data={sectionsByKey['brand_story']?.[0]} />
       case 'limited_drop':
-        return <LimitedDrop key={sectionId} data={sectionsByKey['limited_drop']} />
+        return <LimitedDrop key={sectionId} data={sectionsByKey['limited_drop']?.[0]} />
       case 'new_arrivals':
         return (
           <section

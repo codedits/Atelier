@@ -21,12 +21,12 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   return (
-    <section className="luxury-section bg-[#FAF9F6] overflow-hidden" ref={sectionRef}>
+    <section className="luxury-section !pt-12 md:!pt-20 !pb-0 bg-[#FAF9F6] overflow-hidden" ref={sectionRef}>
       <div className="w-full mx-auto px-6 lg:px-8 max-w-7xl">
         {/* Section header */}
         <div
           className={cn(
-            "text-center mb-16 md:mb-20 invisible-before-reveal",
+            "text-center mb-10 md:mb-12 invisible-before-reveal",
             isIntersecting && "reveal-slide-up"
           )}
         >
@@ -43,7 +43,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
       </div>
 
       {/* Full-bleed editorial grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#E8E4DF]">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
         {collections.map((collection, index) => (
           <div
             key={collection.id}
@@ -66,7 +66,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
               />
 
               {/* Refined gradient overlay - Darker for mobile centering readability */}
-              <div className="absolute inset-0 bg-black/30 lg:bg-gradient-to-t lg:from-black/60 lg:via-black/10 lg:to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
+              <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-t lg:from-black/60 lg:via-black/10 lg:to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
 
               {/* Content - Absolute center on mobile, bottom on desktop */}
               <div className="absolute inset-0 flex flex-col items-center justify-center lg:justify-end p-4 md:p-10">

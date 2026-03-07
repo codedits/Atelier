@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
- 
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
@@ -78,8 +78,7 @@ const ALL_HOMEPAGE_SECTIONS = [
 
 function BuilderContent() {
     const { showToast, success, error: toastError } = useToast()
-    const [activeTab, setActiveTab] = useState<'homepage' | 'nav' | 'theme' | 'content'>('homepage')
-    const [layout, setLayout] = useState<string[]>([])
+    const [activeTab, setActiveTab] = useState<'nav' | 'theme' | 'content'>('nav')
     const [navMenu, setNavMenu] = useState<NavMenuItem[]>([])
     const [themeColors, setThemeColors] = useState({ primary: '', secondary: '', accent: '' })
     const [features, setFeatures] = useState<any>({})
@@ -104,12 +103,10 @@ function BuilderContent() {
             const cfgRes = await api.get('/site-config')
             const data = cfgRes as any
             if (data) {
-                setLayout(data.homepage_layout || ALL_HOMEPAGE_SECTIONS)
                 setNavMenu(data.nav_menu || [])
                 setThemeColors(data.theme_colors || { primary: '', secondary: '', accent: '' })
                 setFeatures(data.features || {})
             } else {
-                setLayout(ALL_HOMEPAGE_SECTIONS)
                 setNavMenu([])
                 setFeatures({})
             }
@@ -117,12 +114,10 @@ function BuilderContent() {
             // Fallback: try direct read (anon may have SELECT on site_config)
             const { data } = await supabase.from('site_config').select('*').single()
             if (data) {
-                setLayout(data.homepage_layout || ALL_HOMEPAGE_SECTIONS)
                 setNavMenu(data.nav_menu || [])
                 setThemeColors(data.theme_colors || { primary: '', secondary: '', accent: '' })
                 setFeatures(data.features || {})
             } else {
-                setLayout(ALL_HOMEPAGE_SECTIONS)
                 setNavMenu([])
                 setFeatures({})
             }
@@ -133,34 +128,12 @@ function BuilderContent() {
     const handleSave = async () => {
         setSaving(true)
         try {
-            await api.put('/site-config', { homepage_layout: layout, nav_menu: navMenu, theme_colors: themeColors, features })
+            await api.put('/site-config', { nav_menu: navMenu, theme_colors: themeColors, features })
             success('Configuration saved — frontend will update shortly')
         } catch {
             toastError('Failed to save configuration')
         }
         setSaving(false)
-    }
-
-    // --- Homepage layout ---
-    const unselectedSections = ALL_HOMEPAGE_SECTIONS.filter(s => !layout.includes(s))
-
-    const handleDragEndHomepage = (event: any) => {
-        const { active, over } = event;
-        if (active && over && active.id !== over.id) {
-            setLayout((items) => {
-                const oldIndex = items.indexOf(active.id);
-                const newIndex = items.indexOf(over.id);
-                return arrayMove(items, oldIndex, newIndex);
-            });
-        }
-    }
-
-    const toggleSection = (section: string) => {
-        if (layout.includes(section)) {
-            setLayout(layout.filter(s => s !== section))
-        } else {
-            setLayout([...layout, section])
-        }
     }
 
     // --- Nav menu ---
@@ -225,12 +198,6 @@ function BuilderContent() {
 
             <div className="flex gap-4 mb-6 border-b border-[#1a1a1a]">
                 <button
-                    onClick={() => setActiveTab('homepage')}
-                    className={`px-4 py-3 -mb-px text-sm font-medium border-b-2 ${activeTab === 'homepage' ? 'border-white text-white' : 'border-transparent text-[#888] hover:text-[#ccc]'}`}
-                >
-                    Homepage Blocks
-                </button>
-                <button
                     onClick={() => setActiveTab('nav')}
                     className={`px-4 py-3 -mb-px text-sm font-medium border-b-2 ${activeTab === 'nav' ? 'border-white text-white' : 'border-transparent text-[#888] hover:text-[#ccc]'}`}
                 >
@@ -249,44 +216,6 @@ function BuilderContent() {
                     Content Editor
                 </button>
             </div>
-
-            {activeTab === 'homepage' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div>
-                        <h3 className="text-lg font-medium text-white mb-4">Active Layout Order</h3>
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndHomepage}>
-                            <SortableContext items={layout} strategy={verticalListSortingStrategy}>
-                                {layout.map((id) => (
-                                    <SortableBlockItem key={id} id={id} label={id.replace(/_/g, ' ').toUpperCase()} />
-                                ))}
-                            </SortableContext>
-                        </DndContext>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-medium text-white mb-4">Hidden Sections</h3>
-                        <div className="space-y-2">
-                            {unselectedSections.length === 0 ? (
-                                <p className="text-[#666] text-sm">All available sections are currently active.</p>
-                            ) : unselectedSections.map(id => (
-                                <div key={id} className="flex items-center justify-between p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-                                    <span className="text-[#888] font-medium">{id.replace(/_/g, ' ').toUpperCase()}</span>
-                                    <button onClick={() => toggleSection(id)} className="px-3 py-1 bg-[#262626] text-white text-sm rounded">Add</button>
-                                </div>
-                            ))}
-                        </div>
-
-                        <h3 className="text-lg font-medium text-white mt-12 mb-4">Remove Sections</h3>
-                        <p className="text-sm text-[#888] mb-4">Click a section to remove it from the active layout.</p>
-                        <div className="flex flex-wrap gap-2">
-                            {layout.map(id => (
-                                <button key={id} onClick={() => toggleSection(id)} className="px-3 py-1 bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50 rounded text-sm">
-                                    Remove {id.replace(/_/g, ' ')}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {activeTab === 'nav' && (
                 <div className="max-w-3xl">

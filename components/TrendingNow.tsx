@@ -176,8 +176,7 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
               key={product.id}
               className={cn(
                 "flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] snap-start invisible-before-reveal transition-transform duration-300",
-                isIntersecting && "reveal-slide-up",
-                isDragging && "pointer-events-none"
+                isIntersecting && "reveal-slide-up"
               )}
               style={{ animationDelay: isIntersecting ? `${index * 80}ms` : '0ms' }}
             >
@@ -200,8 +199,7 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
           href="/products"
           className={cn(
             "group flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] snap-start invisible-before-reveal",
-            isIntersecting && "reveal-slide-up",
-            isDragging && "pointer-events-none"
+            isIntersecting && "reveal-slide-up"
           )}
           style={{ animationDelay: isIntersecting ? `${products.length * 80}ms` : '0ms' }}
         >

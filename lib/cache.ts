@@ -171,7 +171,7 @@ export async function getCachedHomepageSections() {
         async () => {
             const { data, error } = await supabase
                 .from('homepage_sections')
-                .select('id, section_key, title, subtitle, content, image_url, cta_text, cta_link, metadata, is_active')
+                .select('id, section_key, title, subtitle, content, image_url, cta_text, cta_link, metadata, is_active, display_order')
                 .eq('is_active', true)
             if (error) return []
             return data || []
