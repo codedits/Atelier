@@ -33,26 +33,26 @@ export function SiteConfigProvider({ children, initialConfig }: { children: Reac
         setIsLoading(false)
     }, [])
 
-    // Effect to fetch config on mount if no initial config provided
+    // Only fetch client-side if no initial config was provided from SSR
     useEffect(() => {
         if (!initialConfig) {
             fetchConfig()
         }
     }, [initialConfig, fetchConfig])
 
-    // Effect to inject CSS variables
+    // CSS variable injection — only needed as a fallback when config changes
+    // client-side (e.g. after admin updates). On first load, layout.tsx SSR
+    // already renders the correct values on <html>, avoiding any flash.
     useEffect(() => {
+        if (!config?.theme_colors) return
         const root = document.documentElement
-        const colors = config?.theme_colors || DEFAULT_COLORS
+        const colors = config.theme_colors
 
-        // Convert hex to specific formats if needed, or just set raw vars
-        // Assuming tailwind arbitrary values or custom CSS vars
-        root.style.setProperty('--color-primary', colors.primary)
-        root.style.setProperty('--color-secondary', colors.secondary)
-        root.style.setProperty('--color-accent', colors.accent)
-        root.style.setProperty('--color-text', colors.text)
-        root.style.setProperty('--color-text-light', colors.text_light)
-
+        root.style.setProperty('--color-primary', colors.primary || DEFAULT_COLORS.primary)
+        root.style.setProperty('--color-secondary', colors.secondary || DEFAULT_COLORS.secondary)
+        root.style.setProperty('--color-accent', colors.accent || DEFAULT_COLORS.accent)
+        root.style.setProperty('--color-text', colors.text || DEFAULT_COLORS.text)
+        root.style.setProperty('--color-text-light', colors.text_light || DEFAULT_COLORS.text_light)
     }, [config])
 
     const contextValue = useMemo(() => ({

@@ -2,6 +2,18 @@
 @import "tailwindcss";
 
 /* ============================================ */
+/* CSS VARIABLE DEFAULTS — prevents CLS/FOUC    */
+/* Must match SiteConfigContext DEFAULT_COLORS   */
+/* ============================================ */
+:root {
+  --color-primary: #1A1A1A;
+  --color-secondary: #FAFAF8;
+  --color-accent: #D4AF37;
+  --color-text: #1A1A1A;
+  --color-text-light: #4A4A4A;
+}
+
+/* ============================================ */
 /* HERO ANIMATIONS                              */
 /* ============================================ */
 
@@ -223,6 +235,16 @@ html {
 .hover-lift:hover {
   transform: translateY(-2px) translateZ(0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar Hide Utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

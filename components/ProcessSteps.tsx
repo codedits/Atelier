@@ -58,6 +58,7 @@ const defaultData: ProcessStepsData = {
 }
 
 const ProcessSteps = memo(function ProcessSteps({ data: propData }: ProcessStepsProps) {
+  if (!propData || (propData as any).is_active === false) return null
   const d = { ...defaultData, ...propData, metadata: { ...defaultData.metadata, ...propData?.metadata } }
   const steps = d.metadata?.steps || defaultSteps
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 })
@@ -126,7 +127,7 @@ const ProcessSteps = memo(function ProcessSteps({ data: propData }: ProcessSteps
               </div>
             ))}
           </div>
-          
+
           {/* Mobile Scroll Indicator */}
           <div className="flex justify-center gap-2 mt-8 md:hidden">
             {steps.map((_, i) => (

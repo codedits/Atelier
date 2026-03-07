@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
 import Image from 'next/image'
 import Link from 'next/link'
+import ProductCard from './ProductCard'
 
 interface TrendingProduct {
   id: string
@@ -24,6 +25,10 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [hasMoved, setHasMoved] = useState(false)
 
   const updateScrollButtons = useCallback(() => {
     if (!scrollRef.current) return
@@ -31,6 +36,48 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
     setCanScrollLeft(scrollLeft > 10)
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10)
   }, [])
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return
+    setIsDragging(true)
+    setHasMoved(false)
+    setStartX(e.pageX - scrollRef.current.offsetLeft)
+    setScrollLeft(scrollRef.current.scrollLeft)
+    scrollRef.current.style.cursor = 'grabbing'
+    scrollRef.current.style.userSelect = 'none'
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX) * 2.0
+
+    if (Math.abs(walk) > 5) {
+      setHasMoved(true)
+    }
+
+    scrollRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleMouseUpOrLeave = (e: React.MouseEvent) => {
+    if (isDragging && hasMoved) {
+      // If we moved significantly, prevent the default click behavior
+      e.preventDefault()
+    }
+    setIsDragging(false)
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = 'grab'
+      scrollRef.current.style.removeProperty('user-select')
+    }
+  }
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (hasMoved) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+  }
 
   const scroll = useCallback((dir: 'left' | 'right') => {
     if (!scrollRef.current) return
@@ -102,79 +149,49 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
       <div
         ref={scrollRef}
         onScroll={updateScrollButtons}
-        className="flex gap-5 overflow-x-auto scrollbar-hide px-6 lg:px-8 pb-4 snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        onClickCapture={handleClickCapture}
+        className={cn(
+          "flex gap-6 overflow-x-auto px-6 lg:px-8 pb-8 cursor-grab scrollbar-hide select-none transition-all active:cursor-grabbing",
+          !isDragging && "snap-x snap-proximity"
+        )}
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          scrollSnapType: isDragging ? 'none' : ''
+        }}
       >
-        {/* Left spacer for alignment */}
-        <div className="flex-shrink-0 w-0 lg:w-[calc((100vw-80rem)/2)]" />
+        {/* Alignment Padding: Using max() to prevent negative widths on small screens */}
+        <div
+          className="flex-shrink-0 max-lg:hidden"
+          style={{ width: `calc(max(0px, (100vw - 80rem) / 2))` }}
+        />
 
         {products.map((product, index) => {
-          const discount = product.old_price
-            ? Math.round(((product.old_price - product.price) / product.old_price) * 100)
-            : 0
-
           return (
-            <Link
+            <div
               key={product.id}
-              href={`/products/${product.slug || product.id}`}
               className={cn(
-                "group flex-shrink-0 w-[280px] sm:w-[300px] snap-start invisible-before-reveal",
-                isIntersecting && "reveal-slide-up"
+                "flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] snap-start invisible-before-reveal transition-transform duration-300",
+                isIntersecting && "reveal-slide-up",
+                isDragging && "pointer-events-none"
               )}
               style={{ animationDelay: isIntersecting ? `${index * 80}ms` : '0ms' }}
             >
-              {/* Image */}
-              <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F0EB] mb-4">
-                <Image
-                  src={product.image_url}
-                  alt={product.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  sizes="300px"
-                />
-
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                  {index < 3 && (
-                    <span className="bg-[#1A1A1A] text-white text-[9px] uppercase tracking-[0.15em] px-2.5 py-1 font-semibold">
-                      Trending
-                    </span>
-                  )}
-                  {discount > 0 && (
-                    <span className="bg-[#C9A96E] text-white text-[9px] uppercase tracking-[0.15em] px-2.5 py-1 font-semibold">
-                      {discount}% Off
-                    </span>
-                  )}
-                </div>
-
-                {/* Quick view hint */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white font-medium">
-                    View Details →
-                  </span>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="px-1">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#4A4A4A] mb-1">
-                  {product.category}
-                </p>
-                <h3 className="text-sm font-medium text-[#1A1A1A] mb-2 group-hover:text-[#C9A96E] transition-colors duration-300 line-clamp-1">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[#1A1A1A]">
-                    {formatPrice(product.price)}
-                  </span>
-                  {product.old_price && (
-                    <span className="text-xs text-[#999] line-through">
-                      {formatPrice(product.old_price)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
+              <ProductCard
+                id={product.id}
+                slug={product.slug}
+                name={product.name}
+                price={product.price}
+                oldPrice={product.old_price}
+                img={product.image_url}
+                images={product.images}
+                category={product.category}
+              />
+            </div>
           )
         })}
 
@@ -182,13 +199,14 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
         <Link
           href="/products"
           className={cn(
-            "group flex-shrink-0 w-[280px] sm:w-[300px] snap-start invisible-before-reveal",
-            isIntersecting && "reveal-slide-up"
+            "group flex-shrink-0 w-[240px] sm:w-[280px] md:w-[320px] snap-start invisible-before-reveal",
+            isIntersecting && "reveal-slide-up",
+            isDragging && "pointer-events-none"
           )}
           style={{ animationDelay: isIntersecting ? `${products.length * 80}ms` : '0ms' }}
         >
-          <div className="aspect-[3/4] border border-[#E8E4DF] flex flex-col items-center justify-center gap-6 hover:border-[#1A1A1A] hover:bg-[#FEFDFB] transition-all duration-500">
-            <div className="w-12 h-12 border border-[#1A1A1A]/20 flex items-center justify-center group-hover:border-[#1A1A1A] group-hover:bg-[#1A1A1A] group-hover:text-white transition-all duration-500">
+          <div className="aspect-[3/4] border border-[#E8E4DF] flex flex-col items-center justify-center gap-6 hover:border-[#1A1A1A] hover:bg-[#FEFDFB] transition-all duration-500 rounded-sm">
+            <div className="w-12 h-12 border border-[#1A1A1A]/20 flex items-center justify-center group-hover:border-[#1A1A1A] group-hover:bg-[#1A1A1A] group-hover:text-white transition-all duration-500 rounded-full">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
@@ -200,8 +218,11 @@ const TrendingNow = memo(function TrendingNow({ products }: TrendingNowProps) {
           </div>
         </Link>
 
-        {/* Right spacer */}
-        <div className="flex-shrink-0 w-4 lg:w-[calc((100vw-80rem)/2)]" />
+        {/* Right Alignment Padding: Using a standard flex approach instead of negative margin hacks */}
+        <div
+          className="flex-shrink-0"
+          style={{ width: `calc(max(1.5rem, (100vw - 80rem) / 2))` }}
+        />
       </div>
     </section>
   )

@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 import HomeClientPage from './HomeClientPage'
-import { supabase } from '@/lib/supabase'
 import {
   getCachedSiteConfig,
   getCachedHeroImages,
@@ -10,6 +9,7 @@ import {
   getCachedFeaturedProducts,
   getCachedAnnouncements,
   getCachedHomepageSections,
+  getCachedLookbookImages,
 } from '@/lib/cache'
 import { SITE_URL, SITE_NAME, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL } from '@/lib/constants'
 
@@ -85,6 +85,7 @@ export default async function HomePage() {
     featuredProductsData,
     announcementsData,
     homepageSectionsData,
+    lookbookImagesData,
   ] = await Promise.all([
     getCachedNewArrivals(),
     getCachedFeaturedCollections(),
@@ -94,6 +95,7 @@ export default async function HomePage() {
     getCachedFeaturedProducts(),
     getCachedAnnouncements(),
     getCachedHomepageSections(),
+    getCachedLookbookImages(),
   ])
 
   const defaultCollections = [
@@ -127,14 +129,10 @@ export default async function HomePage() {
     },
   ]
 
-  const { data: lookbookImages } = await supabase
-    .from('lookbook_images')
-    .select('id, image_url, title, subtitle, link')
-    .eq('is_active', true)
-    .order('display_order', { ascending: true })
+  const lookbookImages = lookbookImagesData || []
 
   const defaultLayout = [
-    'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
+    'hero', 'feature_video', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
     'process_steps', 'lookbook', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter',
   ]
 

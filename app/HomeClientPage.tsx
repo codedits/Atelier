@@ -16,6 +16,7 @@ import { Testimonial } from '@/components/Testimonials'
 import { Skeleton } from '@/components/ui/Skeleton'
 
 const AnnouncementBanner = dynamic(() => import('@/components/AnnouncementBanner'), { ssr: true })
+const FeatureVideo = dynamic(() => import('@/components/FeatureVideo'), { ssr: true })
 const ValueProposition = dynamic(() => import('@/components/ValueProposition'), { ssr: true })
 const TrendingNow = dynamic(() => import('@/components/TrendingNow'), { ssr: true })
 const BrandStory = dynamic(() => import('@/components/BrandStory'), { ssr: true })
@@ -91,7 +92,7 @@ export default function HomeClientPage({
     let currentLayout = layout && layout.length > 0
       ? layout
       : [
-        'hero', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
+        'hero', 'feature_video', 'limited_drop', 'announcement_banner', 'value_proposition', 'featured_collections', 'logo_marquee',
         'process_steps', 'lookbook', 'trending_now', 'craftsmanship', 'new_arrivals', 'testimonials', 'instagram_gallery', 'newsletter',
       ]
 
@@ -111,6 +112,8 @@ export default function HomeClientPage({
     switch (sectionId) {
       case 'hero':
         return <Hero key={sectionId} heroImages={heroImages} overlay={siteConfig?.features?.hero?.overlay} />
+      case 'feature_video':
+        return <FeatureVideo key={sectionId} data={sectionsByKey['feature_video']} />
       case 'announcement_banner':
         return <AnnouncementBanner key={sectionId} announcements={announcements?.length ? announcements : undefined} />
       case 'value_proposition':

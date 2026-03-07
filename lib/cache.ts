@@ -181,3 +181,20 @@ export async function getCachedHomepageSections() {
     return data
 }
 
+export async function getCachedLookbookImages() {
+    const { data } = await ssgCache.getOrFetch(
+        'ssg:lookbook_images',
+        async () => {
+            const { data, error } = await supabase
+                .from('lookbook_images')
+                .select('id, image_url, title, subtitle, link')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true })
+            if (error) return []
+            return data || []
+        },
+        { ttl: SSG_TTL, tags: ['lookbook_images'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+    )
+    return data
+}
+

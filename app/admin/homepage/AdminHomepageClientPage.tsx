@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-﻿/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useState, useEffect } from 'react'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
+import AdminVideoUpload from '@/components/admin/AdminVideoUpload'
+import Announcement from '@/components/AnnouncementBanner'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import Image from 'next/image'
 import AdminImageUpload from '@/components/admin/AdminImageUpload'
@@ -104,10 +106,228 @@ const Icons = {
   )
 }
 
+// ── Feature Video Tab (local state + explicit Save) ──────────────────
+function FeatureVideoTab({ data, sectionSaving, saveSection }: {
+  data: any
+  sectionSaving: boolean
+  saveSection: (d: any) => Promise<void>
+}) {
+  const [form, setForm] = useState({
+    title: data.title || '',
+    cta_text: data.cta_text || '',
+    cta_link: data.cta_link || '',
+    text_color: data.metadata?.text_color || '#FFFFFF',
+    cta_color: data.metadata?.cta_color || '#FFFFFF',
+  })
+  const [dirty, setDirty] = useState(false)
+
+  // Sync from server when data changes (e.g. after toggle)
+  useEffect(() => {
+    setForm({
+      title: data.title || '',
+      cta_text: data.cta_text || '',
+      cta_link: data.cta_link || '',
+      text_color: data.metadata?.text_color || '#FFFFFF',
+      cta_color: data.metadata?.cta_color || '#FFFFFF',
+    })
+    setDirty(false)
+  }, [data.title, data.cta_text, data.cta_link, data.metadata?.text_color, data.metadata?.cta_color])
+
+  const update = (patch: Partial<typeof form>) => {
+    setForm(prev => ({ ...prev, ...patch }))
+    setDirty(true)
+  }
+
+  const handleSave = async () => {
+    await saveSection({
+      ...data,
+      title: form.title,
+      cta_text: form.cta_text,
+      cta_link: form.cta_link,
+      metadata: {
+        ...(data.metadata || {}),
+        text_color: form.text_color,
+        cta_color: form.cta_color,
+      },
+    })
+    setDirty(false)
+  }
+
+  return (
+    <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl p-4 sm:p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h3 className="text-white text-lg font-semibold">100vh Feature Video</h3>
+          <p className="text-[#888] text-sm mt-1">Displayed immediately below the main hero section.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="enable-feature-video"
+            checked={data.is_active}
+            onChange={(e) => saveSection({ ...data, is_active: e.target.checked })}
+            className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a] accent-[#C9A96E]"
+            disabled={sectionSaving}
+          />
+          <label htmlFor="enable-feature-video" className="text-sm text-[#888] cursor-pointer selection:bg-transparent">
+            Enable Section
+          </label>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <AdminVideoUpload
+            label="Background Video (MP4/WebM) - Max 50MB"
+            value={data.image_url}
+            onChange={(url) => saveSection({ ...data, image_url: url })}
+            folder="feature_video"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Overlay Header Text</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={e => update({ title: e.target.value })}
+              className="admin-input w-full"
+              placeholder="e.g. ATELIER"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Button Link Text</label>
+            <input
+              type="text"
+              value={form.cta_text}
+              onChange={e => update({ cta_text: e.target.value })}
+              className="admin-input w-full"
+              placeholder="e.g. Shop Collection"
+            />
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Button URL</label>
+            <input
+              type="text"
+              value={form.cta_link}
+              onChange={e => update({ cta_link: e.target.value })}
+              className="admin-input w-full"
+              placeholder="e.g. /products"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Header Text Color</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={form.text_color}
+                onChange={e => update({ text_color: e.target.value })}
+                className="w-10 h-10 rounded border border-[#333] bg-transparent cursor-pointer"
+              />
+              <input
+                type="text"
+                value={form.text_color}
+                onChange={e => update({ text_color: e.target.value })}
+                className="admin-input flex-1"
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[#a1a1a1] text-[13px] font-medium mb-2">Button Color</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={form.cta_color}
+                onChange={e => update({ cta_color: e.target.value })}
+                className="w-10 h-10 rounded border border-[#333] bg-transparent cursor-pointer"
+              />
+              <input
+                type="text"
+                value={form.cta_color}
+                onChange={e => update({ cta_color: e.target.value })}
+                className="admin-input flex-1"
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end pt-2">
+          <button
+            onClick={handleSave}
+            disabled={sectionSaving || !dirty}
+            className="admin-btn admin-btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {sectionSaving ? 'Saving...' : dirty ? 'Save Changes' : 'Saved'}
+          </button>
+        </div>
+
+        {data.image_url && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-[#a1a1a1] text-[13px] font-medium">Preview</label>
+              {!data.is_active && <span className="text-[10px] text-red-500 uppercase tracking-wider">Section Disabled - Preview Paused</span>}
+            </div>
+            <div className="relative w-full aspect-video md:aspect-[21/9] rounded-lg overflow-hidden bg-black border border-[#1a1a1a]">
+              {data.is_active ? (
+                <>
+                  <video
+                    src={data.image_url}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center">
+                    <h2
+                      className="text-white text-3xl md:text-5xl font-light tracking-[0.2em] mb-4 font-serif"
+                      style={{ color: form.text_color }}
+                    >
+                      {form.title}
+                    </h2>
+                    {form.cta_text && (
+                      <div
+                        className="text-[10px] uppercase tracking-[0.2em] flex items-center gap-1"
+                        style={{ color: form.cta_color }}
+                      >
+                        {form.cta_text}
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0a] text-[#444] text-xs flex-col gap-2">
+                  <svg className="w-8 h-8 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M18.36 18.36A9 9 0 015.64 5.64m12.72 12.72L5.64 5.64" />
+                  </svg>
+                  <span>Enable section to preview video</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function HomepageContent() {
   const api = useAdminApi()
   const toast = useToast()
-  const [activeTab, setActiveTab] = useState<'hero' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('hero')
+  const [activeTab, setActiveTab] = useState<'hero' | 'feature_video' | 'collections' | 'testimonials' | 'announcements' | 'brand_story' | 'craftsmanship' | 'process_steps' | 'limited_drop'>('hero')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -189,8 +409,8 @@ function HomepageContent() {
     loadData()
   }, [])
 
-  const loadData = async () => {
-    setLoading(true)
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const [heroRes, collectionsRes, testimonialsRes, announcementsRes, sectionsRes, overlayRes] = await Promise.all([
         api.get<HeroImage[]>('/hero-images'),
@@ -211,7 +431,7 @@ function HomepageContent() {
     } catch (error) {
       console.error('Failed to load homepage content:', error)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -474,12 +694,16 @@ function HomepageContent() {
 
   const saveSection = async (sectionData: any) => {
     setSectionSaving(true)
+    // Optimistic update
+    setHomepageSections(prev => prev.map(s => s.id === sectionData.id ? { ...s, ...sectionData } : s))
+
     try {
       await api.put('/homepage-sections', sectionData)
       toast.success('Section saved')
-      loadData()
+      await loadData(true)
     } catch {
       toast.error('Failed to save section')
+      await loadData(true) // Rollback or refresh
     } finally {
       setSectionSaving(false)
     }
@@ -523,6 +747,7 @@ function HomepageContent() {
 
   const tabs = [
     { id: 'hero' as const, label: 'Hero Images', count: heroImages.length },
+    { id: 'feature_video' as const, label: 'Feature Video' },
     { id: 'collections' as const, label: 'Collections', count: collections.length },
     { id: 'testimonials' as const, label: 'Testimonials', count: testimonials.length },
     { id: 'announcements' as const, label: 'Announcements', count: announcements.length },
@@ -729,6 +954,29 @@ function HomepageContent() {
           </div>
         </div>
       )}
+
+      {/* Feature Video Tab */}
+      {activeTab === 'feature_video' && (() => {
+        const data = getSection('feature_video') || {
+          section_key: 'feature_video',
+          title: 'ATELIER',
+          subtitle: '',
+          image_url: '',
+          cta_text: 'Shop Collection',
+          cta_link: '/products',
+          content: '',
+          metadata: {},
+          is_active: true
+        }
+
+        return (
+          <FeatureVideoTab
+            data={data}
+            sectionSaving={sectionSaving}
+            saveSection={saveSection}
+          />
+        )
+      })()}
 
       {/* Collections Tab */}
       {activeTab === 'collections' && (
@@ -1322,7 +1570,7 @@ function HomepageContent() {
           <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-t-2xl sm:rounded-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 text-center">
               <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
               </div>
               <h3 className="text-white text-base font-semibold mb-2">Delete {deleteConfirm.type}</h3>
               <p className="text-[#888] text-sm">

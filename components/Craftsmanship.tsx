@@ -36,6 +36,7 @@ const defaultData: CraftsmanshipData = {
 }
 
 export default function Craftsmanship({ data: propData }: CraftsmanshipProps) {
+  if (!propData || (propData as any).is_active === false) return null
   const d = { ...defaultData, ...propData, metadata: { ...defaultData.metadata, ...propData?.metadata } }
   const stats = d.metadata?.stats || defaultData.metadata!.stats!
   const paragraphs = (d.content || '').split('\n').filter(Boolean)

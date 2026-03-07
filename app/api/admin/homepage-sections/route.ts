@@ -9,7 +9,6 @@ export async function GET() {
     const { data, error } = await client
       .from('homepage_sections')
       .select('*')
-      .eq('is_active', true)
     if (error) throw error
     return NextResponse.json(data || [], { status: 200 })
   } catch (err: any) {

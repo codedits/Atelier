@@ -54,9 +54,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/atelier.svg', type: 'image/svg+xml' },
     ],
-    apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   robots: {
@@ -72,8 +71,19 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const initialSiteConfig = await getCachedSiteConfig()
 
+  // Inject CSS variables server-side to prevent CLS/FOUC
+  const colors = initialSiteConfig?.theme_colors
+  const cssVars: Record<string, string> = {}
+  if (colors) {
+    if (colors.primary) cssVars['--color-primary'] = colors.primary
+    if (colors.secondary) cssVars['--color-secondary'] = colors.secondary
+    if (colors.accent) cssVars['--color-accent'] = colors.accent
+    if (colors.text) cssVars['--color-text'] = colors.text
+    if (colors.text_light) cssVars['--color-text-light'] = colors.text_light
+  }
+
   return (
-    <html lang="en">
+    <html lang="en" style={cssVars as React.CSSProperties} suppressHydrationWarning>
       <body className={`${cormorant.variable} ${poppins.variable}`}>
         <AppProviders initialSiteConfig={initialSiteConfig}>{children}</AppProviders>
       </body>

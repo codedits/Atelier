@@ -8,7 +8,6 @@ export async function GET() {
     const { data, error } = await client
       .from('announcements')
       .select('*')
-      .eq('is_active', true)
       .order('display_order', { ascending: true })
     if (error) throw error
     return NextResponse.json(data || [], { status: 200 })

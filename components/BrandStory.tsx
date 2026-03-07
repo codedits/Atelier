@@ -55,6 +55,7 @@ const defaultData: BrandStoryData = {
 }
 
 export default function BrandStory({ data: propData }: BrandStoryProps) {
+  if (!propData || (propData as any).is_active === false) return null
   const d = { ...defaultData, ...propData, metadata: { ...defaultData.metadata, ...propData?.metadata } }
   const milestones = d.metadata?.milestones || defaultData.metadata!.milestones!
   const images = d.metadata?.images || defaultData.metadata!.images!

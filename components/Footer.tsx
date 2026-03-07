@@ -1,5 +1,6 @@
 ﻿import { memo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { SITE_NAME, CONTACT_EMAIL, INSTAGRAM_URL, FACEBOOK_URL, PINTEREST_URL, TWITTER_URL, YOUTUBE_URL } from '@/lib/constants'
 
 // Memoized footer to prevent unnecessary re-renders
@@ -11,7 +12,18 @@ const Footer = memo(function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-12 border-b border-[#E5E5E5]">
           {/* Brand Section */}
           <div>
-            <div className="font-display font-bold text-lg tracking-[0.05em] text-[#1A1A1A] mb-4">{SITE_NAME.toUpperCase()}</div>
+            <div className="mb-6 opacity-90 flex items-center gap-3">
+              <Image
+                src="/atelier.svg"
+                alt={SITE_NAME}
+                width={32}
+                height={32}
+                className="h-6 w-auto"
+              />
+              <span className="font-display text-lg font-semibold tracking-[0.2em] text-[#1A1A1A] uppercase">
+                {SITE_NAME}
+              </span>
+            </div>
             <p className="text-sm text-[#4A4A4A] leading-relaxed mb-4">
               Handcrafted jewelry since 1987. Luxury, elegance, and timeless beauty.
             </p>
@@ -92,7 +104,7 @@ const Footer = memo(function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="pt-8 space-y-6 md:space-y-0">
+        <div className="pt-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div className="flex flex-col gap-4 w-full md:w-auto">
               <p className="text-xs text-[#4A4A4A]">© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
@@ -113,10 +125,6 @@ const Footer = memo(function Footer() {
               </div>
             </div>
           </div>
-        </div>
-        {/* Large editorial watermark at footer bottom */}
-        <div className="mt-10 w-full">
-          <h2 aria-hidden className="font-display font-bold text-6xl md:text-8xl text-[#1A1A1A] opacity-100 text-center select-none pointer-events-none">ATELIER</h2>
         </div>
       </div>
     </footer>

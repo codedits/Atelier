@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext'
 import { useUserAuth } from '@/context/UserAuthContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { useSiteConfig } from '@/context/SiteConfigContext'
+import Image from 'next/image'
 
 const Header = memo(function Header() {
   const router = useRouter()
@@ -196,11 +197,16 @@ const Header = memo(function Header() {
 
             {/* Center: Logo */}
             <div className="flex-[1.5] max-w-fit flex justify-center items-center">
-              <Link href="/" className={`font-display text-2xl md:text-3xl lg:text-[2rem] font-medium tracking-[0.15em] transition-colors ${shouldBeTransparent
-                ? 'text-white hover:text-white/90'
-                : 'text-[#1A1A1A] hover:text-[#4A4A4A]'
-                }`}>
-                ATELIER
+              <Link href="/" className="transition-opacity hover:opacity-80">
+                <Image
+                  src="/atelier.svg"
+                  alt="ATELIER"
+                  width={180}
+                  height={58}
+                  className="h-10 md:h-12 w-auto transition-all duration-500"
+                  style={{ filter: shouldBeTransparent ? 'brightness(0) invert(1)' : 'none' }}
+                  priority
+                />
               </Link>
             </div>
 

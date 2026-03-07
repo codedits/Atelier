@@ -34,7 +34,6 @@ export async function GET() {
         const { data, error } = await client
           .from('featured_collections')
           .select('*')
-          .eq('is_active', true)
           .order('display_order', { ascending: true })
         if (error) {
           const msg = error?.message || String(error)

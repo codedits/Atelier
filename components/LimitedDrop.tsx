@@ -75,6 +75,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 const LimitedDrop = memo(function LimitedDrop({ data: propData }: LimitedDropProps) {
+  if (!propData || (propData as any).is_active === false) return null
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
