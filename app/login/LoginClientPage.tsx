@@ -56,7 +56,7 @@ export default function LoginClientPage({ redirect }: LoginClientPageProps) {
     <>
       <Header />
 
-      <main className="min-h-screen bg-gray-50 py-16 px-4">
+      <main className="min-h-screen bg-gray-50 pt-32 pb-16 px-4">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-10">
             <Link href="/" className="inline-block">

@@ -12,7 +12,7 @@ export default function TermsPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto text-center"><h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">Terms of Service</h1><p className="text-lg text-[#4A4A4A]">Last updated: December 16, 2025</p></div></section>
         <section className="py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto space-y-8 text-[#4A4A4A]">
           <div><h2 className="font-display text-2xl text-[#1A1A1A] mb-4">1. Agreement to Terms</h2><p className="leading-relaxed">By accessing and using {SITE_NAME}&apos;s website and services, you accept and agree to be bound by and comply with these Terms of Service. If you do not agree to abide by the above, please do not use this service.</p></div>

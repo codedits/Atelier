@@ -28,7 +28,7 @@ export default function FAQClientPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">Frequently Asked Questions</h1>

@@ -16,7 +16,7 @@ export default function AboutPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">

@@ -24,7 +24,7 @@ export default function JournalPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto text-center"><h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">Journal</h1><p className="text-lg text-[#4A4A4A]">Stories, insights, and expertise from the world of fine jewelry</p></div></section>
         <section className="py-16 md:py-24 px-6 lg:px-8"><div className="max-w-6xl mx-auto">
           <div className="mb-16"><div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12"><div className="relative h-96 rounded-lg overflow-hidden"><Image src={blogPosts[0].image} alt={blogPosts[0].title} fill className="object-cover" /></div><div><div className="flex items-center gap-3 mb-4"><span className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider">Featured</span><span className="text-xs text-[#9CA3AF]">•</span><span className="text-xs text-[#4A4A4A]">{blogPosts[0].category}</span></div><h2 className="font-display text-3xl md:text-4xl text-[#1A1A1A] mb-4">{blogPosts[0].title}</h2><p className="text-[#4A4A4A] mb-6 leading-relaxed text-lg">{blogPosts[0].excerpt}</p><p className="text-sm text-[#9CA3AF] mb-6">{blogPosts[0].date}</p><span className="inline-block px-6 py-3 border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors font-medium cursor-default opacity-50">Coming Soon</span></div></div></div>

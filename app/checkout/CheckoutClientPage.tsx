@@ -49,7 +49,7 @@ export default function CheckoutClientPage() {
     fetch('/api/store-settings')
       .then(r => r.ok ? r.json() : {})
       .then(data => setStoreSettings(data))
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function CheckoutClientPage() {
             phone: formData.phone,
             address: `${formData.address}, ${formData.city} ${formData.postalCode}`,
           }),
-        }).catch(() => {})
+        }).catch(() => { })
       }
 
       const orderData: Record<string, unknown> = {
@@ -223,7 +223,7 @@ export default function CheckoutClientPage() {
     return (
       <div className="min-h-screen bg-white">
         <Header />
-        <main className="pt-24 pb-20 flex items-center justify-center">
+        <main className="pt-32 pb-20">
           <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
         </main>
         <Footer />

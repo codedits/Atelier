@@ -47,7 +47,7 @@ export default function OrderConfirmationClientPage({ orderId }: OrderConfirmati
     return (
       <div className="min-h-screen bg-white">
         <Header />
-        <main className="pt-24 pb-20 flex items-center justify-center">
+        <main className="pt-32 pb-20 flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-2 border-[#1A1A1A] border-t-transparent rounded-full" />
         </main>
         <Footer />
@@ -59,7 +59,7 @@ export default function OrderConfirmationClientPage({ orderId }: OrderConfirmati
     <div className="min-h-screen bg-white">
       <Header />
 
-      <main className="pt-24 pb-20">
+      <main className="pt-32 pb-20">
         <div className="max-w-2xl mx-auto px-6 lg:px-8 text-center">
           <div className="animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center animate-in zoom-in duration-500 delay-200 fill-mode-both">

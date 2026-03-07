@@ -8,6 +8,7 @@ import { useUserAuth } from '@/context/UserAuthContext'
 import { useFavorites } from '@/context/FavoritesContext'
 import { useSiteConfig } from '@/context/SiteConfigContext'
 import Image from 'next/image'
+import MobileMenu from './MobileMenu'
 
 const Header = memo(function Header() {
   const router = useRouter()
@@ -268,44 +269,8 @@ const Header = memo(function Header() {
           </div>
         </div>
 
-        {/* Mobile menu panel */}
-        <div className={`lg:hidden transition-all duration-300 overflow-hidden bg-white border-t border-[#E5E5E5] ${open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="px-6 py-6">
-            <div className="flex flex-col gap-4">
-              {config?.nav_menu && config.nav_menu.length > 0 ? (
-                config.nav_menu.map(item => (
-                  <Link key={item.id} onClick={closeMenu} href={item.href} className="text-base text-[#1A1A1A] hover:text-[#888] font-semibold">{item.label}</Link>
-                ))
-              ) : (
-                <Link onClick={closeMenu} href="/products" className="text-base text-[#1A1A1A] hover:text-[#888] font-semibold">Shop All</Link>
-              )}
-              <Link onClick={closeMenu} href="/favorites" className="text-base text-[#1A1A1A] hover:text-[#888] font-medium flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                Favorites
-              </Link>
-              <div className="border-t border-[#E5E5E5] pt-4 mt-2">
-                {isAuthenticated ? (
-                  <Link onClick={closeMenu} href="/account" className="text-base text-[#1A1A1A] hover:text-[#888] font-semibold flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    My Account
-                  </Link>
-                ) : (
-                  <Link onClick={closeMenu} href="/login" className="text-base text-[#1A1A1A] hover:text-[#888] font-semibold flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Sign In
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </header>
+      <MobileMenu isOpen={open} onClose={closeMenu} />
     </>
   )
 })

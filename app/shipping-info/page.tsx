@@ -12,7 +12,7 @@ export default function ShippingInfoPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto text-center"><h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">Shipping Information</h1><p className="text-lg text-[#4A4A4A]">Fast, secure, and insured delivery to your door.</p></div></section>
         <section className="py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto space-y-12">
           <div><h2 className="font-display text-3xl text-[#1A1A1A] mb-8">Shipping Options</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-8">{[{ title: 'Standard Delivery', time: '5-7 business days', cost: 'Free on orders over ₨5,000', details: 'Nationwide delivery with full insurance and tracking' }, { title: 'Express Delivery', time: '2-3 business days', cost: '₨500', details: 'Priority handling and same-day dispatch' }, { title: 'International Shipping', time: '10-20 business days', cost: 'Calculated at checkout', details: 'Worldwide shipping with full customs documentation' }, { title: 'Same Day Delivery', time: 'Karachi only', cost: '₨1,500', details: 'Order before 12 PM for same-day delivery' }].map((option, index) => (<div key={index} className="border border-[#E5E5E5] rounded-lg p-6"><h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">{option.title}</h3><p className="text-[#1A1A1A] font-semibold mb-2">{option.time}</p><p className="text-[#4A4A4A] mb-3">{option.cost}</p><p className="text-sm text-[#9CA3AF]">{option.details}</p></div>))}</div></div>

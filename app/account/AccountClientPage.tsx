@@ -170,7 +170,7 @@ export default function AccountClientPage() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-28 md:pt-32">
         <div className="bg-white text-gray-900">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">

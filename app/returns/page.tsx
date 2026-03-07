@@ -12,7 +12,7 @@ export default function ReturnsPolicyPage() {
   return (
     <>
       <Header />
-      <main>
+      <main className="pt-28 md:pt-32">
         <section className="bg-[#F8F7F5] py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto text-center"><h1 className="font-display text-4xl md:text-5xl text-[#1A1A1A] mb-6 tracking-tight">Returns & Refund Policy</h1><p className="text-lg text-[#4A4A4A]">Your satisfaction is our priority. Shop with confidence.</p></div></section>
         <section className="py-16 md:py-24 px-6 lg:px-8"><div className="max-w-4xl mx-auto space-y-12">
           <div><h2 className="font-display text-3xl text-[#1A1A1A] mb-6">30-Day Return Policy</h2><p className="text-[#4A4A4A] mb-4 leading-relaxed">We offer a hassle-free 30-day return policy on all non-custom jewelry pieces. If you&apos;re not completely satisfied with your purchase, you can return it for a full refund within 30 days of delivery.</p><div className="bg-[#F8F7F5] rounded-lg p-6 border border-[#E5E5E5]"><h3 className="font-semibold text-[#1A1A1A] mb-3">Return Eligibility:</h3><ul className="space-y-2">{['Item must be unworn and in original condition', 'All tags and packaging must be intact', 'Original receipt or proof of purchase required', 'Item must not show signs of wear or damage', 'Return must be initiated within 30 days of delivery'].map((item, index) => (<li key={index} className="flex items-start gap-3"><span className="text-[#1A1A1A] font-bold mt-0.5">✓</span><span className="text-[#4A4A4A]">{item}</span></li>))}</ul></div></div>

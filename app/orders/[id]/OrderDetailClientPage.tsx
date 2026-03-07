@@ -163,7 +163,7 @@ export default function OrderDetailClientPage({ orderId }: OrderDetailClientPage
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <main className="min-h-screen bg-gray-50 pt-32 pb-20 flex items-center justify-center">
           <div className="animate-spin h-8 w-8 border-2 border-gray-900 border-t-transparent rounded-full" />
         </main>
         <Footer />
@@ -175,7 +175,7 @@ export default function OrderDetailClientPage({ orderId }: OrderDetailClientPage
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-gray-50 py-12 px-4">
+        <main className="min-h-screen bg-gray-50 pt-32 pb-12 px-4">
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-2xl font-light text-gray-900 mb-4">{error}</h1>
             <Link
@@ -197,7 +197,7 @@ export default function OrderDetailClientPage({ orderId }: OrderDetailClientPage
     <>
       <Header />
 
-      <main className="min-h-screen bg-gray-50 py-12 px-4">
+      <main className="min-h-screen bg-gray-50 pt-32 pb-12 px-4">
         <div className="max-w-3xl mx-auto">
           <Link
             href="/account"

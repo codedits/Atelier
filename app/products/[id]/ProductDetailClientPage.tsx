@@ -216,7 +216,7 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
       <div className="min-h-screen bg-white">
         <Header />
 
-        <main className="pt-24 pb-20">
+        <main className="pt-32 pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="mb-12 animate-fadeIn">
               <ol className="flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-[#4A4A4A]">
