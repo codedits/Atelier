@@ -11,6 +11,7 @@ import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDirectUpload, UploadItem } from '@/hooks/useDirectUpload'
 import { Product, Category } from '@/lib/supabase'
+import { Collection } from '@/app/admin/collections/AdminCollectionsClientPage'
 
 // Icons
 const Icons = {
@@ -84,6 +85,7 @@ function ProductsContent() {
   const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [collections, setCollections] = useState<Collection[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -107,7 +109,8 @@ function ProductsContent() {
     images: [] as string[],
     stock: '0',
     is_hidden: false,
-    is_featured: false
+    is_featured: false,
+    collection_ids: [] as string[]
   })
 
   // Direct upload hook (bypasses API body limit -- uploads straight to Supabase)
@@ -139,12 +142,14 @@ function ProductsContent() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, collectionsData] = await Promise.all([
         api.get<Product[]>('/products'),
-        api.get<Category[]>('/categories')
+        api.get<Category[]>('/categories'),
+        api.get<Collection[]>('/collections')
       ])
       setProducts(productsData)
       setCategories(categoriesData)
+      setCollections(collectionsData)
     } finally {
       setLoading(false)
     }
@@ -163,7 +168,8 @@ function ProductsContent() {
       images: [],
       stock: '0',
       is_hidden: false,
-      is_featured: false
+      is_featured: false,
+      collection_ids: []
     })
     resetUploads()
     setView('form')
@@ -183,7 +189,8 @@ function ProductsContent() {
       images: existingImages,
       stock: String(product.stock),
       is_hidden: (product as Product & { is_hidden?: boolean }).is_hidden || false,
-      is_featured: (product as any).is_featured || false
+      is_featured: (product as any).is_featured || false,
+      collection_ids: (product as any).collection_ids || []
     })
     resetUploads()
     setView('form')
@@ -249,7 +256,8 @@ function ProductsContent() {
       images: form.images,
       stock: Number(form.stock),
       is_hidden: form.is_hidden,
-      is_featured: form.is_featured
+      is_featured: form.is_featured,
+      collection_ids: form.collection_ids
     }
 
     try {
@@ -659,6 +667,35 @@ function ProductsContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Exclusive Collections row */}
+                {collections.length > 0 && (
+                  <div className="pt-2">
+                    <label className="block text-[#a1a1a1] text-[13px] font-medium mb-3">Assign to Exclusive Collections</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {collections.map(c => (
+                        <label key={c.id} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-[#1a1a1a] bg-[#111] hover:bg-[#1a1a1a] transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={form.collection_ids.includes(c.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setForm(f => ({ ...f, collection_ids: [...f.collection_ids, c.id] }))
+                              } else {
+                                setForm(f => ({ ...f, collection_ids: f.collection_ids.filter(id => id !== c.id) }))
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-[#333] bg-[#0a0a0a] text-[#C9A96E] focus:ring-0 focus:ring-offset-0"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-[#eee] text-sm leading-tight">{c.name}</span>
+                            {!c.is_active && <span className="text-[#888] text-[10px]">Draft</span>}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* ===== IMAGE SECTION -- DnD Kit Powered ===== */}
                 <div>

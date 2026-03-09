@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'
@@ -19,25 +19,46 @@ interface LookbookProps {
     subtitle?: string
 }
 
-// Generate column-based positions for images (4 columns)
-function generateGridPositions(count: number) {
-    const positions: { top: string; left: string; width: string; speed: number; zIndex: number; opacity: number; blur: string }[] = []
+interface GridPosition {
+    top: string
+    left: string
+    width: string
+    speed: number
+    zIndex: number
+    opacity: number
+    blur: string
+    // Mobile overrides (applied via CSS media query)
+    mobileTop: string
+    mobileLeft: string
+    mobileWidth: string
+}
 
-    // Config for each column to create varied movement and explicit sizes
+// Generate column-based positions for both desktop and mobile
+function generateGridPositions(count: number): GridPosition[] {
+    const positions: GridPosition[] = []
+
+    // Desktop: 4 columns
     const columns = [
-        { left: '2%', width: '18vw', speed: 0.7, zIndex: 1 },   // Medium-Small
-        { left: '22%', width: '30vw', speed: 1.3, zIndex: 3 },  // Big
-        { left: '55%', width: '24vw', speed: 0.9, zIndex: 2 },  // Medium
-        { left: '82%', width: '15vw', speed: 0.5, zIndex: 0 },  // Smallest
+        { left: '2%', width: '18vw', speed: 0.7, zIndex: 1 },
+        { left: '22%', width: '30vw', speed: 1.3, zIndex: 3 },
+        { left: '55%', width: '24vw', speed: 0.9, zIndex: 2 },
+        { left: '82%', width: '15vw', speed: 0.5, zIndex: 0 },
     ]
 
     for (let i = 0; i < count; i++) {
         const colIndex = i % 4
         const col = columns[colIndex]
-
-        // Distribute images vertically with significant spacing and high randomness
         const row = Math.floor(i / 4)
         const topOffset = 3 + (row * 24) + (seededRandom(i) * 15)
+
+        // Mobile: 2 columns
+        const isEven = i % 2 === 0
+        const mobileRow = Math.floor(i / 2)
+        const mobileWidth = isEven
+            ? (mobileRow % 2 === 0 ? '55vw' : '40vw')
+            : (mobileRow % 2 === 0 ? '38vw' : '50vw')
+        const mobileLeft = isEven ? '3%' : (mobileRow % 2 === 0 ? '58%' : '47%')
+        const mobileTop = `${4 + (mobileRow * 18) + (seededRandom(i) * 12)}%`
 
         positions.push({
             top: `${topOffset}%`,
@@ -47,13 +68,15 @@ function generateGridPositions(count: number) {
             zIndex: col.zIndex,
             opacity: col.zIndex === 0 ? 0.8 : 1,
             blur: col.zIndex === 0 ? '1px' : '0px',
+            mobileTop,
+            mobileLeft,
+            mobileWidth,
         })
     }
     return positions
 }
 
 export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "Discover" }: LookbookProps) {
-    // Only use provided props if they exist, otherwise fallback
     const displayTitle = title || "THE LOOK"
     const displaySubtitle = subtitle || "Discover"
 
@@ -61,19 +84,12 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
     const { ref: sectionRef, isIntersecting } = useIntersectionObserver({ threshold: 0.1 })
     const imageElementsRef = useRef<(HTMLDivElement | null)[]>([])
     const rafRef = useRef<number>(0)
-    const [isMobile, setIsMobile] = useState(false)
 
-    // Detect mobile for responsive scatter widths
-    useEffect(() => {
-        const mq = window.matchMedia('(max-width: 768px)')
-        setIsMobile(mq.matches)
-        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-        mq.addEventListener('change', handler)
-        return () => mq.removeEventListener('change', handler)
-    }, [])
-
-    // Memoize positions for the new grid layout
+    // Memoize positions — deterministic for both server and client
     const positions = useMemo(() => generateGridPositions(images.length), [images.length])
+
+    // Generate a unique CSS class name per instance to scope the styles
+    const styleId = useMemo(() => `lookbook-${Math.random().toString(36).slice(2, 8)}`, [])
 
     // Use rAF-based parallax that writes directly to DOM — zero re-renders
     useEffect(() => {
@@ -93,8 +109,6 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                 const progress = Math.max(0, Math.min(1, scrolled / totalScrollable))
                 const scrollVal = progress * 1000
 
-                // Write transforms directly to each image element — no state updates
-                // We add an extra offset to columns to make them feel "untethered"
                 imageElementsRef.current.forEach((el, i) => {
                     if (!el) return
                     const pos = positions[i]
@@ -105,7 +119,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
         }
 
         window.addEventListener('scroll', onScroll, { passive: true })
-        onScroll() // initial calc
+        onScroll()
 
         return () => {
             window.removeEventListener('scroll', onScroll)
@@ -117,6 +131,22 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
         return null
     }
 
+    // Build responsive CSS rules using media queries — no JS state needed
+    const responsiveStyles = positions.map((pos, i) => `
+        .${styleId}-img-${i} {
+            top: ${pos.mobileTop};
+            left: ${pos.mobileLeft};
+            width: ${pos.mobileWidth};
+        }
+        @media (min-width: 768px) {
+            .${styleId}-img-${i} {
+                top: ${pos.top};
+                left: ${pos.left};
+                width: ${pos.width};
+            }
+        }
+    `).join('\n')
+
     return (
         <section
             ref={(node) => {
@@ -126,6 +156,9 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
             className="relative w-full h-[450vh] md:h-[500vh] bg-[#FAF9F6]"
             aria-label={`${subtitle} — ${title}`}
         >
+            {/* Inject responsive positioning via CSS — prevents SSR/CSR mismatch */}
+            <style dangerouslySetInnerHTML={{ __html: responsiveStyles }} />
+
             {/* Sticky Text Container */}
             <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center pointer-events-none z-20">
                 <div
@@ -149,20 +182,6 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                     const pos = positions[index]
                     if (!pos) return null
 
-                    // Mobile adjustment: distribute into 2 columns instead of 4
-                    const isEven = index % 2 === 0
-                    const row = Math.floor(index / 2)
-                    // Mix sizes on mobile
-                    const mobileWidth = isEven ? (row % 2 === 0 ? '55vw' : '40vw') : (row % 2 === 0 ? '38vw' : '50vw')
-                    const mobileLeft = isEven ? '3%' : (row % 2 === 0 ? '58%' : '47%')
-
-                    const mobileAdjustedPos = isMobile ? {
-                        ...pos,
-                        left: mobileLeft,
-                        top: `${4 + (row * 18) + (seededRandom(index) * 12)}%`,
-                        width: mobileWidth
-                    } : pos
-
                     const imageContent = (
                         <>
                             <Image
@@ -170,7 +189,7 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                                 alt={img.title || `Lookbook image ${index + 1}`}
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                sizes={isMobile ? '45vw' : '25vw'}
+                                sizes="(max-width: 768px) 45vw, 25vw"
                                 loading={index < 6 ? 'eager' : 'lazy'}
                             />
                             {img.title && (
@@ -186,15 +205,11 @@ export default function Lookbook({ images = [], title = "THE LOOK", subtitle = "
                         <div
                             key={img.id || index}
                             ref={(el) => { imageElementsRef.current[index] = el }}
-                            className="absolute shadow-xl will-change-transform"
-                            suppressHydrationWarning
+                            className={`absolute shadow-xl will-change-transform ${styleId}-img-${index}`}
                             style={{
-                                top: mobileAdjustedPos.top,
-                                left: mobileAdjustedPos.left,
-                                width: mobileAdjustedPos.width,
-                                zIndex: mobileAdjustedPos.zIndex,
-                                opacity: mobileAdjustedPos.opacity,
-                                filter: `blur(${mobileAdjustedPos.blur})`,
+                                zIndex: pos.zIndex,
+                                opacity: pos.opacity,
+                                filter: `blur(${pos.blur})`,
                             }}
                         >
                             <div className="relative w-full pt-[125%] overflow-hidden bg-[#E8E4DF] group pointer-events-auto cursor-pointer rounded-sm">

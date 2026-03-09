@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { invalidateAll } from '@/lib/revalidation'
-import type { SupabaseClient } from '@supabase/supabase-js'
-
-// Helper function to delete file from Supabase Storage
-async function deleteStorageFile(adminClient: SupabaseClient, imageUrl: string, folder: string = 'hero') {
-  if (!imageUrl) return
-  try {
-    const urlParts = imageUrl.split('/')
-    const filename = urlParts[urlParts.length - 1]
-    if (!filename) return
-    await adminClient.storage.from('images').remove([`${folder}/${filename}`])
-  } catch (error) {
-    console.warn('Failed to delete old image file:', error)
-  }
-}
+import { deleteStorageFile } from '@/lib/storage-utils'
 
 export async function GET() {
   try {
@@ -72,8 +59,9 @@ export async function PUT(req: NextRequest) {
       .single()
     if (error) throw error
 
+    // Delete old image from storage if it changed
     if (oldImageUrl && image_url !== oldImageUrl) {
-      await deleteStorageFile(adminClient, oldImageUrl, 'hero')
+      await deleteStorageFile(adminClient, oldImageUrl)
     }
 
     invalidateAll('hero_images')
@@ -94,6 +82,7 @@ export async function DELETE(req: NextRequest) {
     const id = new URL(req.url).searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
+    // Fetch image URL before deleting the record
     const { data: heroImage } = await adminClient
       .from('hero_images')
       .select('image_url')
@@ -106,8 +95,9 @@ export async function DELETE(req: NextRequest) {
       .eq('id', id)
     if (error) throw error
 
+    // Delete from storage
     if (heroImage?.image_url) {
-      await deleteStorageFile(adminClient, heroImage.image_url, 'hero')
+      await deleteStorageFile(adminClient, heroImage.image_url)
     }
 
     invalidateAll('hero_images')

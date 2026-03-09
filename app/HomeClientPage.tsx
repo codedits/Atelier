@@ -19,14 +19,16 @@ const AnnouncementBanner = dynamic(() => import('@/components/AnnouncementBanner
 const FeatureVideo = dynamic(() => import('@/components/FeatureVideo'), { ssr: true })
 const ValueProposition = dynamic(() => import('@/components/ValueProposition'), { ssr: true })
 const TrendingNow = dynamic(() => import('@/components/TrendingNow'), { ssr: true })
-const BrandStory = dynamic(() => import('@/components/BrandStory'), { ssr: true })
-const ProcessSteps = dynamic(() => import('@/components/ProcessSteps'), { ssr: true })
-const Craftsmanship = dynamic(() => import('@/components/Craftsmanship'), { ssr: true })
 const Testimonials = dynamic(() => import('@/components/Testimonials'), { ssr: true })
-const InstagramGallery = dynamic(() => import('@/components/InstagramGallery'), { ssr: true })
-const LimitedDrop = dynamic(() => import('@/components/LimitedDrop'), { ssr: true })
-const Newsletter = dynamic(() => import('@/components/Newsletter'), { ssr: true })
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: true })
+
+// Below-fold heavy components — ssr: false for real code-splitting
+const BrandStory = dynamic(() => import('@/components/BrandStory'), { ssr: false })
+const ProcessSteps = dynamic(() => import('@/components/ProcessSteps'), { ssr: false })
+const Craftsmanship = dynamic(() => import('@/components/Craftsmanship'), { ssr: false })
+const InstagramGallery = dynamic(() => import('@/components/InstagramGallery'), { ssr: false })
+const LimitedDrop = dynamic(() => import('@/components/LimitedDrop'), { ssr: false })
+const Newsletter = dynamic(() => import('@/components/Newsletter'), { ssr: false })
 
 interface Product {
   id: string

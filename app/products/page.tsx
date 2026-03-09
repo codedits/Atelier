@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { supabase, Product } from '@/lib/supabase'
+import { ssgCache } from '@/lib/server-cache'
 import { SITE_NAME, SITE_URL } from '@/lib/constants'
 import ProductsClientPage from './ProductsClientPage'
 
@@ -20,19 +21,23 @@ export const metadata: Metadata = {
   },
 }
 
-async function getProducts(): Promise<Product[]> {
-  try {
-    const { data: productsData } = await supabase
-      .from('products')
-      .select('id, name, slug, price, old_price, category, gender, image_url, images, stock, is_hidden, description, created_at')
-      .or('is_hidden.is.null,is_hidden.eq.false')
-      .order('created_at', { ascending: false })
+const SSG_TTL = 30_000
+const SSG_STALE_TTL = 120_000
 
-    return productsData || []
-  } catch (error) {
-    console.error('Failed to fetch products:', error)
-    return []
-  }
+async function getProducts(): Promise<Product[]> {
+  const { data } = await ssgCache.getOrFetch<Product[]>(
+    'ssg:all_products',
+    async () => {
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, name, slug, price, old_price, category, gender, image_url, images, stock, is_hidden, description, created_at')
+        .or('is_hidden.is.null,is_hidden.eq.false')
+        .order('created_at', { ascending: false })
+      return productsData || []
+    },
+    { ttl: SSG_TTL, tags: ['products'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+  )
+  return data
 }
 
 export default async function ProductsPage({

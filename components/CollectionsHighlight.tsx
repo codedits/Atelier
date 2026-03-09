@@ -87,7 +87,7 @@ const CollectionsHighlight = memo(function CollectionsHighlight({ highlights = d
                 {/* Image Container */}
                 <div className="relative overflow-hidden aspect-[3/4] mb-8 bg-[#F5F0EB]">
                   <Image
-                    src={highlight.image}
+                    src={highlight.image || 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop'}
                     alt={highlight.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-all duration-[1000ms] ease-out"

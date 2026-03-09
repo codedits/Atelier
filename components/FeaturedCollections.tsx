@@ -21,7 +21,7 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
   const { ref: sectionRef, isIntersecting } = useIntersectionObserver()
 
   return (
-    <section className="luxury-section !pt-12 md:!pt-20 !pb-0 bg-[#FAF9F6] overflow-hidden" ref={sectionRef}>
+    <section className="luxury-section !pt-12 md:!pt-20 !pb-0 bg-[#0c0c0d] overflow-hidden" ref={sectionRef}>
       <div className="w-full mx-auto px-6 lg:px-8 max-w-7xl">
         {/* Section header */}
         <div
@@ -30,65 +30,88 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
             isIntersecting && "reveal-slide-up"
           )}
         >
-          <p className="text-[11px] uppercase tracking-[0.3em] text-[#1A1A1A] mb-4">
+          <p className="text-[11px] uppercase tracking-[0.3em] !text-[#FFFFFF] mb-4">
             Collections
           </p>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-[#1A1A1A] mb-6">
-            Shop by Category
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium !text-[#FFFFFF] mb-6">
+            Shop by Collections
           </h2>
           <div className="luxury-divider mt-6">
-            <div className="luxury-divider-diamond" />
+            <div className="luxury-divider-diamond bg-white" />
           </div>
         </div>
       </div>
 
       {/* Full-bleed editorial grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
-        {collections.map((collection, index) => (
-          <div
-            key={collection.id}
-            className={cn(
-              "will-change-transform invisible-before-reveal",
-              isIntersecting && "reveal-fade-in"
-            )}
-            style={{ animationDelay: isIntersecting ? `${index * 100}ms` : '0ms' }}
-          >
-            <Link
-              href={collection.link}
-              className="group relative overflow-hidden block h-[45vh] md:h-[65vh] lg:h-[130vh] w-full cursor-pointer bg-[#FAF9F6]"
+      <div className="flex flex-wrap justify-center">
+        {collections.map((collection, index) => {
+          const total = collections.length
+          let widthClass = "w-1/2 lg:w-1/4"
+          let itemSizes = "(min-width: 1024px) 25vw, 50vw"
+
+          if (total === 5) {
+            if (index < 3) {
+              widthClass = "w-1/2 lg:w-1/3"
+              itemSizes = "(min-width: 1024px) 33vw, 50vw"
+            } else {
+              widthClass = "w-1/2 lg:w-1/2"
+              itemSizes = "(min-width: 1024px) 50vw, 50vw"
+            }
+          } else if (total === 6 || total === 3) {
+            widthClass = "w-1/2 lg:w-1/3"
+            itemSizes = "(min-width: 1024px) 33vw, 50vw"
+          } else if (total === 2) {
+            widthClass = "w-1/2 lg:w-1/2"
+            itemSizes = "(min-width: 1024px) 50vw, 50vw"
+          }
+
+          return (
+            <div
+              key={collection.id}
+              className={cn(
+                "will-change-transform invisible-before-reveal",
+                widthClass,
+                isIntersecting && "reveal-fade-in"
+              )}
+              style={{ animationDelay: isIntersecting ? `${index * 100}ms` : '0ms' }}
             >
-              <Image
-                src={collection.image_url}
-                alt={collection.title}
-                fill
-                className="object-cover transition-all duration-[1200ms] ease-out group-hover:scale-105"
-                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 50vw"
-              />
+              <Link
+                href={collection.link}
+                className="group relative overflow-hidden block h-[40vh] md:h-[55vh] lg:h-[85vh] w-full cursor-pointer bg-[#FAF9F6]"
+              >
+                <Image
+                  src={collection.image_url || 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop'}
+                  alt={collection.title}
+                  fill
+                  className="object-cover transition-all duration-[1200ms] ease-out group-hover:scale-[1.03]"
+                  sizes={itemSizes}
+                />
 
-              {/* Refined gradient overlay - Darker for mobile centering readability */}
-              <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-t lg:from-black/60 lg:via-black/10 lg:to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
+                {/* Refined gradient overlay - Darker for mobile centering readability */}
+                <div className="absolute inset-0 bg-black/20 lg:bg-gradient-to-t lg:from-black/60 lg:via-black/10 lg:to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-700" />
 
-              {/* Content - Absolute center on mobile, bottom on desktop */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center lg:justify-end p-4 md:p-10">
-                <div className="text-center w-full">
-                  {/* Gold accent line */}
-                  <div className="hidden lg:block w-8 h-px bg-white mx-auto mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-center" />
+                {/* Content - Absolute center on mobile, bottom on desktop */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center lg:justify-end p-4 md:p-10">
+                  <div className="text-center w-full">
+                    {/* Gold accent line */}
+                    <div className="hidden lg:block w-8 h-px bg-white mx-auto mb-4 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-center" />
 
-                  <h3 className="text-xl md:text-2xl lg:text-3xl font-medium !text-white mb-2 lg:mb-4 tracking-wide font-serif">
-                    {collection.title}
-                  </h3>
+                    <h3 className="text-xl md:text-2xl lg:text-3xl font-medium !text-white mb-2 lg:mb-4 tracking-wide font-serif">
+                      {collection.title}
+                    </h3>
 
-                  <div className="flex flex-col items-center justify-center lg:flex lg:opacity-100 opacity-60">
-                    <span className="text-white/80 text-[10px] lg:text-xs font-medium uppercase tracking-[0.2em] mb-1 transition-all duration-500 group-hover:-translate-y-1">Discover</span>
-                    <svg className="hidden lg:block w-3 h-3 text-white/50 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
+                    <div className="flex flex-col items-center justify-center lg:flex lg:opacity-100 opacity-60">
+                      <span className="text-white/80 text-[10px] lg:text-xs font-medium uppercase tracking-[0.2em] mb-1 transition-all duration-500 group-hover:-translate-y-1">Discover</span>
+                      <svg className="hidden lg:block w-3 h-3 text-white/50 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          </div>
-        ))}
+              </Link>
+            </div>
+          )
+        })}
       </div>
     </section>
   )

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured on server' }, { status: 500 })
   }
 
-  const { name, description, price, old_price, category, gender, image_url, images, stock, is_hidden, is_featured } = await req.json()
+  const { name, description, price, old_price, category, gender, image_url, images, stock, is_hidden, is_featured, collection_ids } = await req.json()
 
   if (!name || !description || price === undefined || !category || !gender || !image_url) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -63,8 +63,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // Insert collection mappings if provided
+  if (collection_ids && Array.isArray(collection_ids) && collection_ids.length > 0) {
+    const cpData = collection_ids.map((cId: string) => ({
+      product_id: data.id,
+      collection_id: cId
+    }))
+    const { error: cpError } = await adminClient.from('collection_products').insert(cpData)
+    if (cpError) console.error('Error assigning collections:', cpError)
+  }
+
   apiCache.invalidateByTag('products')
+  apiCache.invalidateByTag('collections')
   invalidateSSGCache('products')
-  revalidateForTag('products')
+  invalidateSSGCache('collections')
+  revalidateForTag(['products', 'collections'])
   return NextResponse.json(data, { status: 201 })
 }

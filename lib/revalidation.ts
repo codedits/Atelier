@@ -17,6 +17,11 @@ const TAG_TARGETS: Record<string, RevalidateTarget[]> = {
     { path: '/' },
     { path: '/products' },
   ],
+  collections: [
+    { path: '/' },
+    { path: '/products' },
+    { path: '/collections/[slug]', type: 'page' },
+  ],
   site_config: [
     { path: '/' },
   ],

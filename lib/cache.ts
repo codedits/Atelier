@@ -57,14 +57,30 @@ export async function getCachedFeaturedCollections() {
         'ssg:featured_collections',
         async () => {
             const { data, error } = await supabase
-                .from('featured_collections')
-                .select('id, title, description, image_url, link, display_order, is_active')
+                .from('collections')
+                .select('id, name, description, image_url, slug, display_order, is_active')
                 .eq('is_active', true)
                 .order('display_order', { ascending: true })
-            if (error) return []
-            return data || []
+
+            if (error) {
+                console.error('Error fetching collections for homepage:', error)
+                return []
+            }
+
+            const DEFAULT_COLLECTION_IMAGE = 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop'
+
+            // Map to the format expected by HomeClientPage and FeaturedCollections components
+            return (data || []).map(c => ({
+                id: c.id,
+                title: c.name,
+                description: c.description,
+                image_url: c.image_url || DEFAULT_COLLECTION_IMAGE,
+                link: `/collections/${c.slug}`,
+                display_order: c.display_order,
+                is_active: c.is_active
+            }))
         },
-        { ttl: SSG_TTL, tags: ['featured_collections'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
+        { ttl: SSG_TTL, tags: ['collections'], staleWhileRevalidate: true, staleTTL: SSG_STALE_TTL }
     )
     return data
 }

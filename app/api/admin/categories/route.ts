@@ -10,13 +10,39 @@ export async function GET(req: NextRequest) {
   if ('error' in auth) return auth.error
 
   const client = getSupabaseClient()
-  const { data, error } = await client
+
+  // 1. Fetch all categories
+  const { data: categories, error } = await client
     .from('categories')
     .select('*')
     .order('name')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data, { status: 200 })
+
+  // 2. Fetch product counts grouped by category name
+  const { data: counts, error: countError } = await client
+    .from('products')
+    .select('category')
+
+  if (countError) {
+    console.error('Error fetching category counts:', countError)
+    return NextResponse.json(categories, { status: 200 })
+  }
+
+  // 3. Map counts to categories
+  const countMap: Record<string, number> = {}
+  counts.forEach((p: any) => {
+    if (p.category) {
+      countMap[p.category] = (countMap[p.category] || 0) + 1
+    }
+  })
+
+  const formattedData = categories.map((c: any) => ({
+    ...c,
+    product_count: countMap[c.name] || 0
+  }))
+
+  return NextResponse.json(formattedData, { status: 200 })
 }
 
 export async function POST(req: NextRequest) {

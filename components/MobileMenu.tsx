@@ -9,6 +9,31 @@ import { useSiteConfig } from '@/context/SiteConfigContext'
 import { cn } from '@/lib/utils'
 import { SITE_NAME } from '@/lib/constants'
 
+interface CategoryNav {
+    id: string;
+    name: string;
+}
+
+interface CollectionNav {
+    id: string;
+    name: string;
+    slug: string;
+}
+
+const DEFAULT_CATEGORY_NAV: CategoryNav[] = [
+    { id: 'cat-rings', name: 'Rings' },
+    { id: 'cat-necklaces', name: 'Necklaces' },
+    { id: 'cat-bracelets', name: 'Bracelets' },
+    { id: 'cat-earrings', name: 'Earrings' },
+    { id: 'cat-watches', name: 'Watches' },
+]
+
+const DEFAULT_COLLECTION_NAV: CollectionNav[] = [
+    { id: 'col-rings', name: 'Rings', slug: 'rings' },
+    { id: 'col-necklaces', name: 'Necklaces', slug: 'necklaces' },
+    { id: 'col-watches', name: 'Watches', slug: 'watches' },
+]
+
 interface MobileMenuProps {
     isOpen: boolean
     onClose: () => void
@@ -19,9 +44,38 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const { isAuthenticated, user } = useUserAuth()
     const { config } = useSiteConfig()
     const [isMounted, setIsMounted] = useState(false)
+    const [collections, setCollections] = useState<CollectionNav[]>(DEFAULT_COLLECTION_NAV)
+    const [categories, setCategories] = useState<CategoryNav[]>(DEFAULT_CATEGORY_NAV)
 
     useEffect(() => {
         setIsMounted(true)
+
+        async function fetchData() {
+            try {
+                const [collectionsRes, categoriesRes] = await Promise.all([
+                    fetch('/api/collections'),
+                    fetch('/api/categories')
+                ])
+
+                if (collectionsRes.ok) {
+                    const collectionsData = await collectionsRes.json()
+                    if (Array.isArray(collectionsData) && collectionsData.length > 0) {
+                        setCollections(collectionsData)
+                    }
+                }
+
+                if (categoriesRes.ok) {
+                    const categoriesData = await categoriesRes.json()
+                    if (Array.isArray(categoriesData) && categoriesData.length > 0) {
+                        setCategories(categoriesData)
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch navigation data', err)
+            }
+        }
+
+        fetchData()
     }, [])
 
     // Prevent background scrolling when menu is open
@@ -93,34 +147,72 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     <div className="space-y-4">
                         <p className="text-[11px] uppercase tracking-[0.3em] text-[#C9A96E] font-bold mb-6">Collections</p>
                         <nav className="flex flex-col gap-3">
-                            {menuItems.map((item, idx) => (
+                            {/* Home Link */}
+                            <Link
+                                href="/"
+                                className={cn(
+                                    "text-4xl md:text-5xl font-display text-[#1A1A1A] hover:text-[#C9A96E] transition-all transform hover:translate-x-2 duration-300",
+                                    isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                                )}
+                                style={{ transitionDelay: `150ms` }}
+                                onClick={onClose}
+                            >
+                                Home
+                            </Link>
+
+                            <div className="h-px bg-[#F0F0F0] my-2 w-full opacity-50" />
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-bold mb-2">Shop</p>
+
+                            {/* Categories (Male, Female, Unisex) */}
+                            {categories.length > 0 && categories.map((cat, idx) => (
                                 <Link
-                                    key={item.id}
-                                    href={item.href}
+                                    key={cat.id}
+                                    href={`/products?category=${cat.name.toLowerCase()}`}
                                     className={cn(
-                                        "text-4xl md:text-5xl font-display text-[#1A1A1A] hover:text-[#C9A96E] transition-all transform hover:translate-x-2 duration-300",
+                                        "text-3xl md:text-4xl font-display text-[#1A1A1A] hover:text-[#C9A96E] transition-all transform hover:translate-x-2 duration-300",
                                         isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                                     )}
-                                    style={{ transitionDelay: `${150 + idx * 50}ms` }}
+                                    style={{ transitionDelay: `${250 + idx * 50}ms` }}
+                                    onClick={onClose}
                                 >
-                                    {item.label}
+                                    {cat.name}
                                 </Link>
                             ))}
-                            <div className="h-px bg-[#F0F0F0] my-4 w-1/3" />
                             <Link
-                                href="/products?gender=women"
-                                className="text-3xl font-display text-[#1A1A1A]/90 hover:text-[#C9A96E] transition-all"
-                                style={{ transitionDelay: `400ms` }}
+                                href="/products"
+                                className={cn(
+                                    "text-2xl font-display text-[#1A1A1A]/70 hover:text-[#C9A96E] transition-all transform hover:translate-x-2 duration-300",
+                                    isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                                )}
+                                style={{ transitionDelay: `${300 + categories.length * 50}ms` }}
+                                onClick={onClose}
                             >
-                                Women
+                                Shop All
                             </Link>
-                            <Link
-                                href="/products?gender=men"
-                                className="text-3xl font-display text-[#1A1A1A]/90 hover:text-[#C9A96E] transition-all"
-                                style={{ transitionDelay: `500ms` }}
-                            >
-                                Men
-                            </Link>
+
+                            {/* Collections List */}
+                            {collections.length > 0 && (
+                                <>
+                                    <div className="h-px bg-[#F0F0F0] my-4 w-full opacity-50" />
+                                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#888] font-bold mb-2">Curated Collections</p>
+                                    <div className="flex flex-col gap-4">
+                                        {collections.map((c, idx) => (
+                                            <Link
+                                                key={c.id}
+                                                href={`/collections/${c.slug}`}
+                                                className={cn(
+                                                    "text-2xl font-display text-[#1A1A1A]/80 hover:text-[#C9A96E] transition-all transform hover:translate-x-2 duration-300",
+                                                    isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                                                )}
+                                                style={{ transitionDelay: `${300 + idx * 40}ms` }}
+                                                onClick={onClose}
+                                            >
+                                                {c.name}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </nav>
                     </div>
 

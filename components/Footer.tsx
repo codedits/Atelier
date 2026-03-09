@@ -39,10 +39,10 @@ const Footer = memo(function Footer() {
             <h4 className="text-sm md:text-base font-display font-bold uppercase text-[#1A1A1A] mb-4 tracking-widest">Shop</h4>
             <ul className="space-y-3">
               <li><Link href="/products" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">All Products</Link></li>
-              <li><Link href="/products?category=rings" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Rings</Link></li>
-              <li><Link href="/products?category=necklaces" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Necklaces</Link></li>
-              <li><Link href="/products?category=bracelets" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Bracelets</Link></li>
-              <li><Link href="/products?category=earrings" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Earrings</Link></li>
+              <li><Link href="/collections/rings" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Rings</Link></li>
+              <li><Link href="/collections/necklaces" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Necklaces</Link></li>
+              <li><Link href="/collections/watches" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Watches</Link></li>
+              <li><Link href="/collections/bridal-essentials" className="text-sm text-[#1A1A1A] hover:text-[#888] transition-colors duration-150">Bridal Essentials</Link></li>
             </ul>
           </div>
 

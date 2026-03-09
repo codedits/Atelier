@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin, getSupabaseClient } from '@/lib/admin-api-utils'
 import { requireAdmin } from '@/lib/admin-route-utils'
 import { invalidateAll } from '@/lib/revalidation'
+import { deleteStorageFile } from '@/lib/storage-utils'
 
 export async function GET() {
   try {
@@ -37,6 +38,13 @@ export async function PUT(req: NextRequest) {
 
     // If an id is provided, update by id (for existing rows)
     if (id) {
+      // Fetch existing to detect image changes
+      const { data: existing } = await (adminClient as any)
+        .from('homepage_sections')
+        .select('image_url')
+        .eq('id', id)
+        .single()
+
       const updateData: any = {
         section_key,
         title,
@@ -58,6 +66,12 @@ export async function PUT(req: NextRequest) {
         .single()
 
       if (error) throw error
+
+      // Delete old image from storage if it changed
+      if (existing?.image_url && image_url !== undefined && image_url !== existing.image_url) {
+        await deleteStorageFile(adminClient, existing.image_url)
+      }
+
       invalidateAll('homepage_sections')
       return NextResponse.json(data, { status: 200 })
     }
@@ -150,12 +164,25 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 })
     }
 
+    // Fetch image URL before deleting
+    const { data: existing } = await (adminClient as any)
+      .from('homepage_sections')
+      .select('image_url')
+      .eq('id', id)
+      .single()
+
     const { error } = await (adminClient as any)
       .from('homepage_sections')
       .delete()
       .eq('id', id)
 
     if (error) throw error
+
+    // Delete from storage
+    if (existing?.image_url) {
+      await deleteStorageFile(adminClient, existing.image_url)
+    }
+
     invalidateAll('homepage_sections')
     return NextResponse.json({ message: 'Section deleted' }, { status: 200 })
   } catch (err: any) {

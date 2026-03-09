@@ -8,7 +8,11 @@ import { ToastProvider, useToast } from '@/context/ToastContext'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useAdminApi } from '@/hooks/useAdminApi'
 import { useDebounce } from '@/hooks/useDebounce'
-import { Category } from '@/lib/supabase'
+export interface Category {
+  id: string
+  name: string
+  product_count?: number
+}
 
 // Icons
 const Icons = {
@@ -40,6 +44,12 @@ const Icons = {
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
+  ),
+  search: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
   )
 }
 
@@ -54,7 +64,7 @@ function CategoriesContent() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const pendingUpdatesRef = useRef<Map<string, string>>(new Map())
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     loadCategories()
@@ -89,33 +99,24 @@ function CategoriesContent() {
     }
   }
 
-  const performCategoryUpdate = async (id: string, name: string) => {
+  const updateCategory = async (id: string, name: string) => {
+    if (!name.trim()) return
+    if (submitting) return
+
+    setSubmitting(true)
     try {
       await api.put(`/categories/${id}`, { name: name.trim() })
-      toast.success('Category updated')
-      setCategories(prev => prev.map(c => c.id === id ? { ...c, name: name.trim() } : c))
-      pendingUpdatesRef.current.delete(id)
-    } catch (error) {
-      console.error('Failed to update category:', error)
+      toast.success('Category updated successfully')
+      setEditingId(null)
+      loadCategories()
+    } catch {
       toast.error('Failed to update category')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  const { debounced: debouncedCategoryUpdate } = useDebounce(
-    performCategoryUpdate,
-    400 // 400ms debounce for text input
-  )
-
-  const updateCategory = async (id: string, name: string) => {
-    if (!name.trim()) return
-
-    // Store pending update
-    pendingUpdatesRef.current.set(id, name)
-
-    // Update UI immediately
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, name } : c))
-
-    if (deleting) return
+  const deleteCategory = async (id: string) => {
     setDeleting(true)
     try {
       await api.del(`/categories/${id}`)
@@ -123,11 +124,15 @@ function CategoriesContent() {
       setDeleteConfirm(null)
       loadCategories()
     } catch {
-      toast.error('Failed to delete category. Make sure no products are using it.')
+      toast.error('Failed to delete category')
     } finally {
       setDeleting(false)
     }
   }
+
+  const filteredCategories = categories.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   if (loading) {
     return (
@@ -146,13 +151,12 @@ function CategoriesContent() {
   return (
     <div className="max-w-3xl space-y-8">
       {/* Info Note */}
-      <div className="bg-blue-900/15 border border-blue-700/30 rounded-2xl p-5 sm:p-6">
-        <p className="text-blue-400 text-sm leading-relaxed">
-          <strong>What are Categories?</strong> Categories are used to tag and organize your <strong>products</strong> (e.g., Rings, Necklaces, Bracelets).
-          When adding or editing a product, you&apos;ll assign it to one of these categories.
+      <div className="bg-amber-900/15 border border-amber-700/30 rounded-2xl p-5 sm:p-6">
+        <p className="text-amber-400 text-sm leading-relaxed">
+          <strong>Category Guide:</strong> Categories are used for product types (for example <strong>Rings, Necklaces, Bracelets, Earrings, Watches</strong>).
         </p>
-        <p className="text-blue-400/70 text-xs mt-3 leading-relaxed">
-          💡 To display categories on the homepage, go to <a href="/admin/homepage" className="underline hover:text-blue-300">Homepage → Collections</a> and add a collection card for each category you want to feature.
+        <p className="text-amber-400/80 text-xs mt-3 leading-relaxed">
+          Collections are curated landing pages. Manage them in <a href="/admin/collections" className="underline hover:text-amber-300 font-bold">Collections</a>.
         </p>
       </div>
 
@@ -191,24 +195,34 @@ function CategoriesContent() {
 
       {/* Categories List */}
       <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-[#1a1a1a] flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-white">All Categories</h3>
-            <p className="text-[#666] text-sm mt-1">Manage your product categories</p>
+        <div className="px-6 py-5 border-b border-[#1a1a1a] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative flex-1 max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]">{Icons.search}</span>
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="admin-input pl-10 w-full py-2 text-sm"
+              />
+            </div>
           </div>
-          <span className="admin-badge admin-badge-neutral text-xs px-3 py-1.5">{categories.length} total</span>
+          <div className="flex items-center gap-3 justify-between sm:justify-end">
+            <span className="text-[#555] text-xs font-mono">{filteredCategories.length} categories</span>
+          </div>
         </div>
 
         <div className="divide-y divide-[#1a1a1a]">
-          {categories.map(category => (
-            <div key={category.id} className="px-6 py-5 flex items-center justify-between hover:bg-[#111] transition-colors">
+          {filteredCategories.map(category => (
+            <div key={category.id} className="px-6 py-4 flex items-center justify-between hover:bg-[#030303] transition-colors group">
               {editingId === category.id ? (
-                <div className="flex gap-3 flex-1 mr-4">
+                <div className="flex gap-2 flex-1 mr-4">
                   <input
                     type="text"
                     value={editName}
                     onChange={e => setEditName(e.target.value)}
-                    className="admin-input flex-1 py-3 px-4 text-sm"
+                    className="admin-input flex-1 py-1.5 px-3 text-sm"
                     autoFocus
                     onKeyDown={e => {
                       if (e.key === 'Enter') updateCategory(category.id, editName)
@@ -217,43 +231,41 @@ function CategoriesContent() {
                   />
                   <button
                     onClick={() => updateCategory(category.id, editName)}
-                    className="admin-btn admin-btn-primary px-4 py-3"
-                    title="Save"
+                    className="p-2 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors"
                   >
                     {Icons.check}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="admin-btn admin-btn-secondary px-4 py-3"
-                    title="Cancel"
+                    className="p-2 text-[#666] hover:bg-[#1a1a1a] rounded-lg transition-colors"
                   >
                     {Icons.x}
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#222] flex items-center justify-center text-[#555]">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                      </svg>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-white text-sm font-medium">{category.name}</span>
+                      <span className="text-[#555] text-[10px] uppercase tracking-widest font-bold mt-0.5">
+                        {category.product_count || 0} Products
+                      </span>
                     </div>
-                    <span className="text-white text-sm font-medium">{category.name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => {
                         setEditingId(category.id)
                         setEditName(category.name)
                       }}
-                      className="p-2.5 text-[#666] hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                      className="p-2 text-[#666] hover:text-[#C9A96E] hover:bg-[#C9A96E]/5 rounded-lg transition-colors"
                       title="Edit"
                     >
                       {Icons.edit}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(category.id)}
-                      className="p-2.5 text-[#666] hover:text-[#ff6166] hover:bg-[#ff6166]/10 rounded-lg transition-colors"
+                      className="p-2 text-[#666] hover:text-[#ff6166] hover:bg-[#ff6166]/10 rounded-lg transition-colors"
                       title="Delete"
                     >
                       {Icons.trash}
@@ -299,7 +311,7 @@ function CategoriesContent() {
               </button>
               <button
                 disabled={deleting}
-                onClick={() => updateCategory(deleteConfirm, '')}
+                onClick={() => deleteCategory(deleteConfirm)}
                 className="flex-1 admin-btn admin-btn-danger py-2.5 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {deleting && (
@@ -322,7 +334,7 @@ export default function AdminCategoriesClientPage() {
   return (
     <AdminAuthProvider>
       <ToastProvider>
-        <AdminLayout title="Categories" subtitle="Organize your products into collections">
+        <AdminLayout title="Categories" subtitle="Manage product type categories used in filtering">
           <CategoriesContent />
         </AdminLayout>
       </ToastProvider>

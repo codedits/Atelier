@@ -10,6 +10,31 @@ import { useSiteConfig } from '@/context/SiteConfigContext'
 import Image from 'next/image'
 import MobileMenu from './MobileMenu'
 
+interface CategoryNav {
+  id: string;
+  name: string;
+}
+
+interface CollectionNav {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+const DEFAULT_CATEGORY_NAV: CategoryNav[] = [
+  { id: 'cat-rings', name: 'Rings' },
+  { id: 'cat-necklaces', name: 'Necklaces' },
+  { id: 'cat-bracelets', name: 'Bracelets' },
+  { id: 'cat-earrings', name: 'Earrings' },
+  { id: 'cat-watches', name: 'Watches' },
+]
+
+const DEFAULT_COLLECTION_NAV: CollectionNav[] = [
+  { id: 'col-rings', name: 'Rings', slug: 'rings' },
+  { id: 'col-necklaces', name: 'Necklaces', slug: 'necklaces' },
+  { id: 'col-watches', name: 'Watches', slug: 'watches' },
+]
+
 const Header = memo(function Header() {
   const router = useRouter()
   const pathname = usePathname()
@@ -21,6 +46,37 @@ const Header = memo(function Header() {
   const { isAuthenticated, user } = useUserAuth()
   const { favorites } = useFavorites()
   const { config } = useSiteConfig()
+
+  const [collections, setCollections] = useState<CollectionNav[]>(DEFAULT_COLLECTION_NAV)
+  const [categories, setCategories] = useState<CategoryNav[]>(DEFAULT_CATEGORY_NAV)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [collectionsRes, categoriesRes] = await Promise.all([
+          fetch('/api/collections'),
+          fetch('/api/categories')
+        ])
+
+        if (collectionsRes.ok) {
+          const collectionsData = await collectionsRes.json()
+          if (Array.isArray(collectionsData) && collectionsData.length > 0) {
+            setCollections(collectionsData)
+          }
+        }
+
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json()
+          if (Array.isArray(categoriesData) && categoriesData.length > 0) {
+            setCategories(categoriesData)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch navigation data', err)
+      }
+    }
+    fetchData()
+  }, [])
 
   // Check if current page matches the link - memoized
   const isActive = useCallback((path: string) => {
@@ -164,19 +220,72 @@ const Header = memo(function Header() {
               </button>
 
               <nav className="hidden lg:flex items-center gap-8">
-                {config?.nav_menu && config.nav_menu.length > 0 ? (
-                  config.nav_menu.map(item => (
-                    <Link key={item.id} href={item.href} className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive(item.href) ? 'text-white font-medium' : 'text-white/80 hover:text-white'}`}>
-                      {item.label}
-                      <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
-                    </Link>
-                  ))
-                ) : (
-                  <Link href="/products" className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive('/products') ? 'text-white font-medium' : 'text-white/80 hover:text-white'}`}>
-                    Shop All
-                    <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive('/products') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
-                  </Link>
-                )}
+                {/* Home Link */}
+                <Link
+                  href="/"
+                  className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive('/') ? 'text-white font-medium' : 'text-white/80 hover:text-white'}`}
+                >
+                  Home
+                  <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive('/') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                </Link>
+
+                {/* Shop Dropdown (Categories) */}
+                <div className="relative group">
+                  <button className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-white/80 hover:text-white transition-colors py-2">
+                    Shop
+                    <svg className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <div className="absolute top-full left-0 pt-4 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300">
+                    <div className="bg-[#1A1A1A] border border-[#333] p-4 min-w-[180px] shadow-2xl flex flex-col gap-3">
+                      <Link
+                        href="/products"
+                        className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group/link inline-block w-fit ${isActive('/products') && !pathname?.includes('category') ? 'text-white font-medium' : 'text-[#888] hover:text-white'}`}
+                      >
+                        Shop All
+                        <span className={`absolute -bottom-1 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive('/products') && !pathname?.includes('category') ? 'scale-x-100' : 'scale-x-0 group-hover/link:scale-x-100'}`} />
+                      </Link>
+                      <div className="h-px bg-[#333] my-1" />
+                      {categories.map(cat => (
+                        <Link
+                          key={cat.id}
+                          href={`/products?category=${cat.name.toLowerCase()}`}
+                          className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group/link inline-block w-fit ${isActive(`/products?category=${cat.name.toLowerCase()}`) ? 'text-white font-medium' : 'text-[#888] hover:text-white'}`}
+                        >
+                          {cat.name}
+                          <span className={`absolute -bottom-1 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive(`/products?category=${cat.name.toLowerCase()}`) ? 'scale-x-100' : 'scale-x-0 group-hover/link:scale-x-100'}`} />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Collections Dropdown */}
+                <div className="relative group">
+                  <button className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-white/80 hover:text-white transition-colors py-2">
+                    Collections
+                    <svg className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <div className="absolute top-full left-0 pt-4 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300">
+                    <div className="bg-[#1A1A1A] border border-[#333] p-4 min-w-[200px] shadow-2xl flex flex-col gap-3">
+                      {collections.map(c => (
+                        <Link
+                          key={c.id}
+                          href={`/collections/${c.slug}`}
+                          className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group/link inline-block w-fit ${isActive(`/collections/${c.slug}`) ? 'text-white font-medium' : 'text-[#888] hover:text-white'}`}
+                        >
+                          {c.name}
+                          <span className={`absolute -bottom-1 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive(`/collections/${c.slug}`) ? 'scale-x-100' : 'scale-x-0 group-hover/link:scale-x-100'}`} />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </nav>
             </div>
 

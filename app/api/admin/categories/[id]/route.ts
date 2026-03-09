@@ -40,6 +40,14 @@ export async function PUT(
   const body = await req.json()
   const { name } = body || {}
 
+  // 1. Get old category name to update products
+  const { data: oldCategory } = await adminClient
+    .from('categories')
+    .select('name')
+    .eq('id', id)
+    .single()
+
+  // 2. Update category
   const { data, error } = await adminClient
     .from('categories')
     .update({ name } as any)
@@ -49,9 +57,21 @@ export async function PUT(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // 3. Update products with the new category name if it changed
+  if (oldCategory && oldCategory.name !== name) {
+    const { error: productError } = await adminClient
+      .from('products')
+      .update({ category: name } as any)
+      .eq('category', oldCategory.name)
+
+    if (productError) console.error('Error updating products category:', productError)
+  }
+
   apiCache.invalidateByTag('categories')
+  apiCache.invalidateByTag('products')
   invalidateSSGCache('categories')
-  revalidateForTag('categories')
+  invalidateSSGCache('products')
+  revalidateForTag(['categories', 'products'])
 
   return NextResponse.json(data, { status: 200 })
 }
@@ -70,6 +90,14 @@ export async function DELETE(
 
   const { id } = await context.params
 
+  // 1. Get category name before deleting
+  const { data: category } = await adminClient
+    .from('categories')
+    .select('name')
+    .eq('id', id)
+    .single()
+
+  // 2. Delete category
   const { error } = await adminClient
     .from('categories')
     .delete()
@@ -77,9 +105,21 @@ export async function DELETE(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  // 3. Update products to have no category
+  if (category) {
+    const { error: productError } = await adminClient
+      .from('products')
+      .update({ category: null } as any)
+      .eq('category', category.name)
+
+    if (productError) console.error('Error clearing products category:', productError)
+  }
+
   apiCache.invalidateByTag('categories')
+  apiCache.invalidateByTag('products')
   invalidateSSGCache('categories')
-  revalidateForTag('categories')
+  invalidateSSGCache('products')
+  revalidateForTag(['categories', 'products', 'collections'])
 
   return NextResponse.json({ message: 'Category deleted' }, { status: 200 })
 }
