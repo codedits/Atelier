@@ -54,12 +54,14 @@ const FeaturedCollections = memo(function FeaturedCollections({ collections }: F
               widthClass = "w-1/2 lg:w-1/3"
               itemSizes = "(min-width: 1024px) 33vw, 50vw"
             } else {
-              widthClass = "w-1/2 lg:w-1/2"
-              itemSizes = "(min-width: 1024px) 50vw, 50vw"
+              // On mobile, the 5th item (index 4) should be full width to avoid empty space
+              widthClass = index === 4 ? "w-full lg:w-1/2" : "w-1/2 lg:w-1/2"
+              itemSizes = index === 4 ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 50vw, 50vw"
             }
           } else if (total === 6 || total === 3) {
-            widthClass = "w-1/2 lg:w-1/3"
-            itemSizes = "(min-width: 1024px) 33vw, 50vw"
+            // For 3 items, the last one should also be full width on mobile
+            widthClass = (total === 3 && index === 2) ? "w-full lg:w-1/3" : "w-1/2 lg:w-1/3"
+            itemSizes = (total === 3 && index === 2) ? "(min-width: 1024px) 33vw, 100vw" : "(min-width: 1024px) 33vw, 50vw"
           } else if (total === 2) {
             widthClass = "w-1/2 lg:w-1/2"
             itemSizes = "(min-width: 1024px) 50vw, 50vw"
