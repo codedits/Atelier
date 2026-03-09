@@ -276,7 +276,7 @@ export default function ProductDetailClientPage({ product, relatedProducts, revi
                 </div>
               </div>
 
-              <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-10 animate-fadeIn">
+              <div className="lg:col-span-5 lg:sticky lg:top-[112px] space-y-10 animate-fadeIn">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <p className="text-[10px] uppercase tracking-[0.3em] text-[#1A1A1A] font-medium">

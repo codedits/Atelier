@@ -408,7 +408,7 @@ export default function CheckoutClientPage() {
                   </div>
 
                   <div className="lg:col-span-1 order-first lg:order-last">
-                    <div className="bg-[#F8F7F5] rounded-lg p-4 sm:p-6 lg:sticky lg:top-24 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
+                    <div className="bg-[#F8F7F5] rounded-lg p-4 sm:p-6 lg:sticky lg:top-[112px] animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
                       <h2 className="text-base sm:text-lg font-medium text-[#111827] mb-4 sm:mb-6">Order Summary</h2>
 
                       <div className="space-y-3 mb-4 sm:mb-6 max-h-48 sm:max-h-64 overflow-y-auto">

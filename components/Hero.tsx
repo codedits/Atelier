@@ -156,9 +156,8 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
         {heroImages.map((img, index) => (
           <div
             key={img.id || index}
-            className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
+            className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
           >
             <Image
               src={img.image_url}
@@ -199,11 +198,11 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
         </h1>
 
         {/* CTAs */}
-        <div className="hero-cta flex flex-col sm:flex-row items-center gap-4 mt-12">
+        <div className="hero-cta flex flex-col sm:flex-row items-center gap-4 mt-8 sm:mt-12">
           {hero.cta_text && (
             <Link
               href={hero.cta_link || '/products'}
-              className="group inline-flex items-center gap-3 px-10 py-4 bg-white text-black text-[11px] font-semibold uppercase tracking-[0.2em] hover:bg-white/90 transition-all duration-300"
+              className="group inline-flex items-center gap-2.5 px-6 py-2.5 sm:px-9 sm:py-3.5 bg-white text-black text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] hover:bg-white/90 transition-all duration-300 rounded-full"
             >
               <span>{hero.cta_text}</span>
               <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -211,12 +210,6 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
               </svg>
             </Link>
           )}
-          <Link
-            href="/about"
-            className="inline-flex items-center gap-3 px-10 py-4 border border-white/40 text-white text-[11px] font-medium uppercase tracking-[0.2em] hover:bg-white/10 hover:border-white/60 transition-all duration-300"
-          >
-            <span>Our Story</span>
-          </Link>
         </div>
 
         {/* Animated Stats Row */}
@@ -259,11 +252,10 @@ const Hero = memo(function Hero({ heroImages: initialHeroImages, overlay }: Hero
               className="relative overflow-hidden transition-all duration-500"
               aria-label={`Go to slide ${index + 1}`}
             >
-              <div className={`transition-all duration-500 ${
-                index === currentImageIndex
-                  ? 'w-10 h-[2px] bg-white/30'
-                  : 'w-4 h-[1px] bg-white/40 hover:bg-white/60'
-              }`} />
+              <div className={`transition-all duration-500 ${index === currentImageIndex
+                ? 'w-10 h-[2px] bg-white/30'
+                : 'w-4 h-[1px] bg-white/40 hover:bg-white/60'
+                }`} />
               {index === currentImageIndex && (
                 <div
                   ref={progressRef}

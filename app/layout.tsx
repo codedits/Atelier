@@ -83,8 +83,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="en" style={cssVars as React.CSSProperties} suppressHydrationWarning>
-      <body className={`${cormorant.variable} ${poppins.variable}`}>
+    <html lang="en" style={{ ...cssVars as React.CSSProperties, minHeight: '100vh' }} className="js" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('js');`,
+          }}
+        />
+      </head>
+      <body className={`${cormorant.variable} ${poppins.variable} min-h-screen flex flex-col`}>
         <AppProviders initialSiteConfig={initialSiteConfig}>{children}</AppProviders>
       </body>
     </html>

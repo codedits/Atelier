@@ -17,22 +17,10 @@ const Header = memo(function Header() {
   const [open, setOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [hasScrolled, setHasScrolled] = useState(false)
   const { totalItems, openCart } = useCart()
   const { isAuthenticated, user } = useUserAuth()
   const { favorites } = useFavorites()
   const { config } = useSiteConfig()
-
-  // Memoized scroll handler
-  const handleScroll = useCallback(() => {
-    setHasScrolled(window.scrollY > 200)
-  }, [])
-
-  // Detect scroll to change header style on homepage
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [handleScroll])
 
   // Check if current page matches the link - memoized
   const isActive = useCallback((path: string) => {
@@ -48,9 +36,8 @@ const Header = memo(function Header() {
     return currentPath === path
   }, [currentPath])
 
-  // Determine if we're on homepage and should show transparent header - memoized
+  // Determine if we're on homepage - memoized
   const isHomepage = currentPath === '/'
-  const shouldBeTransparent = useMemo(() => isHomepage && !hasScrolled, [isHomepage, hasScrolled])
 
   // Memoized toggle handler
   const toggleMenu = useCallback(() => setOpen(prev => !prev), [])
@@ -156,10 +143,7 @@ const Header = memo(function Header() {
         </div>
       )}
 
-      <header className={`fixed ${currentPath === '/' ? 'top-0' : 'top-8 md:top-8'} left-0 right-0 z-40 transition-all duration-500 ease-out ${shouldBeTransparent
-        ? 'bg-transparent border-b-0 py-2'
-        : 'bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] shadow-sm py-0'
-        }`}>
+      <header className={`fixed ${currentPath === '/' ? 'top-0' : 'top-8 md:top-8'} left-0 right-0 z-40 transition-all duration-500 ease-out bg-transparent py-2 mix-blend-difference`}>
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Left: Navigation & Hamburger */}
@@ -168,7 +152,7 @@ const Header = memo(function Header() {
                 aria-label="Toggle menu"
                 aria-expanded={open}
                 onClick={toggleMenu}
-                className={`lg:hidden p-2 -ml-2 focus:outline-none transition-colors ${shouldBeTransparent ? 'text-white hover:text-white/80' : 'text-[#1A1A1A] hover:text-[#888]'}`}
+                className="lg:hidden p-2 -ml-2 focus:outline-none transition-colors text-white hover:text-white/80"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {open ? (
@@ -182,13 +166,13 @@ const Header = memo(function Header() {
               <nav className="hidden lg:flex items-center gap-8">
                 {config?.nav_menu && config.nav_menu.length > 0 ? (
                   config.nav_menu.map(item => (
-                    <Link key={item.id} href={item.href} className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive(item.href) ? 'text-[#1A1A1A] font-medium' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A]/80 hover:text-[#1A1A1A]'}`}>
+                    <Link key={item.id} href={item.href} className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive(item.href) ? 'text-white font-medium' : 'text-white/80 hover:text-white'}`}>
                       {item.label}
                       <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
                     </Link>
                   ))
                 ) : (
-                  <Link href="/products" className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive('/products') ? 'text-[#1A1A1A] font-medium' : shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A]/80 hover:text-[#1A1A1A]'}`}>
+                  <Link href="/products" className={`text-[11px] uppercase tracking-[0.15em] transition-colors relative group ${isActive('/products') ? 'text-white font-medium' : 'text-white/80 hover:text-white'}`}>
                     Shop All
                     <span className={`absolute -bottom-1.5 left-0 right-0 h-px bg-current transition-transform duration-300 origin-left ${isActive('/products') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
                   </Link>
@@ -205,7 +189,7 @@ const Header = memo(function Header() {
                   width={180}
                   height={58}
                   className="h-10 md:h-12 w-auto transition-all duration-500"
-                  style={{ filter: shouldBeTransparent ? 'brightness(0) invert(1)' : 'none' }}
+                  style={{ filter: 'brightness(0) invert(1)' }}
                   priority
                 />
               </Link>
@@ -216,7 +200,7 @@ const Header = memo(function Header() {
               <button
                 onClick={() => setIsSearchOpen(true)}
                 aria-label="Search"
-                className={`transition-colors flex items-center gap-2 group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}
+                className="transition-colors flex items-center gap-2 group text-white/90 hover:text-white"
               >
                 <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Search</span>
                 <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +208,7 @@ const Header = memo(function Header() {
                 </svg>
               </button>
 
-              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className={`hidden md:flex flex-col items-center gap-1 transition-colors relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+              <Link href={isAuthenticated ? '/account' : '/login'} aria-label="Account" className="hidden md:flex flex-col items-center gap-1 transition-colors relative group text-white/90 hover:text-white">
                 <div className="flex items-center gap-2">
                   <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Sign In</span>
                   <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +222,7 @@ const Header = memo(function Header() {
                 )}
               </Link>
 
-              <Link href="/favorites" aria-label="Favorites" className={`hidden md:flex items-center gap-2 transition-colors relative group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+              <Link href="/favorites" aria-label="Favorites" className="hidden md:flex items-center gap-2 transition-colors relative group text-white/90 hover:text-white">
                 <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Wishlist</span>
                 <div className="relative">
                   <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +236,7 @@ const Header = memo(function Header() {
                 </div>
               </Link>
 
-              <button onClick={openCart} aria-label="Cart" className={`transition-colors relative flex items-center gap-2 group ${shouldBeTransparent ? 'text-white/90 hover:text-white' : 'text-[#1A1A1A] hover:text-[#4A4A4A]'}`}>
+              <button onClick={openCart} aria-label="Cart" className="transition-colors relative flex items-center gap-2 group text-white/90 hover:text-white">
                 <span className="hidden xl:inline-block text-[10px] font-medium uppercase tracking-[0.15em] opacity-80 group-hover:opacity-100 transition-opacity">Bag</span>
                 <div className="relative">
                   <svg className="w-[20px] h-[20px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">

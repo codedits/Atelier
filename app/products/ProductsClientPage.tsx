@@ -141,7 +141,7 @@ export default function ProductsClientPage({
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('default')
 
-   
+
   useEffect(() => {
     setSelectedCategory(initialCategory ? initialCategory.toLowerCase() : 'all')
     setSelectedGender(initialGender ? initialGender.toLowerCase() : 'all')
@@ -263,7 +263,7 @@ export default function ProductsClientPage({
               </div>
             </div>
 
-            <div className="sticky top-[80px] z-30 bg-white/90 backdrop-blur-md border-y border-[#E8E4DF] mb-12 py-4">
+            <div className="sticky top-[112px] z-30 bg-white/90 backdrop-blur-md border-y border-[#E8E4DF] mb-12 py-4">
               <div className="flex flex-wrap items-center justify-between gap-6">
                 <div className="flex items-center gap-8">
                   <div className="relative group">

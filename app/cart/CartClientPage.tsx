@@ -135,7 +135,7 @@ export default function CartClientPage() {
             </div>
 
             <div className="lg:col-span-1 order-first lg:order-last">
-              <div className="bg-[#F8F7F5] rounded-lg p-6 sticky top-24 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
+              <div className="bg-[#F8F7F5] rounded-lg p-6 sticky top-[112px] animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
                 <h2 className="text-lg font-medium text-[#111827] mb-6">Order Summary</h2>
 
                 <div className="space-y-4 mb-6">

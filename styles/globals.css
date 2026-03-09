@@ -1012,9 +1012,14 @@ textarea.admin-input {
   animation-delay: 500ms;
 }
 
-/* Keep elements hidden before animation starts */
-.invisible-before-reveal {
+/* Keep elements hidden before animation starts only when JS is active */
+.js .invisible-before-reveal {
   opacity: 0;
+}
+
+/* Fallback for when JS is disabled or hasn't loaded yet to prevent CLS */
+.invisible-before-reveal {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
